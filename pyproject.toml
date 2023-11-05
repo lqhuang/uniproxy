@@ -1,0 +1,17 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "uni-proxy"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+license = { text = "GPLv3" }
+authors = [{ name = "Lanqing Huang", email = "lqhuang@outlook.com" }]
+requires-python = ">=3.8"
+dependencies = ["attrs", "toml"]
+
+[project.optional-dependencies]
+dev = ["mypy", "black", "isort", "ruff"]
+test = ["pytest"]
