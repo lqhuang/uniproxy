@@ -4,13 +4,13 @@ from enum import StrEnum
 from typing import Iterable, Literal
 
 from attrs import frozen
-from uniproxy.proxies import BaseProxy
+from uniproxy.protocols.base import BaseProtocol
 
 
 @frozen
 class BaseProxyGroup:
     name: str
-    proxies: Iterable[BaseProxy | BaseProxyGroup]
+    proxies: Iterable[BaseProtocol | BaseProxyGroup]
     type: GroupType
     url: str = "http://www.gstatic.com/generate_204"
     udp: bool = True
@@ -98,7 +98,7 @@ class LoadBalanceGroup(BaseProxyGroup):
 class ExternalGroup(BaseProxyGroup):
     # FIXME: Compose Other Group instead of add `using_type` in ExternalGroup
 
-    proxies: Iterable[BaseProxy | BaseProxyGroup] = ()
+    proxies: Iterable[BaseProtocol | BaseProxyGroup] = ()
     type: Literal[GroupType.EXTERNAL] = GroupType.EXTERNAL
     using_type: GroupType = GroupType.SELECT
     policy_path: str | None = None

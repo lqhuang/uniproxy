@@ -1,6 +1,4 @@
-class Inbound:
-    type: str
-    tag: str
+from .base import Inbound
 
 
 class HTTPInbound(Inbound):

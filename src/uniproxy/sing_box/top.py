@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from .inbounds import Inbound
-from .outbounds import Outbound
+from .base import Inbound, Outbound
 
 
 class SingBoxConfig:

@@ -1,15 +1,13 @@
 from ipaddress import IPv4Address, IPv6Address
 from typing import Literal
 
+from uniproxy.protocols.shadowsocks import LiteralShadowsocksCipher, ShadowsocksCipher
+
+from .base import Outbound
 from .shared import OutboundMultiplex
 
 
-class Outboud:
-    type: str
-    tag: str
-
-
-class ShadowsocksOutbound(Outboud):
+class ShadowsocksOutbound(Outbound):
     """
 
     Examples:
@@ -39,7 +37,7 @@ class ShadowsocksOutbound(Outboud):
     # The server port.
     server_port: int
     # Encryption methods.
-    method: Literal["2022-blake3-aes-128-gcm"]
+    method: ShadowsocksCipher | LiteralShadowsocksCipher
     password: str
     # Shadowsocks SIP003 plugin, implemented in internal.
     plugin: Literal["obfs-local", "v2ray-plugin"] | None = None
