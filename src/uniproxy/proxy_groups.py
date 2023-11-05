@@ -4,7 +4,7 @@ from enum import StrEnum
 from typing import Iterable, Literal
 
 from attrs import frozen
-from proxies import BaseProxy
+from uniproxy.proxies import BaseProxy
 
 
 @frozen
