@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "GPLv3" }
 authors = [{ name = "Lanqing Huang", email = "lqhuang@outlook.com" }]
 requires-python = ">=3.8"
-dependencies = ["attrs", "tomlkit", "strictyaml"]
+dependencies = ["attrs", "tomlkit", "strictyaml", "httpx[socks]"]
 
 [project.optional-dependencies]
 dev = ["mypy", "black", "isort", "ruff", "typing_extensions"]
