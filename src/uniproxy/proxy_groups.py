@@ -60,8 +60,8 @@ class SelectGroup(BaseProxyGroup):
 class AutoGroup(BaseProxyGroup):
     type: Literal[GroupType.URL_TEST] = GroupType.URL_TEST
     filter: str | None = None
-    interval: float = 600  # seconds
-    tolerance: float = 100  # milliseconds
+    interval: float = 60  # seconds
+    tolerance: float = 300  # milliseconds
     timeout: float = 5  # seconds
 
     def as_surge(self) -> dict[str, str]:
@@ -92,6 +92,11 @@ class LoadBalanceGroup(BaseProxyGroup):
     def persistent(self) -> bool:
         """(Surge) Enable persistent connection."""
         return self.strategy == "consistent-hashing" if self.strategy else False
+
+    def as_surge(self) -> dict[str, str]:
+        proxies = ", ".join((p.name for p in self.proxies))
+        opts = f"persistent={self.persistent}"
+        return {self.name: f"{self.type}, {proxies}, {opts}"}
 
 
 @frozen

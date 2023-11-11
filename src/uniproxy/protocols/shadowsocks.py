@@ -83,7 +83,7 @@ class ShadowsocksProtocol(BaseProtocol):
             self.name: (
                 f"ss, {self.host}, {self.port}, "
                 f"encrypt-method={self.method}, password={self.password}, "
-                f"udp-relay={str(self.udp).lower()}"
+                f"udp-relay={str(self.udp).lower()}, ecn=true"
             )
         }
 
