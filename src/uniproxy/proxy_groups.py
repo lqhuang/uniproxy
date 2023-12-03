@@ -109,7 +109,7 @@ class ExternalGroup(BaseProxyGroup):
     policy_path: str | None = None
 
     # The update interval in seconds. Only meaningful when the path is a URL.
-    update_interval: float | None = 86400
+    update_interval: float | None = 21600  # 6 hours
 
     # Only use the policies that the regex matches the policy name.
     policy_regex_filter: str | None = None
