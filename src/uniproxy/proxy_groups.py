@@ -72,9 +72,9 @@ class AutoGroup(BaseProxyGroup):
 
 @frozen
 class FallBackGroup(BaseProxyGroup):
-    type: Literal[GroupType.URL_TEST] = GroupType.URL_TEST
+    type: Literal[GroupType.FALLBACK] = GroupType.FALLBACK
     filter: str | None = None
-    interval: float = 100  # milliseconds
+    interval: float = 120  # milliseconds
     timeout: float = 5  # seconds
 
     def as_surge(self) -> dict[str, str]:
