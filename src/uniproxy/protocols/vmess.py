@@ -2,10 +2,28 @@ from __future__ import annotations
 
 from typing import Literal
 
+from enum import StrEnum
+
 from attrs import frozen
+
 from uniproxy.typing import ProtocolType
 
 from .base import BaseProtocol
+
+
+class VmessCipher(StrEnum):
+    NONE = "none"
+    AUTO = "auto"
+    ZERO = "zero"
+    AES_128_GCM = "aes-128-gcm"
+    CHACHA20_POLY1305 = "chacha20-pol1305"
+
+
+class VmessTransport(StrEnum):
+    HTTP = "http"
+    WS = "ws"
+    GRPC = "grpc"
+    H2 = "h2"
 
 
 @frozen
@@ -35,12 +53,12 @@ class VmessWSOpt:
 class VmessProtocol(BaseProtocol):
     uuid: str
     alter_id: int = 0
-    method: Literal["auto", "aes-128-gcm", "chacha20-poly1305", "none"] = "auto"
+    method: VmessCipher = VmessCipher.AUTO
     udp: bool = False
     tls: bool | None = None
     skip_cert_verify: bool = False
-    sni: str | Literal[False] | None = None  # servername in clash
-    network: Literal["http", "ws", "grpc", "h2"] | None = None
+    sni: str | Literal[False] | None = None
+    transport: VmessTransport | None = None
     ws: VmessWSOpt | None = None
 
     type: Literal[ProtocolType.VMESS] = ProtocolType.VMESS
@@ -74,7 +92,7 @@ class VmessProtocol(BaseProtocol):
             else {}
         )
         servername_opt = {"servername": self.sni} if self.sni else {}
-        if self.ws is not None and self.network in ("ws", None):
+        if self.ws is not None and self.transport in ("ws", None):
             ws_opts = {
                 "network": "ws",
                 "ws-opts": self.ws.as_clash(),
@@ -85,7 +103,7 @@ class VmessProtocol(BaseProtocol):
         return {
             "name": self.name,
             "type": "vmess",
-            "server": self.host,
+            "server": self.server,
             "port": self.port,
             "uuid": self.uuid,
             "alterId": self.alter_id,
@@ -128,7 +146,7 @@ class VmessProtocol(BaseProtocol):
 
         return {
             self.name: (
-                f"vmess, {self.host}, {self.port}, "
+                f"vmess, {self.server}, {self.port}, "
                 f"username={self.uuid}"  # Do not end with comma for this line
                 f"{extra_opts}"
             )

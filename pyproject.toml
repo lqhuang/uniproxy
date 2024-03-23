@@ -15,3 +15,16 @@ dependencies = ["attrs", "tomlkit", "ruamel.yaml", "httpx[socks]", "pyjson5"]
 [project.optional-dependencies]
 dev = ["mypy", "black", "isort", "ruff", "typing_extensions"]
 test = ["pytest"]
+
+[tool.isort]
+profile = "black"
+known_typing = ["typing", "typing_extensions", "collections.abc"]
+known_first_party = ["uniproxy"]
+sections = [
+    "FUTURE",
+    "TYPING",
+    "STDLIB",
+    "THIRDPARTY",
+    "FIRSTPARTY",
+    "LOCALFOLDER",
+]

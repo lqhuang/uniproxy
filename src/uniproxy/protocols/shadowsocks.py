@@ -1,9 +1,16 @@
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Any, Literal
 
+from enum import StrEnum
+from ipaddress import IPv4Address, IPv6Address
+
 from attrs import frozen
+
+from uniproxy.constants import Network
+from uniproxy.sing_box.outbounds import ShadowsocksOutbound
+
+# from uniproxy.sing_box.inbounds import ShadowsocksInbound
 from uniproxy.typing import ProtocolType
 
 from .base import BaseProtocol
@@ -30,18 +37,23 @@ LiteralShadowsocksCipher = Literal[
 ]
 
 
+class NetworkMode(StrEnum):
+    TCP = "tcp"
+    UDP = "udp"
+    TCP_AND_UDP = "tcp_and_udp"
+
+
 class SSPlugin:
-    command: str
-    opts: dict[str, Any]
+    command: Literal["obfs-local", "v2ray-plugin"]
+    opts: str
 
 
 @frozen
 class ShadowsocksProtocol(BaseProtocol):
-    method: ShadowsocksCipher | LiteralShadowsocksCipher
     password: str
-    udp: bool = True
+    method: ShadowsocksCipher
+    mode: NetworkMode = NetworkMode.TCP_AND_UDP
     plugin: SSPlugin | None = None
-
     type: Literal[ProtocolType.SHADOWSOCKS] = ProtocolType.SHADOWSOCKS
 
     # surge_extra: None = None
@@ -64,11 +76,11 @@ class ShadowsocksProtocol(BaseProtocol):
         return {
             "name": self.name,
             "type": "ss",
-            "server": self.host,
+            "server": self.server,
             "port": self.port,
             "cipher": self.method,
             "password": self.password,
-            "udp": self.udp,
+            "udp": True if self.mode != Network.TCP else False,
         }
 
     def as_surge(self) -> dict:
@@ -81,15 +93,29 @@ class ShadowsocksProtocol(BaseProtocol):
         """
         return {
             self.name: (
-                f"ss, {self.host}, {self.port}, "
+                f"ss, {self.server}, {self.port}, "
                 f"encrypt-method={self.method}, password={self.password}, "
-                f"udp-relay={str(self.udp).lower()}, ecn=true"
+                f"udp-relay={'true' if self.mode != Network.TCP else 'false'}, ecn=true"
             )
         }
 
 
-class SSServer:
-    method: ShadowsocksCipher | LiteralShadowsocksCipher
-    password: str
-    udp: bool = True
-    plugin: SSPlugin | None = None
+@frozen
+class ShadowsocksServer(ShadowsocksProtocol): ...
+
+
+@frozen
+class ShadowsocksLocal(ShadowsocksProtocol):
+    def _as_sing_box(self, **kwargs) -> ShadowsocksOutbound:
+
+        return ShadowsocksOutbound(
+            tag=self.name,
+            server=self.server,
+            server_port=self.port,
+            method=self.method,
+            password=self.password,
+            network=None if self.mode else Network.TCP,
+            plugin=self.plugin.command if self.plugin else None,
+            plugin_opts=self.plugin.opts if self.plugin else None,
+            **kwargs,
+        )
