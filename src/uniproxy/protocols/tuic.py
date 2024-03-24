@@ -3,19 +3,18 @@ from __future__ import annotations
 from typing import Literal
 
 from attrs import frozen
-from uniproxy.typing import ProtocolType
 
 from .base import BaseProtocol
+from .std import TLS
 
 
 @frozen
 class TuicProtocol(BaseProtocol):
-    password: str
-    uuid: str
+    token: str
     version: int
-    sni: str | None
-    skip_cert_verify: bool
-    alpn: list[str]
-    udp: bool
-
-    type: Literal[ProtocolType.TUIC] = ProtocolType.TUIC
+    tls: TLS
+    disable_sni: bool = False
+    udp_mode: Literal["naive", "quic"] = "quic"
+    congestion_control: Literal["cubic", "new_reno", "bbr"] = "bbr"
+    reduce_rtt: bool = False
+    type: Literal["tuic"] = "tuic"

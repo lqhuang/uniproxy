@@ -7,13 +7,11 @@ from ipaddress import IPv4Address, IPv6Address
 from attrs import frozen
 
 from uniproxy.protocols.shadowsocks import ShadowsocksCipher, ShadowsocksProtocol
-from uniproxy.protocols.vmess import VmessCipher, VmessProtocol, VmessTransport
-from uniproxy.sing_box.constants import Network
+from uniproxy.protocols.vmess import VmessCipher, VmessProtocol
 
 from .base import BaseOutbound
-from .multiplex import OutboundMultiplex
-from .tls import TLS
-from .transport import BaseTransport
+from .shared import BaseTransport, OutboundMultiplex, OutboundTLS
+from .typing import SingBoxNetwork
 
 
 @frozen
@@ -74,35 +72,25 @@ class ShadowsocksOutbound(BaseOutbound):
 
     # The server address.
     server: IPv4Address | IPv6Address | str
-
     # The server port.
     server_port: int
-
     # Encryption methods.
     method: ShadowsocksCipher
-
     # The shadowsocks password.
     password: str
-
     # Shadowsocks SIP003 plugin, implemented in internal.
-    plugin: Literal["obfs-local", "v2ray-plugin"] | None = None
-
+    plugin: Literal["obfs-local", "v2ray-plugin"] | str | None = None
     # Shadowsocks SIP003 plugin options.
     plugin_opts: str | None = None
-
     # Enabled network. One of `tcp`, `udp`.
     # Both is enabled by default.
-    network: Network | None = None
-
+    network: SingBoxNetwork | None = None
     # UDP over TCP configuration. Conflict with `multiplex`.
     udp_over_tcp: bool | dict | None = False
-
     # See Multiplex for details.
     multiplex: OutboundMultiplex | None = None
-
     # # See Dial Fields for details.
     # dial: DialFields | None = None
-
     type: Literal["shadowsocks"] = "shadowsocks"
 
     @classmethod
@@ -113,7 +101,7 @@ class ShadowsocksOutbound(BaseOutbound):
             server_port=ss.port,
             method=ss.method,
             password=ss.password,
-            network=None if ss.mode else Network.TCP,
+            network=None if ss.network == "tcp_and_udp" else ss.network,
             plugin=ss.plugin.command if ss.plugin else None,
             plugin_opts=ss.plugin.opts if ss.plugin else None,
             **kwargs,
@@ -131,8 +119,8 @@ class VmessOutbound(BaseOutbound):
     alter_id: int | None = None
     global_padding: bool | None = None
     authenticated_length: bool | None = True
-    network: Network | None = None
-    tls: TLS | None = None
+    network: SingBoxNetwork | None = None
+    tls: OutboundTLS | None = None
     packet_encoding: Literal["packetaddr", "xudp"] | None = None
     transport: BaseTransport | None = None
     multiplex: OutboundMultiplex | None = None
@@ -140,16 +128,26 @@ class VmessOutbound(BaseOutbound):
 
     @classmethod
     def from_uniproxy(cls, vmess: VmessProtocol, **kwargs) -> VmessOutbound:
+
+        transport_mapping = {
+            # "ws": "ws",
+            # "h2": "h2",
+            # "quic": "quic",
+            "httpupgrade": NotImplementedError("httpupgrade"),
+        }
+        if vmess.transport is not None:
+            # transport = transport_mapping[vmess.transport]
+            raise NotImplementedError("unsupported transport type for now")
+
         return cls(
             tag=vmess.name,
             server=vmess.server,
             server_port=vmess.port,
             uuid=vmess.uuid,
-            security=vmess.method,
+            security=vmess.security,
             alter_id=vmess.alter_id,
-            network=None if vmess.udp else Network.TCP,
-            tls=vmess.tls,
-            transport=vmess.transport,
+            network=None if vmess.network == "tcp_and_udp" else vmess.network,
+            tls=None if vmess.tls is None else OutboundTLS.from_uniproxy(vmess.tls),
             **kwargs,
         )
 

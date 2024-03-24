@@ -3,11 +3,10 @@ from __future__ import annotations
 from attrs import frozen
 
 from uniproxy.common import User
-from uniproxy.sing_box.constants import Network
+from uniproxy.sing_box.typing import SingBoxNetwork
 
 from .base import BaseInbound
-from .listen import MixinListenFields
-from .tls import TLS
+from .shared import InboundTLS, MixinListenFields
 
 
 @frozen
@@ -15,7 +14,7 @@ class DirectInbound(BaseInbound, MixinListenFields):
     # Listen network, one of `tcp`, `udp`.
     #
     # Both if empty.
-    network: Network | None = None
+    network: SingBoxNetwork | None = None
 
     # Override the connection destination address.
     override_address: str | None = None
@@ -27,7 +26,7 @@ class DirectInbound(BaseInbound, MixinListenFields):
 @frozen
 class HTTPInbound(BaseInbound, MixinListenFields):
     users: list[User] | None = None
-    tls: TLS | None = None
+    tls: InboundTLS | None = None
     set_system_proxy: bool | None = None
 
 

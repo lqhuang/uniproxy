@@ -6,12 +6,15 @@ from enum import StrEnum
 
 from attrs import frozen
 
-from uniproxy.typing import ProtocolType
+from uniproxy.typing import Network, ProtocolType
 
 from .base import BaseProtocol
+from .std import TLS
+
+VmessCipher = Literal["none", "auto", "zero", "aes-128-gcm", "chacha20-poly1305"]
 
 
-class VmessCipher(StrEnum):
+class VmessCipherEnum(StrEnum):
     NONE = "none"
     AUTO = "auto"
     ZERO = "zero"
@@ -19,7 +22,10 @@ class VmessCipher(StrEnum):
     CHACHA20_POLY1305 = "chacha20-pol1305"
 
 
-class VmessTransport(StrEnum):
+VmessTransport = Literal["http", "ws", "grpc", "h2"]
+
+
+class VmessTransportEnum(StrEnum):
     HTTP = "http"
     WS = "ws"
     GRPC = "grpc"
@@ -27,9 +33,15 @@ class VmessTransport(StrEnum):
 
 
 @frozen
-class VmessWSOpt:
+class BaseVmessTransport:
+    type: VmessTransport
+
+
+@frozen
+class VmessWSTransport:
     path: str | None
     headers: dict[str, str] | None = None
+    type = "ws"
 
     def as_clash(self) -> dict:
         """
@@ -53,15 +65,11 @@ class VmessWSOpt:
 class VmessProtocol(BaseProtocol):
     uuid: str
     alter_id: int = 0
-    method: VmessCipher = VmessCipher.AUTO
-    udp: bool = False
-    tls: bool | None = None
-    skip_cert_verify: bool = False
-    sni: str | Literal[False] | None = None
-    transport: VmessTransport | None = None
-    ws: VmessWSOpt | None = None
-
-    type: Literal[ProtocolType.VMESS] = ProtocolType.VMESS
+    security: VmessCipher = "auto"
+    network: Network = "tcp"
+    tls: TLS | None = None
+    transport: BaseVmessTransport | None = None
+    type: Literal["vmess"] = "vmess"
 
     def as_clash(self) -> dict:
         """
@@ -85,10 +93,10 @@ class VmessProtocol(BaseProtocol):
         """
         tls_opt = (
             {
-                "tls": self.tls,
-                "skip-cert-verify": self.skip_cert_verify,
+                "tls": True,
+                "skip-cert-verify": not self.tls.verify,
             }
-            if self.tls
+            if self.tls is not None
             else {}
         )
         servername_opt = {"servername": self.sni} if self.sni else {}
@@ -107,7 +115,7 @@ class VmessProtocol(BaseProtocol):
             "port": self.port,
             "uuid": self.uuid,
             "alterId": self.alter_id,
-            "cipher": self.method,
+            "cipher": self.security,
             "udp": self.udp,
             **servername_opt,
             **tls_opt,

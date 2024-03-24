@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Literal
 
 from attrs import frozen
-from uniproxy.typing import ProtocolType
 
 
+@frozen
 class WGPeer:
     endpoint: str
     public_key: str
@@ -25,5 +25,4 @@ class WireGuard:
     dns: list
     mtu: int
     reserved_bits: list[int] | None
-
-    type: Literal[ProtocolType.WIREGUARD] = ProtocolType.WIREGUARD
+    type: Literal["wireguard"] = "wireguard"

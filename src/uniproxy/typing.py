@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from enum import StrEnum
 
 
-class ProtocolType(StrEnum):
+class ProtocolTypeEnum(StrEnum):
     HTTP = "http"
     HTTPS = "https"
     HTTP2 = "http2"
@@ -22,7 +24,28 @@ class ProtocolType(StrEnum):
     WIREGUARD = "wireguard"
 
 
-class Network(StrEnum):
+ProtocolType = Literal[
+    "http",
+    "https",
+    "http2",
+    "quic",
+    "socks4",
+    "socks5",
+    "socks5-tls",
+    "shadowsocks",
+    "vmess",
+    "trojan",
+    "snell",
+    "naive",
+    "tuic",
+    "wireguard",
+]
+
+
+class NetworkEnum(StrEnum):
     TCP = "tcp"
     UDP = "udp"
     TCP_AND_UDP = "tcp_and_udp"
+
+
+Network = Literal["tcp", "udp", "tcp_and_udp"]

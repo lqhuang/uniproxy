@@ -4,26 +4,41 @@ from typing import Literal
 
 from enum import StrEnum
 
+from attrs import frozen
+
 from .base import BaseInbound, BaseOutbound
-from .sniff import SniffProtocol
+from .shared import SniffProtocol
+
+DnsReturnCode = Literal[
+    "rcode://success",
+    "rcode://format_error",
+    "rcode://server_failure",
+    "rcode://name_error",
+    "rcode://not_implemented",
+    "rcode://refused",
+]
 
 
-class DnsReturnCode(StrEnum):
-    SUCCESS = "success"
-    FORMAT_ERROR = "format_error"
-    SERVER_FAILURE = "server_failure"
-    NAME_ERROR = "name_error"
-    NOT_IMPLEMENTED = "not_implemented"
-    REFUSED = "refused"
+class DnsReturnCodeEnum(StrEnum):
+    SUCCESS = "rcode://success"
+    FORMAT_ERROR = "rcode://format_error"
+    SERVER_FAILURE = "rcode://server_failure"
+    NAME_ERROR = "rcode://name_error"
+    NOT_IMPLEMENTED = "rcode://not_implemented"
+    REFUSED = "rcode://refused"
 
 
-class DnsStrategy(StrEnum):
+DnsStrategy = Literal["prefer_ipv4", "prefer_ipv6", "ipv4_only", "ipv6_only", "", None]
+
+
+class DnsStrategyEnum(StrEnum):
     PREFER_IPV4 = "prefer_ipv4"
     PREFER_IPV6 = "prefer_ipv6"
     IPV4_ONLY = "ipv4_only"
     IPV6_ONLY = "ipv6_only"
 
 
+@frozen
 class DNS:
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/
@@ -38,7 +53,7 @@ class DNS:
     # Default domain strategy for resolving the domain names.
     # One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
     # Take no effect if `server.strategy` is set.
-    strategy: DnsStrategy | None = None
+    strategy: DnsStrategy = None
 
     # Disable dns cache.
     disable_cache: bool | None = None
@@ -70,6 +85,7 @@ class DNS:
     client_subnet: str | None = None
 
 
+@frozen
 class DnsServer:
     tag: str
     address: str | DnsReturnCode | Literal["local", "dhcp://auto", "fakeip"]
@@ -100,6 +116,7 @@ class DnsServer:
         return str(self.tag)
 
 
+@frozen
 class DnsRule:
     server: str
     outbound: list[BaseOutbound] | list[str] | Literal["any"] | None = None
@@ -118,13 +135,14 @@ class DnsRule:
     source_ip_is_private: bool | None = None
     source_port: int | None = None
     source_port_range: list[str] | None = None
-    port: list[int] | None
+    port: list[int] | None = None
     port_range: list[str] | None = None
     rule_set: list[str] | None = None
     rule_set_ipcidr_match_source: bool | None = None
     invert: bool | None = None
 
 
+@frozen
 class FakeIP:
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/fakeip/

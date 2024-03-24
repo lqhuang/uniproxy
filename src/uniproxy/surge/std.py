@@ -2,49 +2,31 @@ from __future__ import annotations
 
 from typing import Literal
 
-from os import PathLike
-
 from attrs import frozen
 
-from uniproxy.typing import Network, ProtocolType
+from uniproxy.typing import ProtocolType
 
 from .base import BaseProtocol
-
-
-@frozen
-class TLS:
-    server_name: str | None = None
-    enable_sni: bool | None = None
-    alpn: list[str] | None = None
-    verify: bool = True
-    cert_ca: str | PathLike | None = None
-    cert_private_key: str | PathLike | None = None
-    cert_private_password: str | None = None
 
 
 @frozen
 class HttpProtocol(BaseProtocol):
     username: str
     password: str
-    tls: TLS | None = None
-    type: Literal["http", "https"] = "http"
-
-
-@frozen
-class QuicProtocol(BaseProtocol):
-    username: str
-    password: str
+    tls: bool
     skip_cert_verify: bool
 
-    type: Literal["quic"] = "quic"
+    type: Literal["http", "https"] = "http"
 
 
 @frozen
 class Socks5Protocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
-    tls: TLS | None = None
-    network: Network = "tcp_and_udp"
+    tls: bool | None = None
+    skip_cert_verify: bool = False
+    udp: bool = True
+
     type: Literal["socks5", "socks5-tls"] = "socks5"
 
     def as_clash(self) -> dict:
@@ -72,7 +54,7 @@ class Socks5Protocol(BaseProtocol):
             else {}
         )
         tls_opts = (
-            {"tls": self.tls, "skip-cert-verify": not self.tls.verify}
+            {"tls": self.tls, "skip-cert-verify": self.skip_cert_verify}
             if self.tls
             else {}
         )

@@ -17,8 +17,5 @@ class BaseProtocol:
     @classmethod
     def from_toml(cls) -> BaseProtocol: ...
 
-    def as_clash(self) -> dict:
-        raise NotImplementedError
-
-    def as_surge(self) -> dict:
-        raise NotImplementedError
+    @classmethod
+    def from_yaml(cls) -> BaseProtocol: ...

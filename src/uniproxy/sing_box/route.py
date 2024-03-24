@@ -3,7 +3,7 @@ from typing import Literal
 from enum import StrEnum
 
 from .base import BaseInbound, BaseOutbound
-from .sniff import SniffProtocol
+from .shared import SniffProtocol
 
 
 class RuleSetType(StrEnum):
