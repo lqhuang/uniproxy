@@ -6,7 +6,7 @@ from abc import ABC
 
 
 class AbstractSurge(ABC):
-    __backend__ = "surge"
+    __uniproxy_impl__ = "surge"
 
 
 ProtocolType = Literal[

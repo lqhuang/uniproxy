@@ -14,7 +14,7 @@ class User:
 
 
 class AbstractSingBox(ABC):
-    __backend__ = "sing-box"
+    __uniproxy_impl__ = "sing-box"
 
 
 class BaseOutbound(AbstractSingBox):

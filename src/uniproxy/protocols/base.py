@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from abc import ABC
 from ipaddress import IPv4Address, IPv6Address
 
 from attrs import frozen
 
 from uniproxy.typing import ProtocolType
+
+
+class AbstractUniproxy(ABC):
+    __uniproxy_impl__ = "uniproxy"
 
 
 @frozen

@@ -9,10 +9,12 @@ ProxyGroups: TypeAlias = list[ProxyGroup]
 RuleProviders: TypeAlias = list[RuleProvider]
 Rules: TypeAlias = list[Rule]
 
+LogLevelType = Literal["silent", "info", "warning", "error", "debug"]
+
 
 class ClashConfig(AbstractClash):
     mode: Literal["Rule", "Global", "Direct"]
-    log_level: Literal["silent", "info", "warning", "error", "debug"]
+    log_level: LogLevelType
     ipv6: bool
 
     port: int
@@ -24,9 +26,9 @@ class ClashConfig(AbstractClash):
     bind_address: str
     external_controller: str
 
-    dns: Dns
-    tun: Tun
-    hosts: Hosts
+    # dns: Dns
+    # tun: Tun
+    # hosts: Hosts
     proxies: Proxies
     proxy_providers: ProxyProviders
     proxy_groups: ProxyGroups

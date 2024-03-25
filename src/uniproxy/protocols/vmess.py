@@ -6,10 +6,19 @@ from enum import StrEnum
 
 from attrs import frozen
 
-from uniproxy.typing import Network, ProtocolType
+from uniproxy.typing import Network
 
 from .base import BaseProtocol
 from .std import TLS
+
+__all__ = (
+    "VmessCipher",
+    "VmessCipherEnum",
+    "VmessTransport",
+    "VmessTransportEnum",
+    "VmessProtocol",
+    "VmessWSTransport",
+)
 
 VmessCipher = Literal["none", "auto", "zero", "aes-128-gcm", "chacha20-poly1305"]
 
