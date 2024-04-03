@@ -6,7 +6,7 @@ from abc import ABC
 
 from attrs import frozen
 
-from uniproxy.protocols.base import BaseProtocol
+from uniproxy.base import BaseProtocol
 
 RuleType = Literal[
     # Domain-based Rule

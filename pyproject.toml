@@ -3,7 +3,7 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project]
-name = "uni-proxy"
+name = "uniproxy"
 version = "0.1.0"
 description = ""
 readme = "README.md"

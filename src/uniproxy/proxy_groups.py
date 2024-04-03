@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Iterable, Literal
 
+from enum import StrEnum
+
 from attrs import frozen
+
 from uniproxy.protocols.base import BaseProtocol
 
 
@@ -17,8 +19,7 @@ class BaseProxyGroup:
     lazy: bool = True  # clash only
 
     @classmethod
-    def from_toml(cls) -> BaseProxyGroup:
-        ...
+    def from_toml(cls) -> BaseProxyGroup: ...
 
     def as_clash(self) -> dict:
         raise NotImplementedError
