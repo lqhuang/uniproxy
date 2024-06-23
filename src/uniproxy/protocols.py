@@ -214,7 +214,7 @@ class BaseVmessTransport:
 
 
 @frozen
-class VmessWSTransport:
+class VmessWsTransport:
     path: str | None
     headers: dict[str, str] | None = None
     type = "ws"

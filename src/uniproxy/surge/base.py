@@ -23,7 +23,7 @@ ProtocolType = Literal[
 ]
 
 
-class BaseProtocol(AbstractSurge):
+class BaseSurgeProtocol(AbstractSurge):
     name: str
     type: ProtocolType
 

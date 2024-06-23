@@ -64,7 +64,7 @@ RuleType = Literal[
 
 
 @frozen
-class BaseRule(ABC):
+class BaseRule(AbstractClash):
     matcher: str
     policy: str | BaseProtocol
     type: RuleType

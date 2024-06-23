@@ -1,6 +1,6 @@
 from typing import Iterable, Literal, TypeAlias
 
-from .abc import AbstractClash
+from .base import AbstractClash
 
 Hosts: TypeAlias = dict[str, str]
 Proxies: TypeAlias = Iterable[Proxy]
