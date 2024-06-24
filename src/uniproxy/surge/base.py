@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal, Iterable
-
-from abc import ABC
+from typing import Literal, Sequence
 
 
-class AbstractSurge(ABC):
-    __uniproxy_impl__ = "surge"
+from attrs import frozen
 
 
 SurgeProtocolType = Literal[
@@ -23,6 +20,11 @@ SurgeProtocolType = Literal[
 ]
 
 
+class AbstractSurge:
+    __uniproxy_impl__ = "surge"
+
+
+@frozen
 class BaseProtocol(AbstractSurge):
     name: str
     type: SurgeProtocolType
@@ -30,19 +32,27 @@ class BaseProtocol(AbstractSurge):
     def __str__(self) -> str:
         return str(self.name)
 
+    def asdict(self) -> dict[str, str]:
+        raise NotImplementedError
+
+    @classmethod
+    def from_uniproxy(cls, uniproxy, **kwargs) -> BaseProtocol:
+        raise NotImplementedError
+
 
 SurgeGroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet", "smart"
 ]
 
 
+@frozen
 class BaseProxyGroup(AbstractSurge):
     name: str
-    proxies: Iterable[BaseProtocol | BaseProxyGroup]
+    proxies: Sequence[BaseProtocol | BaseProxyGroup]
     type: SurgeGroupType
     # url: str = "http://www.gstatic.com/generate_204"
 
-    def as_dict(self) -> dict[str, str]:
+    def asdict(self) -> dict[str, str]:
         raise NotImplementedError
 
     @property

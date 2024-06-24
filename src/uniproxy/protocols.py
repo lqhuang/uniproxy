@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Literal
 
 from attrs import frozen
 
@@ -21,6 +21,7 @@ class HttpProtocol(BaseProtocol):
     username: str
     password: str
     tls: TLS | None = None
+
     type: Literal["http", "https"] = "http"
 
 
@@ -39,6 +40,7 @@ class Socks5Protocol(BaseProtocol):
     password: str | None = None
     tls: TLS | None = None
     network: Network = "tcp_and_udp"
+
     type: Literal["socks5", "socks5-tls"] = "socks5"
 
     def as_clash(self) -> dict:
@@ -82,7 +84,10 @@ class Socks5Protocol(BaseProtocol):
         }
 
 
+@frozen
 class ShadowsocksPlugin:
+    """SIP003 plugin for shadowsocks."""
+
     command: Literal["obfs-local", "v2ray-plugin"] | str
     opts: str
 
@@ -93,50 +98,8 @@ class ShadowsocksProtocol(BaseProtocol):
     method: ShadowsocksCipher
     network: Network = "tcp_and_udp"
     plugin: ShadowsocksPlugin | None = None
+
     type: Literal["shadowsocks"] = "shadowsocks"
-
-    # surge_extra: None = None
-    "test-udp=google.com@1.1.1.1"
-
-    def as_clash(self) -> dict[str, Any]:
-        """
-        YAML example:
-
-        ```yaml
-        name: "proxy-name"
-        type: "ss"
-        server: host
-        port: 8842
-        cipher: "aes-256-gcm"
-        password: "x-secret-token"
-        udp: true
-        ```
-        """
-        return {
-            "name": self.name,
-            "type": "ss",
-            "server": self.server,
-            "port": self.port,
-            "cipher": self.method,
-            "password": self.password,
-            "udp": True if self.network != "tcp" else False,
-        }
-
-    def as_surge(self) -> dict:
-        """
-        ini example:
-
-        ```ini
-        Proxy-SS = ss, 1.2.3.4, 8000, encrypt-method=chacha20-ietf-poly1305, password=abcd1234, udp-relay=true
-        ```
-        """
-        return {
-            self.name: (
-                f"ss, {self.server}, {self.port}, "
-                f"encrypt-method={self.method}, password={self.password}, "
-                f"udp-relay={'true' if self.network != 'tcp' else 'false'}, ecn=true"
-            )
-        }
 
 
 @frozen
@@ -180,7 +143,8 @@ class BaseVmessTransport:
 class VmessWsTransport:
     path: str | None
     headers: dict[str, str] | None = None
-    type = "ws"
+
+    type: Literal["ws"] = "ws"
 
     def as_clash(self) -> dict:
         """
@@ -208,6 +172,7 @@ class VmessProtocol(BaseProtocol):
     network: Network = "tcp"
     tls: TLS | None = None
     transport: BaseVmessTransport | None = None
+
     type: Literal["vmess"] = "vmess"
 
     def as_clash(self) -> dict:
@@ -260,64 +225,3 @@ class VmessProtocol(BaseProtocol):
             **tls_opt,
             **ws_opts,
         }
-
-    def as_surge(self) -> dict:
-        """
-        Ini example:
-
-        ```ini
-        ProxyVMess = vmess, 1.2.3.4, 8000, username=0233d11c-15a4-47d3-ade3-48ffca0ce119
-        ```
-        """
-        skip_cert_verify_opt = (
-            "skip-cert-verify=true" if self.skip_cert_verify else None
-        )
-
-        if self.sni is False:
-            sni_opt = "sni=off"
-        elif self.sni:
-            sni_opt = f"sni={self.sni}"
-        else:
-            sni_opt = None
-
-        ws_opts = self.ws.as_surge_inline() if self.ws else None
-
-        encrypt_method = (
-            f"encrypt-method={self.method}" if self.method != "auto" else None
-        )
-
-        valid = tuple(
-            filter(None, (skip_cert_verify_opt, sni_opt, ws_opts, encrypt_method))
-        )
-        extra_opts = (", " + ", ".join(valid)) if valid else ""
-
-        return {
-            self.name: (
-                f"vmess, {self.server}, {self.port}, "
-                f"username={self.uuid}"  # Do not end with comma for this line
-                f"{extra_opts}"
-            )
-        }
-
-
-@frozen
-class WGPeer:
-    endpoint: str
-    public_key: str
-    allowed_ips: str | None
-    keepalive: int | None
-    preshared_key: str | None
-    reserved_bits: list[int] | None
-
-
-@frozen
-class WireGuard:
-    name: str
-    host: str
-    port: int
-    private_key: str
-    peers: list[WGPeer]
-    dns: list
-    mtu: int
-    reserved_bits: list[int] | None
-    type: Literal["wireguard"] = "wireguard"

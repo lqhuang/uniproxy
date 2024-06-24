@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal, Sequence
+
 from attrs import frozen
 
 from .base import BaseProxyGroup, SurgeGroupType
@@ -7,9 +9,9 @@ from .base import BaseProxyGroup, SurgeGroupType
 
 @frozen
 class SelectGroup(BaseProxyGroup):
-    type = "select"
+    type: Literal["select"] = "select"
 
-    def as_dict(self) -> dict[str, str]:
+    def asdict(self):
         proxies = ", ".join((p.name for p in self.proxies))
         return {self.name: f"{self.type}, {proxies}"}
 
@@ -27,9 +29,9 @@ class UrlTestGroup(BaseProxyGroup):
     """
 
     url: str = "https://www.gstatic.com/generate_204"
-    type = "url-test"
+    type: Literal["url-test"] = "url-test"
 
-    def as_dict(self) -> dict[str, str]:
+    def asdict(self):
         proxies = ", ".join((p.name for p in self.proxies))
         opts = f"interval={self.interval}, tolerance={self.tolerance}, timeout={self.timeout}"
         return {self.name: f"{self.type}, {proxies}, {opts}"}
@@ -40,9 +42,9 @@ class FallBackGroup(BaseProxyGroup):
     interval: float = 120  # milliseconds
     timeout: float = 5  # seconds
 
-    type = "fallback"
+    type: Literal["fallback"] = "fallback"
 
-    def as_dict(self) -> dict[str, str]:
+    def asdict(self):
         proxies = ", ".join((p.name for p in self.proxies))
         opts = f"interval={self.interval}, timeout={self.timeout}"
         return {self.name: f"{self.type}, {proxies}, {opts}"}
@@ -52,9 +54,9 @@ class FallBackGroup(BaseProxyGroup):
 class LoadBalanceGroup(BaseProxyGroup):
     persistent: bool = False
 
-    type = "load-balance"
+    type: Literal["load-balance"] = "load-balance"
 
-    def as_dict(self) -> dict[str, str]:
+    def asdict(self):
         proxies = ", ".join((p.name for p in self.proxies))
         opts = f"persistent={self.persistent}"
         return {self.name: f"{self.type}, {proxies}, {opts}"}
@@ -79,13 +81,14 @@ class ExternalGroup(BaseProxyGroup):
         external-policy-modifier="test-url=http://apple.com/,tfo=true"
     """
 
-    type = "external"
+    proxies: Sequence = ()
+    type: Literal["external"] = "external"
 
     def __post_init__(self) -> None:
         if self.using_type == "external":
             raise ValueError("The using_type cannot be 'external'.")
 
-    def as_dict(self) -> dict[str, str]:
+    def asdict(self):
         external_policy_modifier = (
             '"%s"' % self.external_policy_modifier.strip("'").strip('"')
             if self.external_policy_modifier is not None

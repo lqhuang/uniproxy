@@ -6,8 +6,8 @@ from ipaddress import IPv4Address, IPv6Address
 
 from attrs import frozen
 
-from uniproxy.protocols.shadowsocks import ShadowsocksCipher, ShadowsocksProtocol
-from uniproxy.protocols.vmess import VmessCipher, VmessProtocol
+from uniproxy.protocols import VmessProtocol, ShadowsocksProtocol
+from uniproxy.typing import VmessCipher, ShadowsocksCipher
 
 from .base import BaseOutbound
 from .shared import BaseTransport, OutboundMultiplex, OutboundTLS

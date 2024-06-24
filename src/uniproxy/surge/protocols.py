@@ -5,6 +5,10 @@ from typing import Literal, TypeAlias
 from attrs import frozen
 
 from uniproxy.typing import ShadowsocksCipher
+from uniproxy.protocols import (
+    ShadowsocksProtocol as UniproxyShadowsocksProtocol,
+    VmessProtocol as UniproxyVmessProtocol,
+)
 
 from .base import AbstractSurge, BaseProtocol
 
@@ -12,6 +16,7 @@ from .base import AbstractSurge, BaseProtocol
 ProtocolOptions: TypeAlias = dict[str, str | None]
 
 
+@frozen
 class SurgeTLS(AbstractSurge):
     skip_cert_verify: bool = False
     """
@@ -67,7 +72,7 @@ class Socks5Protocol(BaseProtocol):
 
     type: Literal["socks5", "socks5-tls"] = "socks5"
 
-    def as_dict(self) -> dict:
+    def asdict(self):
         """
         Config (ini) example:
 
@@ -93,21 +98,22 @@ class Socks5Protocol(BaseProtocol):
         }
 
 
+@frozen
 class ShadowsocksProtocol(BaseProtocol):
     server: str
     port: int
     password: str
     encrypt_method: ShadowsocksCipher
 
-    udp_relay: bool = True
+    udp_relay: bool = False
 
     obfs: Literal["http", "tls"] | None = None
     obfs_host: str | None = None
     obfs_uri: str | None = None
 
-    type = "ss"
+    type: Literal["ss"] = "ss"
 
-    def as_dict(self) -> dict:
+    def asdict(self):
         """
         Config (ini) example:
 
@@ -126,8 +132,9 @@ class ShadowsocksProtocol(BaseProtocol):
         ss_conf = {
             "encrypt-method": self.encrypt_method,
             "password": self.password,
+            "udp-relay": str(self.udp_relay).lower(),
         }
-        ss_opts = ",".join(f"{k}={v}" for k, v in ss_conf.items())
+        ss_opts = ", ".join(f"{k}={v}" for k, v in ss_conf.items())
 
         return {
             self.name: (
@@ -136,6 +143,23 @@ class ShadowsocksProtocol(BaseProtocol):
                 + (", " + obfs_opts if obfs_opts else "")
             )
         }
+
+    @classmethod
+    def from_uniproxy(
+        cls, protocol: UniproxyShadowsocksProtocol, **kwargs
+    ) -> ShadowsocksProtocol:
+        if not isinstance(protocol, UniproxyShadowsocksProtocol):
+            raise TypeError("Invalid protocol type")
+
+        return cls(
+            name=protocol.name,
+            server=protocol.server,  # pyright: ignore[reportCallIssue]
+            port=protocol.port,  # pyright: ignore[reportCallIssue]
+            password=protocol.password,  # pyright: ignore[reportCallIssue]
+            encrypt_method=protocol.method,  # pyright: ignore[reportCallIssue]
+            udp_relay=protocol.network != "tcp",  # pyright: ignore[reportCallIssue]
+            **kwargs,
+        )
 
 
 @frozen
@@ -180,7 +204,7 @@ class VmessProtocol(BaseProtocol):
 
     type: Literal["vmess"] = "vmess"
 
-    def as_dict(self) -> ProtocolOptions:
+    def asdict(self):
         """
         Ini example:
 
@@ -201,3 +225,37 @@ class VmessProtocol(BaseProtocol):
                 f"{extra_opts}"
             )
         }
+
+    @classmethod
+    def from_uniproxy(cls, protocol: UniproxyVmessProtocol, **kwargs) -> VmessProtocol:
+        if not isinstance(protocol, UniproxyVmessProtocol):
+            raise TypeError("Invalid protocol type")
+
+        if protocol.transport is not None and protocol.transport.type != "ws":
+            raise ValueError("Only ws transport is supported for surge for now")
+
+        return cls(
+            name=protocol.name,
+            server=protocol.server,  # pyright: ignore[reportCallIssue]
+            port=protocol.port,  # pyright: ignore[reportCallIssue]
+            username=protocol.uuid,  # pyright: ignore[reportCallIssue]
+            tls=(
+                None
+                if protocol.tls is None
+                else SurgeTLS(
+                    skip_cert_verify=protocol.tls.skip_cert_verify,
+                    sni=protocol.tls.sni,
+                    server_cert_fingerprint_sha256=protocol.tls.server_cert_fingerprint_sha256,
+                )
+            ),
+            transport=(
+                None
+                if protocol.transport is None
+                else SurgeVmessTransport(
+                    path=protocol.transport.path,
+                    headers=protocol.transport.headers,
+                    encrypt_method=protocol.security,
+                )
+            ),
+            **kwargs,
+        )
