@@ -1,56 +1,13 @@
 from __future__ import annotations
 
-from typing import Iterable, Literal
-
-from enum import StrEnum
-
 from attrs import frozen
 
-from .base import AbstractSurge, BaseProtocol
-
-
-@frozen
-class BaseProxyGroup(AbstractSurge):
-    name: str
-    proxies: Iterable[BaseProtocol | BaseProxyGroup]
-    type: GroupType
-    url: str = "http://www.gstatic.com/generate_204"
-    udp: bool = True
-    lazy: bool = True  # clash only
-
-    @classmethod
-    def from_toml(cls) -> BaseProxyGroup: ...
-
-    def as_clash(self) -> dict:
-        raise NotImplementedError
-
-    def as_dict(self) -> dict[str, str]:
-        raise NotImplementedError
-
-    @property
-    def disable_udp(self) -> bool:
-        """(Clash) Disable UDP for this group."""
-        return not self.udp
-
-    @property
-    def include_other_group(self) -> tuple[BaseProxyGroup, ...]:
-        """(Surge) Include other groups in this group."""
-        return tuple(
-            group for group in self.proxies if isinstance(group, BaseProxyGroup)
-        )
-
-
-class GroupType(StrEnum):
-    SELECT = "select"
-    URL_TEST = "url-test"
-    FALLBACK = "fallback"
-    LOAD_BALANCE = "load-balance"
-    EXTERNAL = "external"
+from .base import BaseProxyGroup, SurgeGroupType
 
 
 @frozen
 class SelectGroup(BaseProxyGroup):
-    type: Literal[GroupType.SELECT] = GroupType.SELECT
+    type = "select"
 
     def as_dict(self) -> dict[str, str]:
         proxies = ", ".join((p.name for p in self.proxies))
@@ -58,41 +15,44 @@ class SelectGroup(BaseProxyGroup):
 
 
 @frozen
-class AutoGroup(BaseProxyGroup):
-    type: Literal[GroupType.URL_TEST] = GroupType.URL_TEST
-    filter: str | None = None
+class UrlTestGroup(BaseProxyGroup):
     interval: float = 60  # seconds
     tolerance: float = 300  # milliseconds
     timeout: float = 5  # seconds
+    evaluate_before_use: bool = False
+    """
+    By default, when the Automatic Testing policy group is used for the first time, in order not to affect the request, it will first access using the first policy in the policy group while triggering a test of the policy group.
+
+    If this option is enabled, then when using the Automatic Testing policy group for the first time, it will trigger a test of the policy group and wait until testing is finished before making requests with selected results.
+    """
+
+    url: str = "https://www.gstatic.com/generate_204"
+    type = "url-test"
 
     def as_dict(self) -> dict[str, str]:
         proxies = ", ".join((p.name for p in self.proxies))
         opts = f"interval={self.interval}, tolerance={self.tolerance}, timeout={self.timeout}"
-        return {self.name: f"{self.type}, {proxies}, url={self.url}, {opts}"}
+        return {self.name: f"{self.type}, {proxies}, {opts}"}
 
 
 @frozen
 class FallBackGroup(BaseProxyGroup):
-    type: Literal[GroupType.FALLBACK] = GroupType.FALLBACK
-    filter: str | None = None
     interval: float = 120  # milliseconds
     timeout: float = 5  # seconds
+
+    type = "fallback"
 
     def as_dict(self) -> dict[str, str]:
         proxies = ", ".join((p.name for p in self.proxies))
         opts = f"interval={self.interval}, timeout={self.timeout}"
-        return {self.name: f"{self.type}, {proxies}, url={self.url}, {opts}"}
+        return {self.name: f"{self.type}, {proxies}, {opts}"}
 
 
 @frozen
 class LoadBalanceGroup(BaseProxyGroup):
-    type: Literal[GroupType.LOAD_BALANCE] = GroupType.LOAD_BALANCE
-    strategy: Literal["consistent-hashing", "round-robin"] | None = None
+    persistent: bool = False
 
-    @property
-    def persistent(self) -> bool:
-        """(Surge) Enable persistent connection."""
-        return self.strategy == "consistent-hashing" if self.strategy else False
+    type = "load-balance"
 
     def as_dict(self) -> dict[str, str]:
         proxies = ", ".join((p.name for p in self.proxies))
@@ -102,37 +62,40 @@ class LoadBalanceGroup(BaseProxyGroup):
 
 @frozen
 class ExternalGroup(BaseProxyGroup):
-    # FIXME: Compose Other Group instead of add `using_type` in ExternalGroup
+    using_type: SurgeGroupType
+    policy_path: str
 
-    proxies: Iterable[BaseProtocol | BaseProxyGroup] = ()
-    type: Literal[GroupType.EXTERNAL] = GroupType.EXTERNAL
-    using_type: GroupType = GroupType.SELECT
-    policy_path: str | None = None
-
-    # The update interval in seconds. Only meaningful when the path is a URL.
     update_interval: float | None = 21600  # 6 hours
+    """The update interval in seconds. Only meaningful when the path is a URL."""
 
-    # Only use the policies that the regex matches the policy name.
     policy_regex_filter: str | None = None
+    """Only use the policies that the regex matches the policy name."""
 
-    # You may use this parameter to modify the parameters of external policies.
-    # For example, enabling TFO and changing the testing URL:
-    #
-    #     external-policy-modifier="test-url=http://apple.com/,tfo=true"
     external_policy_modifier: str | None = None
+    """
+    You may use this parameter to modify the parameters of external policies.
+    For example, enabling TFO and changing the testing URL:
+
+        external-policy-modifier="test-url=http://apple.com/,tfo=true"
+    """
+
+    type = "external"
+
+    def __post_init__(self) -> None:
+        if self.using_type == "external":
+            raise ValueError("The using_type cannot be 'external'.")
 
     def as_dict(self) -> dict[str, str]:
-        # opts = f"interval={self.interval}, timeout={self.timeout}"
-        if self.external_policy_modifier is not None:
-            external_policy_modifier = (
-                f", external-policy-modifier={self.external_policy_modifier}"
-            )
-        else:
-            external_policy_modifier = ""
-
-        all_opts = (
-            f"{self.using_type}, policy-path={self.policy_path}, "
-            f"update-interval={self.update_interval}"
-            f"{external_policy_modifier}"
+        external_policy_modifier = (
+            '"%s"' % self.external_policy_modifier.strip("'").strip('"')
+            if self.external_policy_modifier is not None
+            else None
         )
-        return {self.name: all_opts}
+        conf = {
+            "policy-path": self.policy_path,
+            "update-interval": self.update_interval,
+            "policy-regex-filter": self.policy_regex_filter,
+            "external-policy-modifier": external_policy_modifier,
+        }
+        opts = ", ".join(f"{k}={v}" for k, v in conf.items() if v is not None)
+        return {self.name: f"{self.using_type}, {opts}"}

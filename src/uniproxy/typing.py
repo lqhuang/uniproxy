@@ -4,6 +4,23 @@ from typing import Literal
 
 from enum import StrEnum
 
+ProtocolType = Literal[
+    "http",
+    "https",
+    "http2",
+    "quic",
+    "socks4",
+    "socks5",
+    "socks5-tls",
+    "shadowsocks",
+    "vmess",
+    "trojan",
+    "snell",
+    "naive",
+    "tuic",
+    "wireguard",
+]
+
 
 class ProtocolTypeEnum(StrEnum):
     HTTP = "http"
@@ -24,22 +41,7 @@ class ProtocolTypeEnum(StrEnum):
     WIREGUARD = "wireguard"
 
 
-ProtocolType = Literal[
-    "http",
-    "https",
-    "http2",
-    "quic",
-    "socks4",
-    "socks5",
-    "socks5-tls",
-    "shadowsocks",
-    "vmess",
-    "trojan",
-    "snell",
-    "naive",
-    "tuic",
-    "wireguard",
-]
+Network = Literal["tcp", "udp", "tcp_and_udp"]
 
 
 class NetworkEnum(StrEnum):
@@ -48,4 +50,43 @@ class NetworkEnum(StrEnum):
     TCP_AND_UDP = "tcp_and_udp"
 
 
-Network = Literal["tcp", "udp", "tcp_and_udp"]
+ShadowsocksCipher = Literal[
+    "aes-128-gcm",
+    "aes-256-gcm",
+    "chacha20-ietf-poly1305",
+    "2022-blake3-aes-128-gcm",
+    "2022-blake3-aes-256-gcm",
+    "2022-blake3-chacha20-poly1305",
+    "2022-blake3-chacha8-poly1305",
+]
+
+
+class ShadowsocksCipherEnum(StrEnum):
+    AEAD_AES_128_GCM = "aes-128-gcm"
+    ADAD_AES_256_GCM = "aes-256-gcm"
+    AEAD_CHACHA20_IETF_POLY1305 = "chacha20-ietf-poly1305"
+    AEAD_2022_BLAKE3_AES_128_GCM = "2022-blake3-aes-128-gcm"
+    AEAD_2022_BLAKE3_AES_256_GCM = "2022-blake3-aes-256-gcm"
+    AEAD_2022_BLAKE3_CHACHA20_POLY1305 = "2022-blake3-chacha20-poly1305"
+    AEAD_2022_BLAKE3_CHACHA8_POLY1305 = "2022-blake3-chacha8-poly1305"
+
+
+VmessCipher = Literal["none", "auto", "zero", "aes-128-gcm", "chacha20-poly1305"]
+
+
+class VmessCipherEnum(StrEnum):
+    NONE = "none"
+    AUTO = "auto"
+    ZERO = "zero"
+    AES_128_GCM = "aes-128-gcm"
+    CHACHA20_POLY1305 = "chacha20-pol1305"
+
+
+VmessTransport = Literal["http", "ws", "grpc", "h2"]
+
+
+class VmessTransportEnum(StrEnum):
+    HTTP = "http"
+    WS = "ws"
+    GRPC = "grpc"
+    H2 = "h2"
