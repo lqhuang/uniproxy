@@ -2,75 +2,20 @@ from __future__ import annotations
 
 from typing import Literal
 
-from abc import ABC
-from dataclasses import dataclass
-
 from attrs import frozen
 
-from uniproxy.protocols.base import BaseProtocol
-
-RuleProviderBehaviorType = Literal[
-    "domain",
-    "ipcidr",
-    "classical",
-]
-
-RuleProviderFormat = Literal["text", "yaml"]
-
-
-@dataclass(frozen=True)
-class RuleProvider:
-    name: str
-    behavior: RuleProviderBehaviorType
-    format: RuleProviderFormat
-    url: str
-    path: str | None = None
-    interval: int | None = None
-
-
-RuleType = Literal[
-    # Domain-based Rule
-    "domain",
-    "domain-suffix",
-    "domain-keyword",
-    "domain-set",
-    # IP-based Rule
-    "ip-cidr",
-    "ip-cidr6",
-    "geoip",
-    # HTTP Rule
-    "user-agent",
-    "url-regex",
-    # Process Rule
-    "process-name",
-    # Logical Rule
-    "and",
-    "or",
-    "not",
-    # Subnet Rule
-    "subnet",
-    # Miscellaneous Rule
-    "dest-port",
-    "src-port",
-    "in-port",
-    "src-ip",
-    "protocol",
-    "script",
-    "cellular-radio",
-    "device-name",
-    # Ruleset
-    "rule-set",
-]
+from .base import BaseProtocol, BaseRule
+from .typing import RuleProviderBehaviorType, RuleProviderFormat
 
 
 @frozen
-class BaseRule(AbstractClash):
-    matcher: str
-    policy: str | BaseProtocol
-    type: RuleType
-
-    def __str__(self) -> str:
-        return str(self.type)
+class RuleProvider:
+    name: str
+    url: str
+    path: str
+    format: RuleProviderFormat
+    behavior: RuleProviderBehaviorType
+    interval: int | None = None
 
 
 @frozen

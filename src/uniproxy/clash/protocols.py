@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 from typing import Literal
+from uniproxy.typing import (
+    ProtocolType,
+    ShadowsocksCipher,
+    VmessCipher,
+    Network,
+    VmessTransport,
+)
 
 from attrs import frozen
 
-from uniproxy.typing import ProtocolType
-
-from .base import BaseClashProtocol
+from .base import BaseProtocol
 
 
 @frozen
-class HttpProtocol(BaseClashProtocol):
+class HttpProtocol(BaseProtocol):
     username: str
     password: str
     tls: bool
@@ -20,7 +25,7 @@ class HttpProtocol(BaseClashProtocol):
 
 
 @frozen
-class Socks5Protocol(BaseClashProtocol):
+class Socks5Protocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
     tls: bool | None = None
@@ -76,15 +81,14 @@ class ShadowsocksPlugin:
 
 
 @frozen
-class ShadowsocksProtocol(BaseClashProtocol):
+class ShadowsocksProtocol(BaseProtocol):
     cipher: ShadowsocksCipher
     password: str
     udp: bool
     plugin: ShadowsocksPlugin | None = None
     type: Literal["shadowsocks"] = "shadowsocks"
 
-
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self):
         """
         YAML example:
 
@@ -107,27 +111,6 @@ class ShadowsocksProtocol(BaseClashProtocol):
             "password": self.password,
             "udp": True if self.network != "tcp" else False,
         }
-
-
-VmessCipher = Literal["none", "auto", "zero", "aes-128-gcm", "chacha20-poly1305"]
-
-
-class VmessCipherEnum(StrEnum):
-    NONE = "none"
-    AUTO = "auto"
-    ZERO = "zero"
-    AES_128_GCM = "aes-128-gcm"
-    CHACHA20_POLY1305 = "chacha20-pol1305"
-
-
-VmessTransport = Literal["http", "ws", "grpc", "h2"]
-
-
-class VmessTransportEnum(StrEnum):
-    HTTP = "http"
-    WS = "ws"
-    GRPC = "grpc"
-    H2 = "h2"
 
 
 @frozen
@@ -157,12 +140,12 @@ class VmessWsTransport:
 
 
 @frozen
-class VmessProtocol(BaseClashProtocol):
+class VmessProtocol(BaseProtocol):
     uuid: str
     alter_id: int = 0
     security: VmessCipher = "auto"
     network: Network = "tcp"
-    tls: TLS | None = None
+    tls: bool | None = None
     transport: BaseVmessTransport | None = None
     type: Literal["vmess"] = "vmess"
 

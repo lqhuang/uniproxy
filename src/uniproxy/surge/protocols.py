@@ -100,8 +100,6 @@ class Socks5Protocol(BaseProtocol):
 
 @frozen
 class ShadowsocksProtocol(BaseProtocol):
-    server: str
-    port: int
     password: str
     encrypt_method: ShadowsocksCipher
 
@@ -193,9 +191,6 @@ class SurgeVmessTransport(AbstractSurge):
 
 @frozen
 class VmessProtocol(BaseProtocol):
-    server: str
-    port: int
-
     username: str
     """uuid"""
 
@@ -236,9 +231,9 @@ class VmessProtocol(BaseProtocol):
 
         return cls(
             name=protocol.name,
-            server=protocol.server,  # pyright: ignore[reportCallIssue]
-            port=protocol.port,  # pyright: ignore[reportCallIssue]
-            username=protocol.uuid,  # pyright: ignore[reportCallIssue]
+            server=protocol.server,
+            port=protocol.port,
+            username=protocol.uuid,
             tls=(
                 None
                 if protocol.tls is None

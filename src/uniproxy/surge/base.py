@@ -1,23 +1,11 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
-
+from typing import Sequence
 
 from attrs import frozen
 
-
-SurgeProtocolType = Literal[
-    "http",
-    "https",
-    "socks5",
-    "socks5-tls",
-    "snell",
-    "ss",
-    "vmess",
-    "trojan",
-    "tuic",
-    "hysteria2",
-]
+from .typing import SurgeGroupType, SurgeProtocolType
+from uniproxy.typing import ServerAddress
 
 
 class AbstractSurge:
@@ -27,6 +15,8 @@ class AbstractSurge:
 @frozen
 class BaseProtocol(AbstractSurge):
     name: str
+    server: ServerAddress
+    port: int
     type: SurgeProtocolType
 
     def __str__(self) -> str:
@@ -38,11 +28,6 @@ class BaseProtocol(AbstractSurge):
     @classmethod
     def from_uniproxy(cls, uniproxy, **kwargs) -> BaseProtocol:
         raise NotImplementedError
-
-
-SurgeGroupType = Literal[
-    "select", "url-test", "fallback", "load-balance", "external", "subnet", "smart"
-]
 
 
 @frozen

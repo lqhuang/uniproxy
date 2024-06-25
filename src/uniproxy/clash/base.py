@@ -1,7 +1,14 @@
-from abc import ABC, abstractmethod
+from __future__ import annotations
+
+from typing import Sequence, Literal
+from attrs import frozen
+
+from .typing import ProtocolType, GroupType, RuleType
+
+from uniproxy.typing import ServerAddress
 
 
-class AbstractClash(ABC):
+class AbstractClash:
     """
     Abstract Clash class
 
@@ -10,50 +17,65 @@ class AbstractClash(ABC):
 
     __uniproxy_impl__ = "clash"
 
-ProtocolType = Literal[
-    "http",
-    "https",
-    "socks5",
-    "socks5-tls",
-    "ss",
-    "vmess",
-    "trojan",
-    "tuic",
-    "hysteria",
-]
 
-class GroupType(StrEnum):
-    SELECT = "select"
-    URL_TEST = "url-test"
-    FALLBACK = "fallback"
-    LOAD_BALANCE = "load-balance"
-    EXTERNAL = "external"
-
-
-class BaseClashProtocol(AbstractClash):
+@frozen
+class BaseProtocol(AbstractClash):
     name: str
+    server: ServerAddress
+    port: int
     type: ProtocolType
 
     def __str__(self) -> str:
         return str(self.name)
 
+
 @frozen
-class BaseClashProxyGroup(AbstractClash):
+class HealthCheck:
+    enable: bool = True
+    interval: float = 60
+    lazy: bool = True
+    url: str = "https://www.gstatic.com/generate_204"
+
+
+@frozen
+class ProxyProvider(AbstractClash):
     name: str
-    proxies: Iterable[BaseClashProtocol | BaseClashProxyGroup]
+    type: Literal["http", "file"]
+
+    url: str
+    path: str
+
+    behavior: str
+    interval: int
+
+    health_check: HealthCheck | None = HealthCheck()
+
+
+@frozen
+class BaseProxyGroup(AbstractClash):
+    name: str
     type: GroupType
-    url: str = "http://www.gstatic.com/generate_204"
-    udp: bool = True
-    lazy: bool = True  # clash only
+    proxies: Sequence[BaseProtocol | BaseProxyGroup] | None = None
+    use: Sequence[ProxyProvider] | None = None
 
-    @property
-    def disable_udp(self) -> bool:
-        """(Clash) Disable UDP for this group."""
-        return not self.udp
+    disable_udp: bool = False
 
-    @property
-    def include_other_group(self) -> tuple[BaseProxyGroup, ...]:
-        """(Surge) Include other groups in this group."""
-        return tuple(
-            group for group in self.proxies if isinstance(group, BaseProxyGroup)
-        )
+    url: str = "https://www.gstatic.com/generate_204"
+    interval: float = 600  # seconds
+    lazy: bool = True
+
+    # timeout: float = 5  # seconds
+    # filter: str | None = None
+
+    def __str__(self) -> str:
+        return str(self.name)
+
+
+@frozen
+class BaseRule(AbstractClash):
+    matcher: str
+    policy: str | BaseProtocol
+    type: RuleType
+
+    def __str__(self) -> str:
+        return str(self.type)

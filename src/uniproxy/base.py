@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from ipaddress import IPv4Address, IPv6Address
-
 from attrs import frozen
 
-from uniproxy.typing import ProtocolType
+from uniproxy.typing import ProtocolType, ServerAddress
 
 
 class AbstractUniproxy:
@@ -15,7 +13,7 @@ class AbstractUniproxy:
 class BaseProtocol(AbstractUniproxy):
     name: str
     type: ProtocolType
-    server: str | IPv4Address | IPv6Address
+    server: ServerAddress
     port: int
 
     @classmethod
