@@ -1,24 +1,17 @@
 from __future__ import annotations
 
-from typing import Sequence, Literal
-from attrs import frozen
-
-from .typing import ProtocolType, GroupType, RuleType
-
+from typing import Literal, Sequence
 from uniproxy.typing import ServerAddress
 
+from attrs import define
 
-class AbstractClash:
-    """
-    Abstract Clash class
+from uniproxy.abc import AbstractClash
 
-    All Clash classes should inherit from this class.
-    """
-
-    __uniproxy_impl__ = "clash"
+from .providers import ProxyProvider
+from .typing import GroupType, ProtocolType, RuleType
 
 
-@frozen
+@define
 class BaseProtocol(AbstractClash):
     name: str
     server: ServerAddress
@@ -29,29 +22,7 @@ class BaseProtocol(AbstractClash):
         return str(self.name)
 
 
-@frozen
-class HealthCheck:
-    enable: bool = True
-    interval: float = 60
-    lazy: bool = True
-    url: str = "https://www.gstatic.com/generate_204"
-
-
-@frozen
-class ProxyProvider(AbstractClash):
-    name: str
-    type: Literal["http", "file"]
-
-    url: str
-    path: str
-
-    behavior: str
-    interval: int
-
-    health_check: HealthCheck | None = HealthCheck()
-
-
-@frozen
+@define
 class BaseProxyGroup(AbstractClash):
     name: str
     type: GroupType
@@ -71,11 +42,11 @@ class BaseProxyGroup(AbstractClash):
         return str(self.name)
 
 
-@frozen
+@define
 class BaseRule(AbstractClash):
     matcher: str
     policy: str | BaseProtocol
     type: RuleType
 
     def __str__(self) -> str:
-        return str(self.type)
+        return f"{self.type},{self.matcher},{str(self.policy)}"

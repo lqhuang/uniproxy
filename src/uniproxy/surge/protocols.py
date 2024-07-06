@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 from typing import Literal, TypeAlias
+from uniproxy.typing import ShadowsocksCipher
 
 from attrs import frozen
 
-from uniproxy.typing import ShadowsocksCipher
-from uniproxy.protocols import (
-    ShadowsocksProtocol as UniproxyShadowsocksProtocol,
-    VmessProtocol as UniproxyVmessProtocol,
-)
+from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
+from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 
 from .base import AbstractSurge, BaseProtocol
-
 
 ProtocolOptions: TypeAlias = dict[str, str | None]
 
@@ -37,7 +34,7 @@ class SurgeTLS(AbstractSurge):
     Use a pinned server certificate instead of the standard X.509 validation.
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         config: ProtocolOptions = {
             "skip-cert-verify": str(self.skip_cert_verify).lower(),
             "sni": self.sni,
@@ -151,11 +148,11 @@ class ShadowsocksProtocol(BaseProtocol):
 
         return cls(
             name=protocol.name,
-            server=protocol.server,  # pyright: ignore[reportCallIssue]
-            port=protocol.port,  # pyright: ignore[reportCallIssue]
-            password=protocol.password,  # pyright: ignore[reportCallIssue]
-            encrypt_method=protocol.method,  # pyright: ignore[reportCallIssue]
-            udp_relay=protocol.network != "tcp",  # pyright: ignore[reportCallIssue]
+            server=protocol.server,
+            port=protocol.port,
+            password=protocol.password,
+            encrypt_method=protocol.method,
+            udp_relay=protocol.network != "tcp",
             **kwargs,
         )
 
@@ -238,9 +235,9 @@ class VmessProtocol(BaseProtocol):
                 None
                 if protocol.tls is None
                 else SurgeTLS(
-                    skip_cert_verify=protocol.tls.skip_cert_verify,
-                    sni=protocol.tls.sni,
-                    server_cert_fingerprint_sha256=protocol.tls.server_cert_fingerprint_sha256,
+                    skip_cert_verify=True if not protocol.tls.verify else False,
+                    sni=protocol.tls.server_name,
+                    # server_cert_fingerprint_sha256=protocol.tls.cert_ca,
                 )
             ),
             transport=(

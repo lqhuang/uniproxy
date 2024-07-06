@@ -1,11 +1,6 @@
 from __future__ import annotations
 
 from typing import Literal
-
-from attrs import frozen
-
-from uniproxy.base import BaseProtocol
-from uniproxy.shared import TLS
 from uniproxy.typing import (
     Network,
     ProtocolType,
@@ -14,6 +9,11 @@ from uniproxy.typing import (
     VmessCipher,
     VmessTransport,
 )
+
+from attrs import frozen
+
+from uniproxy.base import BaseProtocol
+from uniproxy.shared import TLS
 
 
 @frozen
@@ -29,7 +29,7 @@ class HttpProtocol(BaseProtocol):
 class QuicProtocol(BaseProtocol):
     username: str
     password: str
-    skip_cert_verify: bool
+    tls: TLS
 
     type: Literal["quic"] = "quic"
 
@@ -88,8 +88,34 @@ class Socks5Protocol(BaseProtocol):
 class ShadowsocksPlugin:
     """SIP003 plugin for shadowsocks."""
 
-    command: Literal["obfs-local", "v2ray-plugin"] | str
+    command: str
     opts: str
+
+
+@frozen
+class ShadowsocksObfsLocalPlugin:
+    mode: Literal["tls", "http"]
+    host: str
+    command: Literal["obfs"] | str = "obfs-local"
+
+
+@frozen
+class ShadowsocksObfsServerPlugin:
+    mode: Literal["tls", "http"]
+    host: str
+    command: Literal["obfs"] | str = "obfs-server"
+
+
+@frozen
+class ShadowsocksV2RayPlugin:
+    mode: Literal["websocket", "quic"]
+    host: str
+    path: str
+    tls: bool | None = None
+    skip_cert_verify: bool | None = None
+    headers: dict[str, str] | None = None
+    server: bool = False
+    command: Literal["v2ray-plugin"] | str = "v2ray-plugin"
 
 
 @frozen
@@ -97,7 +123,14 @@ class ShadowsocksProtocol(BaseProtocol):
     password: str
     method: ShadowsocksCipher
     network: Network = "tcp_and_udp"
-    plugin: ShadowsocksPlugin | None = None
+
+    plugin: (
+        ShadowsocksPlugin
+        | ShadowsocksObfsServerPlugin
+        | ShadowsocksObfsLocalPlugin
+        | ShadowsocksV2RayPlugin
+        | None
+    ) = None
 
     type: Literal["shadowsocks"] = "shadowsocks"
 
@@ -143,6 +176,8 @@ class BaseVmessTransport:
 class VmessWsTransport:
     path: str | None
     headers: dict[str, str] | None = None
+    max_early_data: int | None = None
+    early_data_header_name: str | None = None
 
     type: Literal["ws"] = "ws"
 
@@ -165,63 +200,23 @@ class VmessWsTransport:
 
 
 @frozen
+class VmessH2Transport(BaseVmessTransport):
+    """
+    YAML example:
+    """
+
+    path: str | None
+    headers: dict[str, str] | None = None
+    type: Literal["h2"] = "h2"
+
+
+@frozen
 class VmessProtocol(BaseProtocol):
     uuid: str
     alter_id: int = 0
     security: VmessCipher = "auto"
     network: Network = "tcp"
     tls: TLS | None = None
-    transport: BaseVmessTransport | None = None
+    transport: VmessWsTransport | VmessH2Transport | None = None
 
     type: Literal["vmess"] = "vmess"
-
-    def as_clash(self) -> dict:
-        """
-
-        YAML example:
-
-        ```yaml
-        name: vmess-proxy-xxx
-        type: vmess
-        server: host
-        port: 2142
-        uuid: uuid-string
-        alterId: 0
-        cipher: auto
-        tls: true
-        skip-cert-verify: true
-        udp: true
-        servername: some-host-name
-        network: ws
-        ```
-        """
-        tls_opt = (
-            {
-                "tls": True,
-                "skip-cert-verify": not self.tls.verify,
-            }
-            if self.tls is not None
-            else {}
-        )
-        servername_opt = {"servername": self.sni} if self.sni else {}
-        if self.ws is not None and self.transport in ("ws", None):
-            ws_opts = {
-                "network": "ws",
-                "ws-opts": self.ws.as_clash(),
-            }
-        else:
-            ws_opts = {}
-
-        return {
-            "name": self.name,
-            "type": "vmess",
-            "server": self.server,
-            "port": self.port,
-            "uuid": self.uuid,
-            "alterId": self.alter_id,
-            "cipher": self.security,
-            "udp": self.network != "tcp",
-            **servername_opt,
-            **tls_opt,
-            **ws_opts,
-        }

@@ -2,25 +2,24 @@ from __future__ import annotations
 
 from typing import Literal
 
-
-from attrs import frozen
+from attrs import define
 
 from .base import BaseProxyGroup
 
 
-@frozen
+@define
 class SelectGroup(BaseProxyGroup):
     type: Literal["select"] = "select"
 
 
-@frozen
+@define
 class UrlTestGroup(BaseProxyGroup):
     tolerance: float = 300  # milliseconds
 
     type: Literal["url-test"] = "url-test"
 
 
-@frozen
+@define
 class FallBackGroup(BaseProxyGroup):
     interval: float = 120  # milliseconds
     timeout: float = 5  # seconds
@@ -28,7 +27,7 @@ class FallBackGroup(BaseProxyGroup):
     type: Literal["fallback"] = "fallback"
 
 
-@frozen
+@define
 class LoadBalanceGroup(BaseProxyGroup):
     strategy: Literal["consistent-hashing", "round-robin"] | None = None
 

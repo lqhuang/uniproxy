@@ -18,7 +18,12 @@ test = ["pytest"]
 
 [tool.isort]
 profile = "black"
-known_typing = ["typing", "typing_extensions", "collections.abc"]
+known_typing = [
+    "typing",
+    "typing_extensions",
+    "collections.abc",
+    'uniproxy.typing',
+]
 known_first_party = ["uniproxy"]
 sections = [
     "FUTURE",

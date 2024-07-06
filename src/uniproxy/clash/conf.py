@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import Sequence, Literal, TypeAlias, Mapping
+from typing import Literal, Mapping, Sequence, TypeAlias
 
-from .base import AbstractClash, BaseProtocol, ProxyProvider, BaseProxyGroup, BaseRule
+from attrs import define
+
+from .base import AbstractClash, BaseProtocol, BaseProxyGroup, BaseRule, ProxyProvider
 from .rules import RuleProvider
 
 Hosts: TypeAlias = Mapping[str, str]
@@ -16,6 +18,7 @@ Mode = Literal["rule", "global", "direct"]
 LogLevelType = Literal["silent", "info", "warning", "error", "debug"]
 
 
+@define
 class ClashConfig(AbstractClash):
     mode: Mode
     log_level: LogLevelType

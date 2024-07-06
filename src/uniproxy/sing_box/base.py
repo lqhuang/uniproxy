@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from abc import ABC
-
 from attrs import frozen
+
+from uniproxy.abc import AbstractSingBox
 
 from .typing import InboundType, OutboundType
 
@@ -11,10 +11,6 @@ from .typing import InboundType, OutboundType
 class User:
     username: str
     password: str
-
-
-class AbstractSingBox(ABC):
-    __uniproxy_impl__ = "sing-box"
 
 
 class BaseOutbound(AbstractSingBox):

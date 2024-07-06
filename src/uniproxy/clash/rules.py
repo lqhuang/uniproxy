@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import Literal
 
-from attrs import frozen
+from attrs import define
 
 from .base import BaseProtocol, BaseRule
 from .typing import RuleProviderBehaviorType, RuleProviderFormat
 
 
-@frozen
+@define
 class RuleProvider:
     name: str
     url: str
@@ -18,161 +18,161 @@ class RuleProvider:
     interval: int | None = None
 
 
-@frozen
+@define
 class DomainRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["domain"] = "domain"
 
 
-@frozen
+@define
 class DomainSuffixRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["domain-suffix"] = "domain-suffix"
 
 
-@frozen
+@define
 class DomainKeywordRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["domain-keyword"] = "domain-keyword"
 
 
-@frozen
+@define
 class DomainSetRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["domain-set"] = "domain-set"
 
 
-@frozen
+@define
 class IPCidrRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["ip-cidr"] = "ip-cidr"
 
 
-@frozen
+@define
 class IPCidr6Rule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
 
-@frozen
+@define
 class GeoIPRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["geoip"] = "geoip"
 
 
-@frozen
+@define
 class UserAgentRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["user-agent"] = "user-agent"
 
 
-@frozen
+@define
 class UrlRegexRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["url-regex"] = "url-regex"
 
 
-@frozen
+@define
 class ProcessNameRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["process-name"] = "process-name"
 
 
-@frozen
+@define
 class AndRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["and"] = "and"
 
 
-@frozen
+@define
 class OrRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["or"] = "or"
 
 
-@frozen
+@define
 class NotRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["not"] = "not"
 
 
-@frozen
+@define
 class SubnetRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["subnet"] = "subnet"
 
 
-@frozen
+@define
 class DestPortRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["dest-port"] = "dest-port"
 
 
-@frozen
+@define
 class SrcPortRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["src-port"] = "src-port"
 
 
-@frozen
+@define
 class InPortRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["in-port"] = "in-port"
 
 
-@frozen
+@define
 class SrcIPRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["src-ip"] = "src-ip"
 
 
-@frozen
+@define
 class ProtocolRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["protocol"] = "protocol"
 
 
-@frozen
+@define
 class ScriptRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["script"] = "script"
 
 
-@frozen
+@define
 class CellularRadioRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["cellular-radio"] = "cellular-radio"
 
 
-@frozen
+@define
 class DeviceNameRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["device-name"] = "device-name"
 
 
-@frozen
+@define
 class RuleSetRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from typing import Literal
-from ipaddress import IPv4Address, IPv6Address
 
 from enum import StrEnum
+from ipaddress import IPv4Address, IPv6Address
 
 ServerAddress = str | IPv4Address | IPv6Address
 
@@ -93,3 +93,8 @@ class VmessTransportEnum(StrEnum):
     WS = "ws"
     GRPC = "grpc"
     H2 = "h2"
+
+
+GroupType = Literal[
+    "select", "url-test", "fallback", "load-balance", "external", "subnet"
+]

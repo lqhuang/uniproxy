@@ -5,12 +5,6 @@ from enum import StrEnum
 SingBoxNetwork = Literal["tcp", "udp", ""]
 
 
-class SingBoxNetworkEnum(StrEnum):
-    TCP = "tcp"
-    UDP = "udp"
-    TCP_AND_UDP = ""
-
-
 InboundType = Literal[
     "direct",
     "mixed",
@@ -50,24 +44,3 @@ OutboundType = Literal[
     "selector",
     "urltest",
 ]
-
-
-class OutboundTypeEnum(StrEnum):
-    DIRECT = "direct"
-    BLOCK = "block"
-    SOCKS = "socks"
-    HTTP = "http"
-    SHADOWSOCKS = "shadowsocks"
-    VMESS = "vmess"
-    TROJAN = "trojan"
-    WIREGUARD = "wireguard"
-    HYSTERIA = "hysteria"
-    SHADOWTLS = "shadowtls"
-    VLESS = "vless"
-    TUIC = "tuic"
-    HYSTERIA2 = "hysteria2"
-    TOR = "tor"
-    SSH = "ssh"
-    DNS = "dns"
-    SELECTOR = "selector"
-    URLTEST = "urltest"

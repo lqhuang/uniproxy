@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from attrs import frozen
-
 from uniproxy.typing import ProtocolType, ServerAddress
 
+from attrs import frozen
 
-class AbstractUniproxy:
-    __uniproxy_impl__ = "uniproxy"
+from uniproxy.abc import AbstractUniproxy
 
 
 @frozen

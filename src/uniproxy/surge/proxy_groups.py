@@ -4,7 +4,8 @@ from typing import Literal, Sequence
 
 from attrs import frozen
 
-from .base import BaseProxyGroup, SurgeGroupType
+from .base import BaseProxyGroup
+from .typing import SurgeGroupType
 
 
 @frozen

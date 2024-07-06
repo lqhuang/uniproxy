@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 from typing import Sequence
+from uniproxy.typing import ServerAddress
 
 from attrs import frozen
 
+from uniproxy.abc import AbstractSurge
+
 from .typing import SurgeGroupType, SurgeProtocolType
-from uniproxy.typing import ServerAddress
-
-
-class AbstractSurge:
-    __uniproxy_impl__ = "surge"
 
 
 @frozen
@@ -25,9 +23,9 @@ class BaseProtocol(AbstractSurge):
     def asdict(self) -> dict[str, str]:
         raise NotImplementedError
 
-    @classmethod
-    def from_uniproxy(cls, uniproxy, **kwargs) -> BaseProtocol:
-        raise NotImplementedError
+    # @classmethod
+    # def from_uniproxy(cls, uniproxy, **kwargs) -> BaseProtocol:
+    #     raise NotImplementedError
 
 
 @frozen
