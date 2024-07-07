@@ -10,14 +10,18 @@ from uniproxy.typing import (
     VmessTransport,
 )
 
-from attrs import frozen
+from attrs import define
 
 from uniproxy.base import BaseProtocol
 from uniproxy.shared import TLS
 
 
-@frozen
-class HttpProtocol(BaseProtocol):
+@define
+class UniproxyProtocol(BaseProtocol): ...
+
+
+@define
+class HttpProtocol(UniproxyProtocol):
     username: str
     password: str
     tls: TLS | None = None
@@ -25,8 +29,8 @@ class HttpProtocol(BaseProtocol):
     type: Literal["http", "https"] = "http"
 
 
-@frozen
-class QuicProtocol(BaseProtocol):
+@define
+class QuicProtocol(UniproxyProtocol):
     username: str
     password: str
     tls: TLS
@@ -34,8 +38,8 @@ class QuicProtocol(BaseProtocol):
     type: Literal["quic"] = "quic"
 
 
-@frozen
-class Socks5Protocol(BaseProtocol):
+@define
+class Socks5Protocol(UniproxyProtocol):
     username: str | None = None
     password: str | None = None
     tls: TLS | None = None
@@ -84,7 +88,7 @@ class Socks5Protocol(BaseProtocol):
         }
 
 
-@frozen
+@define
 class ShadowsocksPlugin:
     """SIP003 plugin for shadowsocks."""
 
@@ -92,21 +96,21 @@ class ShadowsocksPlugin:
     opts: str
 
 
-@frozen
+@define
 class ShadowsocksObfsLocalPlugin:
     mode: Literal["tls", "http"]
     host: str
     command: Literal["obfs"] | str = "obfs-local"
 
 
-@frozen
+@define
 class ShadowsocksObfsServerPlugin:
     mode: Literal["tls", "http"]
     host: str
     command: Literal["obfs"] | str = "obfs-server"
 
 
-@frozen
+@define
 class ShadowsocksV2RayPlugin:
     mode: Literal["websocket", "quic"]
     host: str
@@ -118,8 +122,8 @@ class ShadowsocksV2RayPlugin:
     command: Literal["v2ray-plugin"] | str = "v2ray-plugin"
 
 
-@frozen
-class ShadowsocksProtocol(BaseProtocol):
+@define
+class ShadowsocksProtocol(UniproxyProtocol):
     password: str
     method: ShadowsocksCipher
     network: Network = "tcp_and_udp"
@@ -135,19 +139,19 @@ class ShadowsocksProtocol(BaseProtocol):
     type: Literal["shadowsocks"] = "shadowsocks"
 
 
-@frozen
+@define
 class ShadowsocksServer(ShadowsocksProtocol): ...
 
 
-@frozen
+@define
 class ShadowsocksLocal(ShadowsocksProtocol): ...
 
 
 class TrojanProtocol: ...
 
 
-@frozen
-class TuicProtocol(BaseProtocol):
+@define
+class TuicProtocol(UniproxyProtocol):
     token: str
     version: int
     tls: TLS
@@ -158,8 +162,8 @@ class TuicProtocol(BaseProtocol):
     type: Literal["tuic"] = "tuic"
 
 
-@frozen
-class NaiveProtocol(BaseProtocol):
+@define
+class NaiveProtocol(UniproxyProtocol):
     username: str
     password: str
     proto: Literal["http2", "quic"]
@@ -167,12 +171,12 @@ class NaiveProtocol(BaseProtocol):
     type: ProtocolType = "naive"
 
 
-@frozen
+@define
 class BaseVmessTransport:
     type: VmessTransport
 
 
-@frozen
+@define
 class VmessWsTransport:
     path: str | None
     headers: dict[str, str] | None = None
@@ -199,7 +203,7 @@ class VmessWsTransport:
         return f"ws=true, ws-path={self.path}"
 
 
-@frozen
+@define
 class VmessH2Transport(BaseVmessTransport):
     """
     YAML example:
@@ -210,8 +214,8 @@ class VmessH2Transport(BaseVmessTransport):
     type: Literal["h2"] = "h2"
 
 
-@frozen
-class VmessProtocol(BaseProtocol):
+@define
+class VmessProtocol(UniproxyProtocol):
     uuid: str
     alter_id: int = 0
     security: VmessCipher = "auto"

@@ -1,21 +1,57 @@
 from __future__ import annotations
 
-from uniproxy.typing import ProtocolType, ServerAddress
+from typing import Sequence
+from uniproxy.typing import GroupType, Network, ProtocolType, RuleType, ServerAddress
 
-from attrs import frozen
+from attrs import define
 
 from uniproxy.abc import AbstractUniproxy
 
 
-@frozen
+@define
 class BaseProtocol(AbstractUniproxy):
     name: str
     type: ProtocolType
     server: ServerAddress
     port: int
 
-    @classmethod
-    def from_toml(cls) -> BaseProtocol: ...
 
-    @classmethod
-    def from_yaml(cls) -> BaseProtocol: ...
+@define
+class BaseProxyGroup(AbstractUniproxy):
+    name: str
+    type: GroupType
+
+    proxies: Sequence[str | ProtocolLike]
+    network: Network | None = "tcp_and_udp"
+    health_check: bool = False
+
+
+@define
+class BaseProxyProvider(AbstractUniproxy):
+    name: str
+    type: GroupType
+    url: str
+    path: str | None
+
+
+@define
+class BaseRule(AbstractUniproxy):
+    type: RuleType
+    matcher: str
+    protocol: str | ProtocolLike
+
+    def __str__(self) -> str:
+        return f"{self.type},{self.matcher},{self.protocol}"
+
+
+@define
+class BaseRuleProvider(AbstractUniproxy):
+    name: str
+    type: GroupType
+    proxies: Sequence[ProtocolLike]
+
+    interval: float | None
+
+
+ProtocolLike = BaseProtocol | BaseProxyGroup | BaseProxyProvider
+RuleLike = BaseRule | BaseRuleProvider

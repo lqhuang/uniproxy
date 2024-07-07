@@ -2,109 +2,61 @@ from __future__ import annotations
 
 from typing import Literal
 
-from abc import ABC
+from attrs import define
 
-from attrs import frozen
-
-from uniproxy.base import BaseProtocol
-
-RuleType = Literal[
-    # Domain-based Rule
-    "domain",
-    "domain-suffix",
-    "domain-keyword",
-    "domain-set",
-    # IP-based Rule
-    "ip-cidr",
-    "ip-cidr6",
-    "geoip",
-    # HTTP Rule
-    "user-agent",
-    "url-regex",
-    # Process Rule
-    "process-name",
-    # Logical Rule
-    "and",
-    "or",
-    "not",
-    # Subnet Rule
-    "subnet",
-    # Miscellaneous Rule
-    "dest-port",
-    "src-port",
-    "in-port",
-    "src-ip",
-    "protocol",
-    "script",
-    "cellular-radio",
-    "device-name",
-    # Ruleset
-    "rule-set",
-    # Final Rule
-    "final",
-]
+from uniproxy.base import BaseProtocol, BaseRule
 
 
-@frozen
-class BaseRule(ABC):
-    type: RuleType
-    matcher: str
-    policy: str | BaseProtocol
-
-    def __str__(self) -> str:
-        return str(self.type)
-
-
-@frozen
+@define
 class DomainRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["domain"] = "domain"
 
 
-@frozen
+@define
 class StackedDomainRule(BaseRule):
     matcher: list[str]
     policy: str | BaseProtocol
     type: Literal["domain"] = "domain"
 
 
-@frozen
+@define
 class DomainSuffixRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["domain-suffix"] = "domain-suffix"
 
 
-@frozen
+@define
 class StackedDomainSuffixRule(BaseRule):
     matcher: list[str]
     policy: str | BaseProtocol
     type: Literal["domain-suffix"] = "domain-suffix"
 
 
-@frozen
+@define
 class DomainKeywordRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["domain-keyword"] = "domain-keyword"
 
 
-@frozen
+@define
 class StackedDomainKeywordRule(BaseRule):
     matchers: list[str]
     policy: str | BaseProtocol
     type: Literal["domain-keyword"] = "domain-keyword"
 
 
-@frozen
+@define
 class DomainSetRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["domain-set"] = "domain-set"
 
 
-@frozen
+@define
 class IPCidrRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
@@ -112,7 +64,7 @@ class IPCidrRule(BaseRule):
     type: Literal["ip-cidr"] = "ip-cidr"
 
 
-@frozen
+@define
 class StackedIPCidrRule(BaseRule):
     matcher: list[str]
     policy: str | BaseProtocol
@@ -120,7 +72,7 @@ class StackedIPCidrRule(BaseRule):
     type: Literal["ip-cidr"] = "ip-cidr"
 
 
-@frozen
+@define
 class IPCidr6Rule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
@@ -128,7 +80,7 @@ class IPCidr6Rule(BaseRule):
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
 
-@frozen
+@define
 class StackedIPCidr6Rule(BaseRule):
     matcher: list[str]
     policy: str | BaseProtocol
@@ -136,126 +88,119 @@ class StackedIPCidr6Rule(BaseRule):
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
 
-@frozen
+@define
 class GeoIPRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["geoip"] = "geoip"
 
 
-@frozen
+@define
 class UserAgentRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["user-agent"] = "user-agent"
 
 
-@frozen
+@define
 class UrlRegexRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["url-regex"] = "url-regex"
 
 
-@frozen
+@define
 class ProcessNameRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["process-name"] = "process-name"
 
 
-@frozen
+@define
 class AndRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["and"] = "and"
 
 
-@frozen
+@define
 class OrRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["or"] = "or"
 
 
-@frozen
+@define
 class NotRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["not"] = "not"
 
 
-@frozen
+@define
 class SubnetRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["subnet"] = "subnet"
 
 
-@frozen
+@define
 class DestPortRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["dest-port"] = "dest-port"
 
 
-@frozen
+@define
 class SrcPortRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["src-port"] = "src-port"
 
 
-@frozen
+@define
 class InPortRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["in-port"] = "in-port"
 
 
-@frozen
+@define
 class SrcIPRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["src-ip"] = "src-ip"
 
 
-@frozen
+@define
 class ProtocolRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["protocol"] = "protocol"
 
 
-@frozen
+@define
 class ScriptRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["script"] = "script"
 
 
-@frozen
+@define
 class CellularRadioRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["cellular-radio"] = "cellular-radio"
 
 
-@frozen
+@define
 class DeviceNameRule(BaseRule):
     matcher: str
     policy: str | BaseProtocol
     type: Literal["device-name"] = "device-name"
 
 
-@frozen
-class RuleSetRule(BaseRule):
-    matcher: str
-    policy: str | BaseProtocol
-    type: Literal["rule-set"] = "rule-set"
-
-
-@frozen
+@define
 class FinalRule(BaseRule):
     policy: str | BaseProtocol
     matcher: None = None

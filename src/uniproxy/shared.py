@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from os import PathLike
 
 from attrs import frozen
@@ -12,3 +14,12 @@ class TLS:
     cert_ca: str | PathLike | None = None
     cert_private_key: str | PathLike | None = None
     cert_private_password: str | None = None
+
+
+@frozen
+class HealthCheck:
+    enable: bool = True
+    interval: float = 60
+    lazy: bool = False
+    url: str = "https://www.gstatic.com/generate_204"
+    udp_url: str | None = "https://www.gstatic.com/generate_204"

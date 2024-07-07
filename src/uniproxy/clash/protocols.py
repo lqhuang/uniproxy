@@ -3,13 +3,14 @@ from __future__ import annotations
 from typing import Literal, cast
 from uniproxy.typing import ShadowsocksCipher, VmessCipher, VmessTransport
 
-from attrs import define
+from attrs import define, field, fields
 
 from uniproxy.protocols import (
     ShadowsocksObfsLocalPlugin as UniproxyShadowsocksObfsPlugin,
 )
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
 from uniproxy.protocols import ShadowsocksV2RayPlugin as UniproxyShadowsocksV2RayPlugin
+from uniproxy.protocols import UniproxyProtocol
 from uniproxy.protocols import VmessH2Transport as UniproxyVmessH2Transport
 from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 from uniproxy.protocols import VmessWsTransport as UniproxyVmessWsTransport
@@ -18,10 +19,34 @@ from .base import BaseProtocol
 
 
 @define
-class HttpProtocol(BaseProtocol):
+class ClashProtocol(BaseProtocol):
+
+    @classmethod
+    def from_uniproxy(cls, protocol: UniproxyProtocol, **kwargs) -> ClashProtocol:
+        for subcls in cls.__subclasses__():
+            _fields = fields(subcls)
+            clash_type = _fields.type.default
+            clash_type = "shadowsocks" if clash_type == "ss" else clash_type
+            if clash_type == protocol.type:
+                inst = subcls.from_uniproxy(protocol)
+                break
+        else:
+            raise NotImplementedError(f"Unknown protocol type: {protocol.type}")
+
+        return inst
+
+    def to_uniproxy(self, **kwargs) -> UniproxyProtocol:
+        return self.to_uniproxy()
+
+    def __str__(self) -> str:
+        return str(self.name)
+
+
+@define
+class HttpProtocol(ClashProtocol):
     username: str
     password: str
-    tls: bool | None = None
+    tls: bool | None = field(default=None)
     skip_cert_verify: bool | None = None
     headers: dict[str, str] | None = None
 
@@ -34,11 +59,11 @@ class HttpProtocol(BaseProtocol):
 
 
 @define
-class Socks5Protocol(BaseProtocol):
+class Socks5Protocol(ClashProtocol):
     username: str | None = None
     password: str | None = None
     udp: bool = True
-    tls: bool | None = None
+    tls: bool | None = field(default=None)
     skip_cert_verify: bool = False
 
     type: Literal["socks5", "socks5-tls"] = "socks5"
@@ -66,7 +91,7 @@ class ShadowsocksPluginV2RayOpts:
 
 
 @define
-class ShadowsocksProtocol(BaseProtocol):
+class ShadowsocksProtocol(ClashProtocol):
     """
     YAML example:
 
@@ -84,7 +109,7 @@ class ShadowsocksProtocol(BaseProtocol):
     cipher: ShadowsocksCipher
     password: str
     udp: bool | None = None
-    plugin: Literal["obfs", "v2ray-plugin"] | None = None
+    plugin: Literal["obfs", "v2ray-plugin"] | None = field(default=None)
     plugin_opts: ShadowsocksPluginObfsOpts | ShadowsocksPluginV2RayOpts | None = None
 
     type: Literal["ss"] = "ss"
@@ -180,7 +205,7 @@ class VmessH2Transport:
 
 
 @define
-class VmessProtocol(BaseProtocol):
+class VmessProtocol(ClashProtocol):
     """
 
     YAML example:
@@ -248,7 +273,7 @@ class VmessProtocol(BaseProtocol):
                     )
                     h2_opts = None
                 case "h2":
-                    h2_transport = cast(UniproxyVmessWsTransport, transport)
+                    h2_transport = cast(UniproxyVmessH2Transport, transport)
                     ws_opts = None  # type: ignore[assignment]
                     h2_opts = VmessH2Transport(
                         path=h2_transport.path,
