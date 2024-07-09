@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import Sequence
 from uniproxy.typing import ServerAddress
 
-from attrs import frozen
+from attrs import define
 
 from uniproxy.abc import AbstractSurge
 
 from .typing import SurgeGroupType, SurgeProtocolType
 
 
-@frozen
+@define
 class BaseProtocol(AbstractSurge):
     name: str
     server: ServerAddress
@@ -28,7 +28,7 @@ class BaseProtocol(AbstractSurge):
     #     raise NotImplementedError
 
 
-@frozen
+@define
 class BaseProxyGroup(AbstractSurge):
     name: str
     proxies: Sequence[BaseProtocol | BaseProxyGroup]

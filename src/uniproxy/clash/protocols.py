@@ -4,6 +4,7 @@ from typing import Literal, cast
 from uniproxy.typing import ShadowsocksCipher, VmessCipher, VmessTransport
 
 from attrs import define, field, fields
+from xattrs._metadata import _Metadata
 
 from uniproxy.protocols import (
     ShadowsocksObfsLocalPlugin as UniproxyShadowsocksObfsPlugin,
@@ -44,8 +45,8 @@ class ClashProtocol(BaseProtocol):
 
 @define
 class HttpProtocol(ClashProtocol):
-    username: str
-    password: str
+    username: str | None = None
+    password: str | None = None
     tls: bool | None = field(default=None)
     skip_cert_verify: bool | None = None
     headers: dict[str, str] | None = None
@@ -64,7 +65,7 @@ class Socks5Protocol(ClashProtocol):
     password: str | None = None
     udp: bool = True
     tls: bool | None = field(default=None)
-    skip_cert_verify: bool = False
+    skip_cert_verify: bool | None = None
 
     type: Literal["socks5", "socks5-tls"] = "socks5"
 
@@ -227,17 +228,19 @@ class VmessProtocol(ClashProtocol):
     """
 
     uuid: str
-    alterId: int = 0
+    alter_id: int = field(default=0) | _Metadata(
+        alias="alterId"
+    )  # pyright: ignore[reportOperatorIssue]
     cipher: VmessCipher = "auto"
     udp: bool | None = None
-    tls: bool = True
+    tls: bool | None = None
     skip_cert_verify: bool | None = None
     servername: str | None = None
     """
     overwrite the server name defined in 'ws-opts'/'h2-opts'
     """
 
-    network: VmessTransport | None = "ws"
+    network: VmessTransport | None = None
     ws_opts: VmessWsTransport | None = None
     h2_opts: VmessH2Transport | None = None
 
@@ -289,7 +292,7 @@ class VmessProtocol(ClashProtocol):
             protocol.server,
             protocol.port,
             uuid=protocol.uuid,
-            alterId=protocol.alter_id,
+            alter_id=protocol.alter_id,
             cipher=protocol.security,
             tls=True if protocol.tls else False,
             skip_cert_verify=skip_cert_verify,
