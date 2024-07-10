@@ -10,7 +10,7 @@ from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 
 from .base import AbstractSurge, BaseProtocol
 
-ProtocolOptions: TypeAlias = dict[str, str | None]
+_ProtocolOptions: TypeAlias = dict[str, str | None]
 
 
 @define
@@ -35,7 +35,7 @@ class SurgeTLS(AbstractSurge):
     """
 
     def __str__(self) -> str:
-        config: ProtocolOptions = {
+        config: _ProtocolOptions = {
             "skip-cert-verify": str(self.skip_cert_verify).lower(),
             "sni": self.sni,
             "server-cert-fingerprint-sha256": self.server_cert_fingerprint_sha256,
@@ -71,7 +71,7 @@ class Socks5Protocol(BaseProtocol):
         if self.tls is not None:
             self.type = "socks5-tls"
 
-    def asdict(self):
+    def __attrs_asdict__(self):
         """
         Config (ini) example:
 
@@ -114,7 +114,7 @@ class ShadowsocksProtocol(BaseProtocol):
 
     type: Literal["ss"] = "ss"
 
-    def asdict(self):
+    def __attrs_asdict__(self):
         """
         Config (ini) example:
 
@@ -178,7 +178,7 @@ class SurgeVmessTransport(AbstractSurge):
         else:
             ws_headers = None
 
-        opts: ProtocolOptions = {
+        opts: _ProtocolOptions = {
             "ws": "true",
             "ws-path": self.path,
             "ws-headers": ws_headers,
@@ -200,7 +200,7 @@ class VmessProtocol(BaseProtocol):
 
     type: Literal["vmess"] = "vmess"
 
-    def asdict(self):
+    def __attrs_asdict__(self):
         """
         Ini example:
 

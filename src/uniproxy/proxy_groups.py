@@ -19,22 +19,20 @@ class SelectGroup(UniproxyProxyGroup):
 
 @define
 class UrlTestGroup(UniproxyProxyGroup):
-    filter: str | None = None
-    interval: float = 60  # seconds
     tolerance: float = 300  # milliseconds
-    timeout: float = 5  # seconds
+
     type: Literal["url-test"] = "url-test"
 
 
 @define
 class FallBackGroup(UniproxyProxyGroup):
+    timeout: float = 1
+
     type: Literal["fallback"] = "fallback"
-    filter: str | None = None
-    interval: float = 120  # milliseconds
-    timeout: float = 5  # seconds
 
 
 @define
 class LoadBalanceGroup(UniproxyProxyGroup):
-    type: Literal["load-balance"] = "load-balance"
     strategy: Literal["consistent-hashing", "round-robin"] | None = "round-robin"
+
+    type: Literal["load-balance"] = "load-balance"

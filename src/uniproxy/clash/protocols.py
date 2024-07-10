@@ -286,6 +286,8 @@ class VmessProtocol(ClashProtocol):
                     raise NotImplementedError(f"Unknown transport type: {network}")
         else:
             network = None
+            ws_opts = None
+            h2_opts = None
 
         return cls(
             protocol.name,
@@ -294,7 +296,7 @@ class VmessProtocol(ClashProtocol):
             uuid=protocol.uuid,
             alter_id=protocol.alter_id,
             cipher=protocol.security,
-            tls=True if protocol.tls else False,
+            tls=True if protocol.tls is not None else protocol.tls,
             skip_cert_verify=skip_cert_verify,
             udp=protocol.network != "tcp",
             servername=servername,

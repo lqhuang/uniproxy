@@ -2,56 +2,57 @@ from __future__ import annotations
 
 from typing import Literal
 
-from attrs import define, frozen
+from attrs import define, frozen, field
 
 
 from .base import BaseProxyProvider, BaseRuleProvider
-from uniproxy.providers import UniproxyProxyProvider
-
-
-@define
-class ClashProxyProvider(BaseProxyProvider):
-
-    @classmethod
-    def from_uniproxy(
-        cls, provider: UniproxyProxyProvider, **kwargs
-    ) -> ClashProxyProvider:
-        return cls(
-            name=provider.name,
-            type=provider.type,
-            url=provider.url,
-            path=provider.path,
-            interval=provider.interval,
-            filter=provider.filter,
-            health_check=provider.health_check,
-        )
-
-    def to_uniproxy(self) -> UniproxyProxyProvider:
-        return self.to_uniproxy()
+from uniproxy.providers import ProxyProvider as UniproxyProxyProvider
 
 
 @frozen
 class HealthCheck:
     enable: bool = True
-    interval: float = 60
+    interval: float = 120
     lazy: bool = True
-    url: str = "https://www.gstatic.com/generate_204"
+    # url: str = "https://www.gstatic.com/generate_204"
 
 
 @define
 class ProxyProvider(BaseProxyProvider):
-    name: str
+    name: str = field(metadata={"exclude": True})
     type: Literal["http", "file"]
 
     url: str
     path: str
-    interval: int = 3600
+    interval: float | None = None
 
     filter: str | None = None  # golang regex
-    health_check: HealthCheck | None = HealthCheck()
+    health_check: HealthCheck | None = field(
+        default=HealthCheck(), metadata={"alias_converter": "kebab-case"}
+    )
 
     def __str__(self) -> str:
         return str(self.name)
+
+    @classmethod
+    def from_uniproxy(cls, provider: UniproxyProxyProvider, **kwargs) -> ProxyProvider:
+        if provider.path is None:
+            path = f"./proxy-providers/{provider.name}.yaml"
+        else:
+            path = provider.path
+
+        return cls(
+            name=provider.name,
+            type="http",
+            url=provider.url,
+            path=path,
+            interval=provider.interval,
+            filter=provider.filter,
+            health_check=HealthCheck() if provider.health_check else None,
+        )
+
+    def to_uniproxy(self) -> UniproxyProxyProvider:
+        return self.to_uniproxy()
 
 
 @define

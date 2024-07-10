@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Literal, Sequence
 from uniproxy.typing import ServerAddress
 
-from attrs import define
+from attrs import define, field
 
 from uniproxy.abc import AbstractClash
+from uniproxy.utils import map_to_str
 
 from .typing import GroupType, ProtocolType, RuleType
 
@@ -17,15 +18,13 @@ class BaseProtocol(AbstractClash):
     port: int
     type: ProtocolType
 
+    def __str__(self) -> str:
+        return str(self.name)
+
 
 @define
 class BaseProxyProvider(AbstractClash):
     name: str
-    type: Literal["http", "file"]
-
-    url: str
-    path: str
-    interval: int = 3600
 
     def __str__(self) -> str:
         return str(self.name)
@@ -35,17 +34,17 @@ class BaseProxyProvider(AbstractClash):
 class BaseProxyGroup(AbstractClash):
     name: str
     type: GroupType
-    proxies: Sequence[BaseProtocol | BaseProxyGroup] | None = None
-    use: Sequence[BaseProxyProvider] | None = None
+    proxies: Sequence[ProtocolLike] | None = field(default=None, converter=map_to_str)
+    use: Sequence[BaseProxyProvider] | None = field(default=None, converter=map_to_str)
 
-    disable_udp: bool = False
+    disable_udp: bool = field(default=False, metadata={"alias_converter": "kebab-case"})
 
     url: str = "https://www.gstatic.com/generate_204"
-    interval: float = 600  # seconds
+    interval: float = 120  # seconds
     lazy: bool = True
 
+    filter: str | None = None
     # timeout: float = 5  # seconds
-    # filter: str | None = None
 
     def __str__(self) -> str:
         return str(self.name)
@@ -77,3 +76,7 @@ class BaseRule(AbstractClash):
 
     def __str__(self) -> str:
         return f"{self.type},{self.matcher},{str(self.protocol)}"
+
+
+ProtocolLike = BaseProtocol | BaseProxyGroup | BaseProxyProvider
+RuleLike = BaseRule | BaseRuleProvider

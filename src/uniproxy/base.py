@@ -6,6 +6,7 @@ from uniproxy.typing import GroupType, Network, ProtocolType, RuleType, ServerAd
 from attrs import define
 
 from uniproxy.abc import AbstractUniproxy
+from uniproxy.shared import HealthCheck
 
 
 @define
@@ -23,6 +24,12 @@ class BaseProxyGroup(AbstractUniproxy):
 
     proxies: Sequence[str | ProtocolLike]
     network: Network | None = "tcp_and_udp"
+
+    url: str = "https://www.gstatic.com/generate_204"
+    interval: float = 600
+    timeout: float = 3
+
+    # TODO: update to `HealthCheck` class
     health_check: bool = False
 
 

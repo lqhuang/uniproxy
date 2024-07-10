@@ -4,12 +4,18 @@ from typing import Literal, Mapping, Sequence, TypeAlias
 
 from attrs import define
 
-from .base import AbstractClash, BaseProtocol, BaseProxyGroup, BaseRule, ProxyProvider
+from .base import (
+    AbstractClash,
+    BaseProtocol,
+    BaseProxyGroup,
+    BaseRule,
+    BaseProxyProvider,
+)
 from .rules import RuleProvider
 
 Hosts: TypeAlias = Mapping[str, str]
 Proxies: TypeAlias = Sequence[BaseProtocol]
-ProxyProviders: TypeAlias = Sequence[ProxyProvider]
+ProxyProviders: TypeAlias = Sequence[BaseProxyProvider]
 ProxyGroups: TypeAlias = Sequence[BaseProxyGroup]
 RuleProviders: TypeAlias = Sequence[RuleProvider]
 Rules: TypeAlias = Sequence[BaseRule]

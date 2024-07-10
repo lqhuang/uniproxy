@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import Literal, Sequence
 
-from attrs import frozen
+from attrs import define
 
 from .base import BaseProxyGroup
 from .typing import SurgeGroupType
 
 
-@frozen
+@define
 class SelectGroup(BaseProxyGroup):
     type: Literal["select"] = "select"
 
@@ -17,7 +17,7 @@ class SelectGroup(BaseProxyGroup):
         return {self.name: f"{self.type}, {proxies}"}
 
 
-@frozen
+@define
 class UrlTestGroup(BaseProxyGroup):
     interval: float = 60  # seconds
     tolerance: float = 300  # milliseconds
@@ -38,7 +38,7 @@ class UrlTestGroup(BaseProxyGroup):
         return {self.name: f"{self.type}, {proxies}, {opts}"}
 
 
-@frozen
+@define
 class FallBackGroup(BaseProxyGroup):
     interval: float = 120  # milliseconds
     timeout: float = 5  # seconds
@@ -51,7 +51,7 @@ class FallBackGroup(BaseProxyGroup):
         return {self.name: f"{self.type}, {proxies}, {opts}"}
 
 
-@frozen
+@define
 class LoadBalanceGroup(BaseProxyGroup):
     persistent: bool = False
 
@@ -63,7 +63,7 @@ class LoadBalanceGroup(BaseProxyGroup):
         return {self.name: f"{self.type}, {proxies}, {opts}"}
 
 
-@frozen
+@define
 class ExternalGroup(BaseProxyGroup):
     using_type: SurgeGroupType
     policy_path: str

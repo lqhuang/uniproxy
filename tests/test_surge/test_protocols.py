@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from xattrs import asdict
+
 from uniproxy.surge.protocols import (
     ShadowsocksProtocol,
     Socks5Protocol,
@@ -14,7 +16,7 @@ def test_proxy_socks5():
     name = "proxy-socks5"
     socks5 = Socks5Protocol(name=name, server="localhost", port=1080)
     surge_config = f"{name} = socks5, localhost, 1080"
-    assert socks5.asdict() == load_ini_without_section(surge_config)
+    assert asdict(socks5) == load_ini_without_section(surge_config)
 
 
 def test_proxy_socks5__tls():
@@ -30,7 +32,7 @@ def test_proxy_socks5__tls():
     surge_config = (
         f"{name} = socks5-tls, 10.0.0.1, 1080, user, pass, skip-cert-verify=true"
     )
-    assert socks5.asdict() == load_ini_without_section(surge_config)
+    assert asdict(socks5) == load_ini_without_section(surge_config)
 
 
 def test_proxy_ss():
@@ -45,7 +47,7 @@ def test_proxy_ss():
     )
 
     surge_config = f"{name} = ss, localhost, 1080, encrypt-method=aes-256-gcm, password=pass, udp-relay=true"
-    assert ss.asdict() == load_ini_without_section(surge_config)
+    assert asdict(ss) == load_ini_without_section(surge_config)
 
 
 def test_proxy_vmess():
@@ -58,7 +60,7 @@ def test_proxy_vmess():
         encrypt_method="auto",
     )
     surge_config = f"{name} = vmess, localhost, 1080, username=692b215d-ee58-4a4c-a430-b686c9a658fe, encrypt-method=auto"
-    assert vmess.asdict() == load_ini_without_section(surge_config)
+    assert asdict(vmess) == load_ini_without_section(surge_config)
 
 
 def test_proxy_vmess__ws():
@@ -78,4 +80,4 @@ def test_proxy_vmess__ws():
         "skip-cert-verify=true, sni=example.com, "
         "ws=true, ws-path=/ws-path"
     )
-    assert vmess.asdict() == load_ini_without_section(surge_config)
+    assert asdict(vmess) == load_ini_without_section(surge_config)

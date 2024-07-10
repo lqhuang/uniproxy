@@ -1,19 +1,14 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
 from uniproxy.typing import GroupType, Network
 
-from attrs import define, field
+from attrs import define
 
 from uniproxy.base import BaseProxyProvider, BaseRuleProvider
 
 
 @define
-class UniproxyProxyProvider(BaseProxyProvider): ...
-
-
-@define
-class ProxyProvider(UniproxyProxyProvider):
+class ProxyProvider(BaseProxyProvider):
     name: str
     type: GroupType
     url: str
