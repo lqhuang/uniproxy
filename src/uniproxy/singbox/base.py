@@ -7,12 +7,6 @@ from uniproxy.abc import AbstractSingBox
 from .typing import InboundType, OutboundType
 
 
-@frozen
-class User:
-    username: str
-    password: str
-
-
 @define
 class BaseOutbound(AbstractSingBox):
     tag: str

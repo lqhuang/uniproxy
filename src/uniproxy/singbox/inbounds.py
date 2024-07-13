@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from attrs import frozen
 
-from uniproxy.common import User
-from uniproxy.sing_box.typing import SingBoxNetwork
+from uniproxy.singbox.typing import SingBoxNetwork
 
 from .base import BaseInbound
-from .shared import InboundTLS, MixinListenFields
+from .shared import InboundTLS, MixinListenFields, User
 
 
 @frozen

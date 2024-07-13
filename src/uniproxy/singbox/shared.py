@@ -6,14 +6,20 @@ from abc import ABC
 from enum import StrEnum
 from os import PathLike
 
-from attrs import frozen
+from attrs import define
 
-from uniproxy.protocols.std import TLS as UniproxyTLS
+from uniproxy.protocols import TLS as UniproxyTLS
 
 from .base import BaseInbound
 from .dns import DnsStrategy
 
 SniffProtocol = Literal["HTTP", "TLS", "QUIC", "STUN", "DNS"]
+
+
+@define
+class User:
+    username: str
+    password: str
 
 
 class SniffProtocolEnum(StrEnum):
@@ -24,24 +30,24 @@ class SniffProtocolEnum(StrEnum):
     DNS = "DNS"
 
 
-@frozen
+@define
 class ExternalAccount:
     key_id: str | None = None
     mac_key: str | None = None
 
 
-@frozen
+@define
 class DNS01Challenge:
     provider: Literal["cloudflare", "alidns"]
 
 
-@frozen
+@define
 class CloudflareDNS01Challenge(DNS01Challenge):
     provider: Literal["cloudflare"]
     api_token: str
 
 
-@frozen
+@define
 class AliDNS01Challenge(DNS01Challenge):
     provider: Literal["alidns"]
     access_key_id: str
@@ -49,7 +55,7 @@ class AliDNS01Challenge(DNS01Challenge):
     region_id: str
 
 
-@frozen
+@define
 class ACME:
     domain: list[str] | None = None
     data_directory: str | None = None
@@ -64,7 +70,7 @@ class ACME:
     dns01_challenge: DNS01Challenge | None = None
 
 
-@frozen
+@define
 class ECH:
     enabled: bool | None = None
     pq_signature_schemes_enabled: bool | None = None
@@ -73,7 +79,7 @@ class ECH:
     key_path: str | None = None
 
 
-@frozen
+@define
 class UTLS:
     enabled: bool | None = None
     fingerprint: str | None = None
@@ -82,7 +88,7 @@ class UTLS:
 class BaseTLS(ABC): ...
 
 
-@frozen
+@define
 class InboundTLS:
     enabled: bool | None = None
     server_name: str | None = None
@@ -98,7 +104,7 @@ class InboundTLS:
     ech: ECH | None = None
 
 
-@frozen
+@define
 class OutboundTLS(BaseTLS):
     enabled: bool | None = None
     disable_sni: bool | None = None
@@ -124,7 +130,7 @@ class OutboundTLS(BaseTLS):
         )
 
 
-@frozen
+@define
 class DialFields: ...
 
 
@@ -217,6 +223,6 @@ class TransportTypeEnum(StrEnum):
     HTTP_UPGRADE = "httpupgrade"
 
 
-@frozen
+@define
 class BaseTransport:
     type: TransportType
