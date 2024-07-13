@@ -6,6 +6,7 @@ from enum import StrEnum
 from ipaddress import IPv4Address, IPv6Address
 
 ServerAddress = str | IPv4Address | IPv6Address
+IPAddress = str | IPv4Address | IPv6Address
 
 ProtocolType = Literal[
     "http",

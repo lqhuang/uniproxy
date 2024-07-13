@@ -2,7 +2,7 @@ from typing import Literal
 
 from enum import StrEnum
 
-SingBoxNetwork = Literal["tcp", "udp", ""]
+SingBoxNetwork = Literal["tcp", "udp"]
 
 
 InboundType = Literal[

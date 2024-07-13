@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from attrs import frozen
+from attrs import define, frozen
 
 from uniproxy.abc import AbstractSingBox
 
@@ -13,6 +13,7 @@ class User:
     password: str
 
 
+@define
 class BaseOutbound(AbstractSingBox):
     tag: str
     type: OutboundType

@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Sequence
+from uniproxy.typing import IPAddress, ServerAddress, ShadowsocksCipher, VmessCipher
 
-from ipaddress import IPv4Address, IPv6Address
+from attrs import define
 
-from attrs import frozen
-
-from uniproxy.protocols import VmessProtocol, ShadowsocksProtocol
-from uniproxy.typing import VmessCipher, ShadowsocksCipher
+from uniproxy.protocols import ShadowsocksProtocol, VmessProtocol
 
 from .base import BaseOutbound
 from .shared import BaseTransport, OutboundMultiplex, OutboundTLS
 from .typing import SingBoxNetwork
 
 
-@frozen
+@define
 class DirectOutbound(BaseOutbound):
     """
 
@@ -35,7 +33,7 @@ class DirectOutbound(BaseOutbound):
     """
 
     # Override the connection destination address.
-    override_address: IPv4Address | IPv6Address | str | None = None
+    override_address: ServerAddress | None = None
     # Override the connection destination port.
     override_port: int | None = None
     # Write [Proxy Protocol](https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt) in the connection header.
@@ -44,7 +42,7 @@ class DirectOutbound(BaseOutbound):
     proxy_protocol: Literal[1, 2] | None = None
 
 
-@frozen
+@define
 class ShadowsocksOutbound(BaseOutbound):
     """
 
@@ -71,7 +69,7 @@ class ShadowsocksOutbound(BaseOutbound):
     """
 
     # The server address.
-    server: IPv4Address | IPv6Address | str
+    server: ServerAddress
     # The server port.
     server_port: int
     # Encryption methods.
@@ -108,11 +106,11 @@ class ShadowsocksOutbound(BaseOutbound):
         )
 
 
-@frozen
+@define
 class VmessOutbound(BaseOutbound):
 
     tag: str
-    server: IPv4Address | IPv6Address | str | None
+    server: ServerAddress
     server_port: int
     uuid: str
     security: VmessCipher
@@ -152,7 +150,191 @@ class VmessOutbound(BaseOutbound):
         )
 
 
-@frozen
+@define
+class TrojanOutbound(BaseOutbound):
+    """
+    Examples:
+
+    ```json
+    {
+        "type": "trojan",
+        "tag": "trojan-out",
+
+        "server": "127.0.0.1",
+        "server_port": 1080,
+        "password": "8JCsPssfgS8tiRwiMlhARg==",
+        "network": "tcp",
+        "tls": {},
+        "multiplex": {},
+        "transport": {},
+
+        ... // Dial Fields
+    }
+    ```
+    """
+
+    server: ServerAddress
+    """The server address."""
+    server_port: int
+    """The server port."""
+    password: str
+    """The Trojan password."""
+    multiplex: OutboundMultiplex | None = None
+    """See Multiplex for details."""
+    transport: BaseTransport | None = None
+    """V2Ray Transport configuration, see V2Ray Transport."""
+    # dial: DialFields | None = None
+    """See Dial Fields for details."""
+
+    type: Literal["trojan"] = "trojan"
+
+
+@define
+class Peer:
+    allowed_ips: Sequence[IPAddress]
+    """WireGuard allowed IPs."""
+
+    server: ServerAddress | None = None
+    """The server address. Required if multi-peer disabled"""
+    server_port: int | None = None
+    """The server port. Required if multi-peer disabled"""
+    peer_public_key: str | None = None
+    """
+    Required if multi-peer disabled
+
+    WireGuard peer public key."""
+    pre_shared_key: str | None = None
+    """WireGuard pre-shared key."""
+
+    reserved: Sequence[int] | None = None
+    """
+    WireGuard reserved field bytes.
+
+    $outbound.reserved will be used if empty.
+    """
+
+
+@define
+class WireguardOutbound(BaseOutbound):
+    """
+    Examples:
+
+    ```json
+    {
+    "type": "wireguard",
+    "tag": "wireguard-out",
+
+    "server": "127.0.0.1",
+    "server_port": 1080,
+    "system_interface": false,
+    "gso": false,
+    "interface_name": "wg0",
+    "local_address": [
+        "10.0.0.2/32"
+    ],
+    "private_key": "YNXtAzepDqRv9H52osJVDQnznT5AM11eCK3ESpwSt04=",
+    "peers": [
+        {
+        "server": "127.0.0.1",
+        "server_port": 1080,
+        "public_key": "Z1XXLsKYkYxuiYjJIkRvtIKFepCYHTgON+GwPq7SOV4=",
+        "pre_shared_key": "31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=",
+        "allowed_ips": [
+            "0.0.0.0/0"
+        ],
+        "reserved": [0, 0, 0]
+        }
+    ],
+    "peer_public_key": "Z1XXLsKYkYxuiYjJIkRvtIKFepCYHTgON+GwPq7SOV4=",
+    "pre_shared_key": "31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=",
+    "reserved": [0, 0, 0],
+    "workers": 4,
+    "mtu": 1408,
+    "network": "tcp",
+
+    ... // Dial Fields
+    }
+    ```
+    """
+
+    local_address: list[IPAddress]
+    """
+    Required
+
+    List of IP (v4 or v6) address prefixes to be assigned to the interface.
+    """
+    private_key: str
+    """
+    Required
+
+    WireGuard requires base64-encoded public and private keys. These can be generated using the wg(8) utility:
+
+    ```
+    wg genkey
+    echo "private key" || wg pubkey
+    ```
+    """
+
+    server: ServerAddress | None = None
+    """The server address. Required if multi-peer disabled"""
+    server_port: int | None = None
+    """The server port. Required if multi-peer disabled"""
+    peer_public_key: str | None = None
+    """
+    Required if multi-peer disabled
+
+    WireGuard peer public key."""
+    pre_shared_key: str | None = None
+    """WireGuard pre-shared key."""
+
+    peers: Sequence[Peer] | None = None
+    """
+    Multi-peer support.
+
+    If enabled, `server`, `server_port`, `peer_public_key`, `pre_shared_key` will be ignored.
+    """
+
+    reserved: Sequence[int] | None = None
+
+    """WireGuard reserved field bytes."""
+
+    system_interface: str | None = None
+    """
+    Use system interface.
+
+    Requires privilege and cannot conflict with exists system interfaces.
+
+    Forced if gVisor not included in the build.
+    """
+    interface_name: str | None = None
+    """Custom interface name for system interface."""
+    gso: bool | None = None
+    """Try to enable generic segmentation offload."""
+
+    workers: int | None = None
+    """
+    WireGuard worker count.
+
+    CPU count is used by default.
+    """
+    mtu: int | None = None
+    """WireGuard MTU.
+
+    1408 will be used if empty.
+    """
+    network: SingBoxNetwork | None = None
+    """
+    Enabled network
+
+    One of tcp udp.
+
+    Both is enabled by default.
+    """
+
+    type: Literal["wireguard"] = "wireguard"
+
+
+@define
 class DnsOutbound(BaseOutbound):
     """
 
@@ -170,7 +352,7 @@ class DnsOutbound(BaseOutbound):
     type: Literal["dns"]
 
 
-@frozen
+@define
 class SelectorOutbound(BaseOutbound):
     """
 
@@ -197,3 +379,56 @@ class SelectorOutbound(BaseOutbound):
     default: BaseOutbound | str | None = None
     interrupt_exist_connections: bool | None = None
     type: Literal["selector"] = "selector"
+
+
+class URLTestOutbound(BaseOutbound):
+    """
+    Examples:
+
+    ```json
+    {
+      "type": "urltest",
+      "tag": "auto",
+
+      "outbounds": [
+        "proxy-a",
+        "proxy-b",
+        "proxy-c"
+      ],
+      "url": "",
+      "interval": "",
+      "tolerance": 0,
+      "idle_timeout": "",
+      "interrupt_exist_connections": false
+    }
+    ```
+    """
+
+    outbounds: Sequence[BaseOutbound]
+    """
+    List of outbound tags to test.
+    """
+    url: str | None = None
+    """
+    The URL to test. `https://www.gstatic.com/generate_204` will be used if empty.
+    """
+    interval: str | None = None
+    """
+    The test interval. `3m` will be used if empty.
+    """
+    tolerance: int | None = None
+    """
+    The test tolerance in milliseconds. `50` will be used if empty.
+    """
+    idle_timeout: str | None = None
+    """
+    The idle timeout. 30m will be used if empty.
+    """
+    interrupt_exist_connections: bool | None = None
+    """
+    Interrupt existing connections when the selected outbound has changed.
+
+    Only inbound connections are affected by this setting, internal connections will always be interrupted.
+    """
+
+    type: Literal["urltest"] = "urltest"
