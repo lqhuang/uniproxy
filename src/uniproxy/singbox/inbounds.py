@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from attrs import frozen
+from attrs import define
 
 from uniproxy.singbox.typing import SingBoxNetwork
 
@@ -8,7 +8,7 @@ from .base import BaseInbound
 from .shared import InboundTLS, MixinListenFields, User
 
 
-@frozen
+@define
 class DirectInbound(BaseInbound, MixinListenFields):
     # Listen network, one of `tcp`, `udp`.
     #
@@ -22,13 +22,13 @@ class DirectInbound(BaseInbound, MixinListenFields):
     override_port: int | None = None
 
 
-@frozen
+@define
 class HTTPInbound(BaseInbound, MixinListenFields):
     users: list[User] | None = None
     tls: InboundTLS | None = None
     set_system_proxy: bool | None = None
 
 
-@frozen
+@define
 class Socks5Inbound(BaseInbound, MixinListenFields):
     users: list[User] | None = None

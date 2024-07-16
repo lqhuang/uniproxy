@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from attrs import define, frozen
+from attrs import define
 
 from uniproxy.abc import AbstractSingBox
 
@@ -16,6 +16,7 @@ class BaseOutbound(AbstractSingBox):
         return str(self.tag)
 
 
+@define
 class BaseInbound(AbstractSingBox):
     tag: str
     type: InboundType

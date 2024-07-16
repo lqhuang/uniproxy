@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal, TypeAlias
-from uniproxy.typing import ShadowsocksCipher, VmessCipher
+from typing import Literal, Sequence
+from uniproxy.typing import IPAddress, ShadowsocksCipher, VmessCipher
+
+from ipaddress import IPv4Address, IPv6Address
 
 from attrs import define
 
@@ -9,42 +11,16 @@ from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtoco
 from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 
 from .base import AbstractSurge, BaseProtocol
-
-_ProtocolOptions: TypeAlias = dict[str, str | None]
-
-
-@define
-class SurgeTLS(AbstractSurge):
-    skip_cert_verify: bool = False
-    """
-    If this option is enabled, Surge will not verify the server's certificate.
-
-    Optional, "true" or "false" (Default: false).
-    """
-
-    sni: Literal["off"] | str | None = None
-    """
-    Customize the Server Name Indication (SNI) during the TLS handshake.
-    Use `sni=off` to turn off SNI completely. By default, Surge sends the SNI
-    using the `hostname` like most browsers.
-    """
-
-    server_cert_fingerprint_sha256: str | None = None
-    """
-    Use a pinned server certificate instead of the standard X.509 validation.
-    """
-
-    def __str__(self) -> str:
-        config: _ProtocolOptions = {
-            "skip-cert-verify": str(self.skip_cert_verify).lower(),
-            "sni": self.sni,
-            "server-cert-fingerprint-sha256": self.server_cert_fingerprint_sha256,
-        }
-        return ", ".join(f"{k}={v}" for k, v in config.items() if v is not None)
+from .shared import SurgeTLS
+from .typing import _ProtocolOptions
 
 
 @define
-class HttpProtocol(BaseProtocol):
+class SurgeProtocol(BaseProtocol): ...
+
+
+@define
+class HttpProtocol(SurgeProtocol):
     server: str
     port: int
     username: str | None = None
@@ -58,7 +34,7 @@ class HttpProtocol(BaseProtocol):
 
 
 @define
-class Socks5Protocol(BaseProtocol):
+class Socks5Protocol(SurgeProtocol):
     username: str | None = None
     password: str | None = None
     tls: SurgeTLS | None = None
@@ -102,7 +78,7 @@ class Socks5Protocol(BaseProtocol):
 
 
 @define
-class ShadowsocksProtocol(BaseProtocol):
+class ShadowsocksProtocol(SurgeProtocol):
     password: str
     encrypt_method: ShadowsocksCipher
 
@@ -190,7 +166,7 @@ class SurgeVmessTransport(AbstractSurge):
 
 
 @define
-class VmessProtocol(BaseProtocol):
+class VmessProtocol(SurgeProtocol):
     username: str
     """uuid"""
 
@@ -256,3 +232,86 @@ class VmessProtocol(BaseProtocol):
             ),
             **kwargs,
         )
+
+
+class WireguardProtocol(SurgeProtocol):
+    """
+    ```ini
+    [Proxy]
+    wireguard-home = wireguard, section-name = HomeServer
+    ```
+    """
+
+    section_name: str | WireguardSection
+    type: Literal["wireguard"] = "wireguard"
+
+
+class WireguardPeer(AbstractSurge):
+    """
+    ```ini
+    [WireGuard HomeServer]
+    ...
+    peer = (public-key = fWO8XS9/nwUQcqnkfBpKeqIqbzclQ6EKP20Pgvzwclg=, allowed-ips = 0.0.0.0/0, endpoint = 192.168.20.6:51820)
+    ...
+    ```
+
+    Customize Reserved Bits
+    -----------------------
+
+    Surge supports customizing the reserved bits of WireGuard. It might be used as the client ID or routing ID for some implementations, such as Cloudflare WARP.
+
+    Example:
+    ```
+    [WireGuard HomeServer]
+    ...
+    peer = (public-key = <key>, allowed-ips = "0.0.0.0/0, ::/0", endpoint = example.com:51820, client-id = 83/12/235)
+    ...
+    ```
+    """
+
+    endpoint: str
+    public_key: str
+    allowed_ips: Sequence[str]
+    client_id: tuple[int, int, int] | None = None
+
+    def __attrs_asdict__(self):
+        peer = {
+            "public-key": self.public_key,
+            "allowed-ips": self.allowed_ips,
+            "endpoint": self.endpoint,
+            "client-id": self.client_id,
+        }
+        return {"peer": peer}
+
+
+class WireguardSection(AbstractSurge):
+    """
+    ```ini
+    [WireGuard HomeServer]
+    private-key = sDEZLACT3zgNCS0CyClgcBC2eYROqYrwLT4wdtAJj3s=
+    self-ip = 10.0.2.2
+    self-ip-v6 = fd00:1111::11
+    dns-server = 8.8.8.8, 2606:4700:4700::1001
+    prefer-ipv6 = false
+    mtu = 1280
+    peer = (public-key = fWO8XS9/nwUQcqnkfBpKeqIqbzclQ6EKP20Pgvzwclg=, allowed-ips = 0.0.0.0/0, endpoint = 192.168.20.6:51820)
+    ```
+
+    Notes for configuration:
+    """
+
+    name: str
+
+    private_key: str
+    peer: WireguardPeer
+    self_ip: str | IPv4Address | None = None
+    self_ip_v6: str | IPv6Address | None = None
+
+    dns_server: Sequence[IPAddress] | None = None
+    prefer_ipv6: bool | None = None
+    mtu: int | None = None
+
+    type: Literal["wireguard"] = "wireguard"
+
+    def __attrs_asdict__(self):
+        return {f"WireGuard {self.name}": {}}

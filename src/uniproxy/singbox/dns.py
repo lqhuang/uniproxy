@@ -2,40 +2,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from enum import StrEnum
-
 from attrs import frozen
 
 from .base import BaseInbound, BaseOutbound
-from .shared import SniffProtocol
-
-DnsReturnCode = Literal[
-    "rcode://success",
-    "rcode://format_error",
-    "rcode://server_failure",
-    "rcode://name_error",
-    "rcode://not_implemented",
-    "rcode://refused",
-]
-
-
-class DnsReturnCodeEnum(StrEnum):
-    SUCCESS = "rcode://success"
-    FORMAT_ERROR = "rcode://format_error"
-    SERVER_FAILURE = "rcode://server_failure"
-    NAME_ERROR = "rcode://name_error"
-    NOT_IMPLEMENTED = "rcode://not_implemented"
-    REFUSED = "rcode://refused"
-
-
-DnsStrategy = Literal["prefer_ipv4", "prefer_ipv6", "ipv4_only", "ipv6_only", "", None]
-
-
-class DnsStrategyEnum(StrEnum):
-    PREFER_IPV4 = "prefer_ipv4"
-    PREFER_IPV6 = "prefer_ipv6"
-    IPV4_ONLY = "ipv4_only"
-    IPV6_ONLY = "ipv6_only"
+from .typing import DnsReturnCode, DnsStrategy, SniffProtocol
 
 
 @frozen
@@ -53,7 +23,7 @@ class DNS:
     # Default domain strategy for resolving the domain names.
     # One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
     # Take no effect if `server.strategy` is set.
-    strategy: DnsStrategy = None
+    strategy: DnsStrategy | None = None
 
     # Disable dns cache.
     disable_cache: bool | None = None

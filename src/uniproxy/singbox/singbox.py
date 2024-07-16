@@ -31,14 +31,14 @@ class Log:
     Ref: https://sing-box.sagernet.org/configuration/log/
     """
 
-    # Disable logging, no output after start.
     disabled: bool
-    # Log level.
+    # Disable logging, no output after start.
     level: Literal["trace", "debug", "info", "warn", "error", "fatal", "panic"]
-    # Output file path. Will not write log to console after enable.
+    # Log level.
     output: str
-    # Add time to each line.
+    # Output file path. Will not write log to console after enable.
     timestamp: bool
+    # Add time to each line.
 
 
 class NTP:

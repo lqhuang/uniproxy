@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, TypeAlias
 
 SurgeProtocolType = Literal[
     "http",
@@ -13,8 +13,10 @@ SurgeProtocolType = Literal[
     "trojan",
     "tuic",
     "hysteria2",
+    "wireguard",
 ]
-
 SurgeGroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet", "smart"
 ]
+
+_ProtocolOptions: TypeAlias = dict[str, str | None]

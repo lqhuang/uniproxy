@@ -11,23 +11,13 @@ from attrs import define
 from uniproxy.protocols import TLS as UniproxyTLS
 
 from .base import BaseInbound
-from .dns import DnsStrategy
-
-SniffProtocol = Literal["HTTP", "TLS", "QUIC", "STUN", "DNS"]
+from .typing import DnsStrategy, TransportType
 
 
 @define
 class User:
     username: str
     password: str
-
-
-class SniffProtocolEnum(StrEnum):
-    HTTP = "HTTP"
-    TLS = "TLS"
-    QUIC = "QUIC"
-    STUN = "STUN"
-    DNS = "DNS"
 
 
 @define
@@ -210,9 +200,6 @@ class OutboundMultiplex:
     padding: bool | None = None
     # # See TCP Brutal for details.
     # brutal: dict | None = None
-
-
-TransportType = Literal["http", "ws", "quic", "grpc", "httpupgrade"]
 
 
 class TransportTypeEnum(StrEnum):

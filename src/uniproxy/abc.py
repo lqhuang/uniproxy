@@ -4,28 +4,33 @@ from typing import ClassVar
 
 
 class AbstractUniproxy:
+    """
+    Abstract Uniproxy Class
+
+    All uniproxy classes should inherit from this class.
+    """
+
     __uniproxy_impl__: ClassVar[str] = "uniproxy"
 
 
 class AbstractSingBox:
+    """
+    Abstract SingBox Class
+
+    All sing-box classes should inherit from this class.
+    """
+
     __uniproxy_impl__: ClassVar[str] = "sing-box"
 
 
 class AbstractSurge:
+    """
+    Abstract Clash class
+
+    All Surge classes should inherit from this class.
+    """
+
     __uniproxy_impl__: ClassVar[str] = "surge"
-
-    @classmethod
-    def from_uniproxy(cls, uniproxy: AbstractUniproxy) -> AbstractSurge:
-        """
-        Convert uniproxy instance to Clash object
-        """
-        ...
-
-    def to_uniproxy(self) -> AbstractUniproxy:
-        """
-        Convert Clash object to uniproxy
-        """
-        ...
 
 
 class AbstractClash:
@@ -36,16 +41,3 @@ class AbstractClash:
     """
 
     __uniproxy_impl__: ClassVar[str] = "clash"
-
-    @classmethod
-    def from_uniproxy(cls, uniproxy: AbstractUniproxy) -> AbstractClash:
-        """
-        Convert uniproxy instance to Clash object
-        """
-        ...
-
-    def to_uniproxy(self) -> AbstractUniproxy:
-        """
-        Convert Clash object to uniproxy
-        """
-        ...
