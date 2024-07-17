@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Sequence
 
-from attrs import field, frozen
+from attrs import define
 
 from .base import BaseInbound, BaseOutbound
 from .dns import DNS
 from .route import Route
+from .typing import LogLevel
 
 
-@frozen
+@define
 class SingBoxConfig:
     """
     `sing-box` uses JSON for configuration files.
@@ -18,27 +19,28 @@ class SingBoxConfig:
     """
 
     dns: DNS
-    inbounds: list[BaseInbound]
-    outbounds: list[BaseOutbound]
+    inbounds: Sequence[BaseInbound]
+    outbounds: Sequence[BaseOutbound]
     route: Route
-    log: Log | None
-    ntp: NTP | None
-    experimental: dict = field(factory=dict)
+    log: Log | None = None
+    ntp: NTP | None = None
+    experimental: dict | None = None
 
 
+@define
 class Log:
     """
     Ref: https://sing-box.sagernet.org/configuration/log/
     """
 
-    disabled: bool
-    # Disable logging, no output after start.
-    level: Literal["trace", "debug", "info", "warn", "error", "fatal", "panic"]
-    # Log level.
-    output: str
-    # Output file path. Will not write log to console after enable.
-    timestamp: bool
-    # Add time to each line.
+    disabled: bool | None = None
+    """Disable logging, no output after start."""
+    level: LogLevel | None = None
+    """Log level."""
+    output: str | None = None
+    """Output file path. Will not write log to console after enable."""
+    timestamp: bool | None = None
+    """Add time to each line."""
 
 
 class NTP:

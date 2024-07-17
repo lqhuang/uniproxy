@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Sequence
+from uniproxy.typing import ServerAddress
 
 from abc import ABC
-from enum import StrEnum
 from os import PathLike
 
 from attrs import define
@@ -47,7 +47,7 @@ class AliDNS01Challenge(DNS01Challenge):
 
 @define
 class ACME:
-    domain: list[str] | None = None
+    domain: Sequence[str] | None = None
     data_directory: str | None = None
     default_server_name: str | None = None
     email: str | None = None
@@ -65,7 +65,7 @@ class ECH:
     enabled: bool | None = None
     pq_signature_schemes_enabled: bool | None = None
     dynamic_record_sizing_disabled: bool | None = None
-    key: list[str] | None = None
+    key: Sequence[str] | None = None
     key_path: str | None = None
 
 
@@ -82,13 +82,13 @@ class BaseTLS(ABC): ...
 class InboundTLS:
     enabled: bool | None = None
     server_name: str | None = None
-    alpn: list[str] | None = None
+    alpn: Sequence[str] | None = None
     min_version: str | None = None
     max_version: str | None = None
-    cipher_suites: list[str] | None = None
-    certificate: list[str] | None = None
+    cipher_suites: Sequence[str] | None = None
+    certificate: Sequence[str] | None = None
     certificate_path: PathLike | None = None
-    key: list[str] | None = None
+    key: Sequence[str] | None = None
     key_path: PathLike | None = None
     acme: ACME | None = None
     ech: ECH | None = None
@@ -100,11 +100,11 @@ class OutboundTLS(BaseTLS):
     disable_sni: bool | None = None
     server_name: str | None = None
     insecure: bool | None = None
-    alpn: list[str] | None = None
+    alpn: Sequence[str] | None = None
     min_version: str | None = None
     max_version: str | None = None
-    cipher_suites: list[str] | None = None
-    certificate: list[str] | None = None
+    cipher_suites: Sequence[str] | None = None
+    certificate: Sequence[str] | None = None
     certificate_path: PathLike | None = None
     ech: ECH | None = None
     utls: UTLS | None = None
@@ -124,33 +124,39 @@ class OutboundTLS(BaseTLS):
 class DialFields: ...
 
 
+@define
 class MixinListenFields:
-    listen: str
+    listen: str | None = None
     listen_port: int | None = None
     tcp_fast_open: bool | None = None
     tcp_multi_path: bool | None = None
     udp_fragment: bool | None = None
 
-    # UDP NAT expiration time in seconds.
-    #
-    # `5m` is used by default.
     udp_timeout: str | None = None
+    """
+    UDP NAT expiration time in seconds.
 
-    # If set, connections will be forwarded to the specified inbound.
-    #
-    # Requires target inbound support, see Injectable.
+    `5m` is used by default.
+    """
     detour: BaseInbound | str | None = None
+    """
+    If set, connections will be forwarded to the specified inbound.
+
+    Requires target inbound support, see Injectable.
+    """
 
     sniff: bool | None = None
     sniff_override_destination: bool | None = None
     sniff_timeout: str | None = None
 
-    # One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
-    #
-    # If set, the requested domain name will be resolved to IP before routing.
-    #
-    # If `sniff_override_destination` is in effect, its value will be taken as a fallback.
     domain_strategy: DnsStrategy | None = None
+    """
+    One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
+
+    If set, the requested domain name will be resolved to IP before routing.
+
+    If `sniff_override_destination` is in effect, its value will be taken as a fallback.
+    """
 
     udp_disable_domain_unmapping: bool | None = None
 
@@ -176,40 +182,70 @@ class OutboundMultiplex:
     ```
     """
 
-    # Enable multiplex.
     enabled: bool | None = None
-    # Multiplex protocol.
-    #
-    # | Protocol | Description                        |
-    # | -------- | ---------------------------------- |
-    # | smux     | https://github.com/xtaci/smux      |
-    # | yamux    | https://github.com/hashicorp/yamux |
-    # | h2mux    | https://golang.org/x/net/http2     |
-    #
-    # `h2mux` is used by default.
+    """Enable multiplex."""
     protocol: Literal["smux", "yamux", "h2mux"] | None = None
-    # Max connections. Conflict with `max_streams`.
+    """
+    Multiplex protocol.
+
+    | Protocol | Description                        |
+    | -------- | ---------------------------------- |
+    | smux     | https://github.com/xtaci/smux      |
+    | yamux    | https://github.com/hashicorp/yamux |
+    | h2mux    | https://golang.org/x/net/http2     |
+
+    `h2mux` is used by default.
+    """
     max_connections: int | None = None
-    # Minimum multiplexed streams in a connection before opening a new connection.
-    # Conflict with `max_streams`.
+    """Max connections. Conflict with `max_streams`."""
     min_streams: int | None = None
-    # Maximum multiplexed streams in a connection before opening a new connection.
-    # Conflict with `max_connections` and `min_streams`.
+    """
+    Minimum multiplexed streams in a connection before opening a new connection.
+
+    Conflict with `max_streams`.
+    """
     max_streams: int | None = None
-    # Enable padding for each stream.
+    """
+    Maximum multiplexed streams in a connection before opening a new connection.
+
+    Conflict with `max_connections` and `min_streams`.
+    """
     padding: bool | None = None
-    # # See TCP Brutal for details.
-    # brutal: dict | None = None
-
-
-class TransportTypeEnum(StrEnum):
-    HTTP = "http"
-    WS = "ws"
-    QUIC = "quic"
-    GRPC = "grpc"
-    HTTP_UPGRADE = "httpupgrade"
+    """Enable padding for each stream."""
+    brutal: dict | None = None
+    """See TCP Brutal for details."""
 
 
 @define
 class BaseTransport:
     type: TransportType
+
+
+@define
+class PlatformHttpProxy:
+    server: ServerAddress
+    """**Required** HTTP proxy server address."""
+    server_port: int
+    """**Required** HTTP proxy server port."""
+    enabled: bool | None = None
+    """Enable system HTTP proxy."""
+    bypass_domain: Sequence[str] | None = None
+    """
+    > ![WARNING]
+    > On Apple platforms, `bypass_domain` items matches hostname **suffixes**.
+
+    Hostnames that bypass the HTTP proxy.
+    """
+    match_domain: Sequence[str] | None = None
+    """
+    > ![WARNING]
+    > Only supported in graphical clients on Apple platforms.
+
+    Hostnames that use the HTTP proxy.
+    """
+
+
+@define
+class Platform:
+    http_proxy: PlatformHttpProxy
+    """System HTTP proxy settings."""

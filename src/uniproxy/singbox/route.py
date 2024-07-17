@@ -1,37 +1,41 @@
-from typing import Literal
+from __future__ import annotations
 
-from enum import StrEnum
+from typing import Literal, Sequence
+
+from attrs import define
 
 from .base import BaseInbound, BaseOutbound
-from .shared import SniffProtocol
+from .typing import RuleSetType, SniffProtocol
 
 
-class RuleSetType(StrEnum):
-    LOCAL = "local"
-    REMOTE = "remote"
-
-
+@define
 class BaseRuleSet:
-    tag: str
     type: RuleSetType
-    format: Literal["binary"] = "binary"
+    tag: str
+    format: Literal["binary", "source"]
 
 
+@define
 class LocalRuleSet(BaseRuleSet):
-    type: Literal[RuleSetType.LOCAL] = RuleSetType.LOCAL
     path: str
 
+    type: Literal["local"] = "local"
 
+
+@define
 class RemoteRuleSet(BaseRuleSet):
-    type: Literal[RuleSetType.REMOTE] = RuleSetType.REMOTE
     url: str
-    download_detour: str | BaseOutbound | None
-    update_interval: str
+    download_detour: str | BaseOutbound | None = None
+    update_interval: float | None = None
+
+    type: Literal["remote"] = "remote"
 
 
+@define
 class Rule:
     outbound: BaseOutbound | str
-    inbound: list[BaseInbound] | list[str] | None = None
+
+    inbound: Sequence[BaseInbound] | Sequence[str] | None = None
     ip_version: Literal["4", "6", None] = None
     auth_user: str | None = None
     protocol: SniffProtocol | None = None
@@ -40,24 +44,25 @@ class Rule:
     domain_suffix: str | None = None
     domain_keyword: str | None = None
     domain_regex: str | None = None
-    ip_cidr: list[str] | None = None
+    ip_cidr: Sequence[str] | None = None
     ip_is_private: bool | None = None
-    source_ip_cidr: list[str] | None = None
+    source_ip_cidr: Sequence[str] | None = None
     source_ip_is_private: bool | None = None
     source_port: int | None = None
-    source_port_range: list[str] | None = None
-    port: list[int] | None
-    port_range: list[str] | None = None
-    rule_set: list[str] | None = None
+    source_port_range: Sequence[str] | None = None
+    port: Sequence[int] | None = None
+    port_range: Sequence[str] | None = None
+    rule_set: Sequence[str] | None = None
     rule_set_ipcidr_match_source: bool | None = None
     invert: bool | None = None
 
 
+@define
 class Route:
-    rules: list[Rule]
-    rule_set: list[BaseRuleSet]
-    final: str | None = None
-    auto_detect_interface: bool = False
-    override_android_vpn: bool = False
+    rules: Sequence[Rule]
+    rule_set: Sequence[BaseRuleSet]
+    final: str | BaseOutbound | None = None
+    auto_detect_interface: bool | None = None
+    override_android_vpn: bool | None = None
     default_interface: str | None = None
     default_mark: int | None = None

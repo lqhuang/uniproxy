@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-SingBoxNetwork = Literal["tcp", "udp"]
+SingBoxNetwork = Literal["tcp", "udp", ""]
+LogLevel = Literal["trace", "debug", "info", "warn", "error", "fatal", "panic"]
 
+TunStack = Literal["system", "gvisor", "mixed"]
 InboundType = Literal[
     "direct",
     "mixed",
@@ -55,5 +57,8 @@ DnsReturnCode = Literal[
 DnsStrategy = Literal["prefer_ipv4", "prefer_ipv6", "ipv4_only", "ipv6_only"]
 
 # Shared
-SniffProtocol = Literal["HTTP", "TLS", "QUIC", "STUN", "DNS"]
+SniffProtocol = Literal["http", "tls", "quic", "stun", "dns", "bittorrent", "dtls"]
 TransportType = Literal["http", "ws", "quic", "grpc", "httpupgrade"]
+
+# Route
+RuleSetType = Literal["local", "remote"]

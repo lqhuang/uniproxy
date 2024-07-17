@@ -1,24 +1,25 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Sequence
 
-from attrs import frozen
+from attrs import define
 
 from .base import BaseInbound, BaseOutbound
+from .route import BaseRuleSet
 from .typing import DnsReturnCode, DnsStrategy, SniffProtocol
 
 
-@frozen
+@define
 class DNS:
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/
     """
 
-    servers: list[DnsServer] | None
-    rules: list[DnsRule] | None
+    servers: Sequence[DnsServer] | None
+    rules: Sequence[DnsRule] | None
 
     # Default dns server tag. The first server will be used if empty.
-    final: str | None = None
+    final: str | DnsServer | None = None
 
     # Default domain strategy for resolving the domain names.
     # One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
@@ -55,7 +56,7 @@ class DNS:
     client_subnet: str | None = None
 
 
-@frozen
+@define
 class DnsServer:
     tag: str
     address: str | DnsReturnCode | Literal["local", "dhcp://auto", "fakeip"]
@@ -86,11 +87,11 @@ class DnsServer:
         return str(self.tag)
 
 
-@frozen
+@define
 class DnsRule:
-    server: str
-    outbound: list[BaseOutbound] | list[str] | Literal["any"] | None = None
-    inbound: list[BaseInbound] | list[str] | None = None
+    server: str | DnsServer
+    outbound: Sequence[BaseOutbound] | Sequence[str] | Literal["any"] | None = None
+    inbound: Sequence[BaseInbound] | Sequence[str] | None = None
     ip_version: Literal["4", "6", None] = None
     auth_user: str | None = None
     protocol: SniffProtocol | None = None
@@ -99,20 +100,21 @@ class DnsRule:
     domain_suffix: str | None = None
     domain_keyword: str | None = None
     domain_regex: str | None = None
-    ip_cidr: list[str] | None = None
+    ip_cidr: Sequence[str] | None = None
     ip_is_private: bool | None = None
-    source_ip_cidr: list[str] | None = None
+    source_ip_cidr: Sequence[str] | None = None
     source_ip_is_private: bool | None = None
     source_port: int | None = None
-    source_port_range: list[str] | None = None
-    port: list[int] | None = None
-    port_range: list[str] | None = None
-    rule_set: list[str] | None = None
-    rule_set_ipcidr_match_source: bool | None = None
+    source_port_range: Sequence[str] | None = None
+    port: Sequence[int] | None = None
+    port_range: Sequence[str] | None = None
+    rule_set: Sequence[str | BaseRuleSet] | None = None
+    rule_set_ip_cidr_match_source: bool | None = None
+    rule_set_ip_cidr_accept_empty: bool | None = None
     invert: bool | None = None
 
 
-@frozen
+@define
 class FakeIP:
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/fakeip/

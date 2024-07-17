@@ -13,7 +13,11 @@ from .typing import SingBoxNetwork
 
 
 @define
-class DirectOutbound(BaseOutbound):
+class SingBoxOutbound(BaseOutbound): ...
+
+
+@define
+class DirectOutbound(SingBoxOutbound):
     """
 
     Examples:
@@ -32,18 +36,38 @@ class DirectOutbound(BaseOutbound):
     ```
     """
 
-    # Override the connection destination address.
     override_address: ServerAddress | None = None
-    # Override the connection destination port.
+    """Override the connection destination address."""
     override_port: int | None = None
-    # Write [Proxy Protocol](https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt) in the connection header.
-    #
-    # Protocol value can be `1` or `2`.
+    """Override the connection destination port."""
     proxy_protocol: Literal[1, 2] | None = None
+    """
+    Write [Proxy Protocol](https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt)
+    in the connection header. Protocol value can be `1` or `2`.
+    """
+
+    type: Literal["direct"] = "direct"
 
 
 @define
-class ShadowsocksOutbound(BaseOutbound):
+class BlockOutbound(SingBoxOutbound):
+    """
+
+    Examples:
+
+    ```json
+    {
+      "type": "block",
+      "tag": "block"
+    }
+    ```
+    """
+
+    type: Literal["block"] = "block"
+
+
+@define
+class ShadowsocksOutbound(SingBoxOutbound):
     """
 
     Examples:
@@ -68,28 +92,34 @@ class ShadowsocksOutbound(BaseOutbound):
     ```
     """
 
-    # The server address.
     server: ServerAddress
-    # The server port.
+    """The server address."""
     server_port: int
-    # Encryption methods.
+    """The server port."""
     method: ShadowsocksCipher
-    # The shadowsocks password.
+    """Encryption methods."""
     password: str
-    # Shadowsocks SIP003 plugin, implemented in internal.
+    """The shadowsocks password."""
     plugin: Literal["obfs-local", "v2ray-plugin"] | str | None = None
-    # Shadowsocks SIP003 plugin options.
+    """Shadowsocks SIP003 plugin, implemented in internal."""
     plugin_opts: str | None = None
-    # Enabled network. One of `tcp`, `udp`.
-    # Both is enabled by default.
+    """Shadowsocks SIP003 plugin options."""
     network: SingBoxNetwork | None = None
-    # UDP over TCP configuration. Conflict with `multiplex`.
+    """Enabled network. One of `tcp`, `udp`. Both is enabled by default."""
     udp_over_tcp: bool | dict | None = False
-    # See Multiplex for details.
+    """UDP over TCP configuration. Conflict with `multiplex`."""
     multiplex: OutboundMultiplex | None = None
-    # # See Dial Fields for details.
+    """See Multiplex for details."""
     # dial: DialFields | None = None
+    # """See Dial Fields for details."""
+
     type: Literal["shadowsocks"] = "shadowsocks"
+
+    def __attrs_post_init__(self):
+        if self.udp_over_tcp and self.multiplex:
+            raise ValueError(
+                "Option 'udp_over_tcp' and 'multiplex' cannot be used together"
+            )
 
     @classmethod
     def from_uniproxy(cls, ss: ShadowsocksProtocol, **kwargs) -> ShadowsocksOutbound:
@@ -107,7 +137,7 @@ class ShadowsocksOutbound(BaseOutbound):
 
 
 @define
-class VmessOutbound(BaseOutbound):
+class VmessOutbound(SingBoxOutbound):
 
     tag: str
     server: ServerAddress
@@ -126,7 +156,6 @@ class VmessOutbound(BaseOutbound):
 
     @classmethod
     def from_uniproxy(cls, vmess: VmessProtocol, **kwargs) -> VmessOutbound:
-
         transport_mapping = {
             # "ws": "ws",
             # "h2": "h2",
@@ -151,7 +180,7 @@ class VmessOutbound(BaseOutbound):
 
 
 @define
-class TrojanOutbound(BaseOutbound):
+class TrojanOutbound(SingBoxOutbound):
     """
     Examples:
 
@@ -215,7 +244,7 @@ class Peer:
 
 
 @define
-class WireguardOutbound(BaseOutbound):
+class WireguardOutbound(SingBoxOutbound):
     """
     Examples:
 
@@ -259,15 +288,16 @@ class WireguardOutbound(BaseOutbound):
 
     local_address: list[IPAddress]
     """
-    Required
+    **Required**
 
     List of IP (v4 or v6) address prefixes to be assigned to the interface.
     """
     private_key: str
     """
-    Required
+    **Required**
 
-    WireGuard requires base64-encoded public and private keys. These can be generated using the wg(8) utility:
+    WireGuard requires base64-encoded public and private keys.
+    These can be generated using the wg(8) utility:
 
     ```
     wg genkey
@@ -276,14 +306,13 @@ class WireguardOutbound(BaseOutbound):
     """
 
     server: ServerAddress | None = None
-    """The server address. Required if multi-peer disabled"""
+    """The server address. Required if multi-peer disabled."""
     server_port: int | None = None
-    """The server port. Required if multi-peer disabled"""
+    """The server port. Required if multi-peer disabled."""
     peer_public_key: str | None = None
     """
-    Required if multi-peer disabled
+    Required if multi-peer disabled. WireGuard peer public key."""
 
-    WireGuard peer public key."""
     pre_shared_key: str | None = None
     """WireGuard pre-shared key."""
 
@@ -295,7 +324,6 @@ class WireguardOutbound(BaseOutbound):
     """
 
     reserved: Sequence[int] | None = None
-
     """WireGuard reserved field bytes."""
 
     system_interface: str | None = None
@@ -310,32 +338,18 @@ class WireguardOutbound(BaseOutbound):
     """Custom interface name for system interface."""
     gso: bool | None = None
     """Try to enable generic segmentation offload."""
-
     workers: int | None = None
-    """
-    WireGuard worker count.
-
-    CPU count is used by default.
-    """
+    """WireGuard worker count. CPU count is used by default."""
     mtu: int | None = None
-    """WireGuard MTU.
-
-    1408 will be used if empty.
-    """
+    """WireGuard MTU. 1408 will be used if empty."""
     network: SingBoxNetwork | None = None
-    """
-    Enabled network
-
-    One of tcp udp.
-
-    Both is enabled by default.
-    """
+    """Enabled network. One of tcp udp. Both is enabled by default."""
 
     type: Literal["wireguard"] = "wireguard"
 
 
 @define
-class DnsOutbound(BaseOutbound):
+class DnsOutbound(SingBoxOutbound):
     """
 
     Examples:
@@ -349,11 +363,11 @@ class DnsOutbound(BaseOutbound):
     """
 
     tag: str
-    type: Literal["dns"]
+    type: Literal["dns"] = "dns"
 
 
 @define
-class SelectorOutbound(BaseOutbound):
+class SelectorOutbound(SingBoxOutbound):
     """
 
     Examples:
@@ -381,7 +395,7 @@ class SelectorOutbound(BaseOutbound):
     type: Literal["selector"] = "selector"
 
 
-class URLTestOutbound(BaseOutbound):
+class URLTestOutbound(SingBoxOutbound):
     """
     Examples:
 
@@ -405,25 +419,15 @@ class URLTestOutbound(BaseOutbound):
     """
 
     outbounds: Sequence[BaseOutbound]
-    """
-    List of outbound tags to test.
-    """
+    """List of outbound tags to test."""
     url: str | None = None
-    """
-    The URL to test. `https://www.gstatic.com/generate_204` will be used if empty.
-    """
+    """The URL to test. `https://www.gstatic.com/generate_204` will be used if empty."""
     interval: str | None = None
-    """
-    The test interval. `3m` will be used if empty.
-    """
+    """The test interval. `3m` will be used if empty."""
     tolerance: int | None = None
-    """
-    The test tolerance in milliseconds. `50` will be used if empty.
-    """
+    """The test tolerance in milliseconds. `50` will be used if empty."""
     idle_timeout: str | None = None
-    """
-    The idle timeout. 30m will be used if empty.
-    """
+    """The idle timeout. 30m will be used if empty."""
     interrupt_exist_connections: bool | None = None
     """
     Interrupt existing connections when the selected outbound has changed.
