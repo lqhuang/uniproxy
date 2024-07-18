@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from typing import Literal, Sequence
+from uniproxy.typing import NetworkCIDR
 
 from attrs import define
 
 from .base import BaseInbound
 from .route import BaseRuleSet
-from .shared import InboundTLS, MixinListenFields, Platform, User
+from .shared import InboundTLS, ListenFieldsMixin, Platform, User
 from .typing import SingBoxNetwork, TunStack
 
 __all__ = (
@@ -18,12 +19,12 @@ __all__ = (
 )
 
 
-@define
+@define(slots=False)
 class SingBoxInbound(BaseInbound): ...
 
 
-@define
-class DirectInbound(SingBoxInbound, MixinListenFields):
+@define(slots=False)
+class DirectMixin(SingBoxInbound):
     """
     {
     "type": "direct",
@@ -52,19 +53,23 @@ class DirectInbound(SingBoxInbound, MixinListenFields):
 
 
 @define
-class HTTPInbound(SingBoxInbound, MixinListenFields):
+class DirectInbound(DirectMixin, ListenFieldsMixin, SingBoxInbound): ...
+
+
+@define
+class HTTPInbound(SingBoxInbound):
     users: Sequence[User] | None = None
     tls: InboundTLS | None = None
     set_system_proxy: bool | None = None
 
 
 @define
-class Socks5Inbound(SingBoxInbound, MixinListenFields):
+class Socks5Inbound(SingBoxInbound):
     users: Sequence[User] | None = None
 
 
 @define
-class TunInbound(SingBoxInbound):
+class TunMixin(SingBoxInbound):
     """
     ```json
     {
@@ -146,21 +151,20 @@ class TunInbound(SingBoxInbound):
     ```
     """
 
-    address: Sequence[str]
-    """
-    IPv4 and IPv6 prefix (CIDR mark) for the tun interface.
-    """
+    address: Sequence[NetworkCIDR] | None = None
+    """IPv4 and IPv6 prefix (CIDR mark) for the tun interface."""
+    inet4_address: str | Sequence[str] | None = None
+    """`inet4_address` is merged to `address` and will be removed in sing-box 1.11.0."""
+    inet6_address: str | Sequence[str] | None = None
+    """`inet6_address` is merged to `address` and will be removed in sing-box 1.11.0."""
     interface_name: str | None = None
-    """
-    Virtual device name, automatically selected if empty.
-    """
+    """Virtual device name, automatically selected if empty."""
     mtu: int | None = None
-    """
-    The maximum transmission unit.
-    """
+    """The maximum transmission unit."""
     gso: bool | None = None
     """
-    Only supported on Linux with `auto_route` enabled.
+    > ![NOTE]
+    > Only supported on Linux with `auto_route` enabled.
 
     Enable generic segmentation offload.
     """
@@ -168,9 +172,11 @@ class TunInbound(SingBoxInbound):
     """
     Set the default route to the Tun.
 
-    To avoid traffic loopback, set `route.auto_detect_interface` or `route.default_interface` or `outbound.bind_interface`
+    To avoid traffic loopback, set `route.auto_detect_interface` or
+    `route.default_interface` or `outbound.bind_interface`
 
-    By default, VPN takes precedence over tun. To make tun go through VPN, enable `route.override_android_vpn`.
+    By default, VPN takes precedence over tun. To make tun go through VPN,
+    enable `route.override_android_vpn`.
     """
     iproute2_table_index: int | None = None
     """
@@ -186,29 +192,32 @@ class TunInbound(SingBoxInbound):
     """
     auto_redirect: bool | None = None
     """
-    Only supported on Linux with `auto_route` enabled.
+    > ![NOTE]
+    > Only supported on Linux with `auto_route` enabled.
 
     Automatically configure iptables/nftables to redirect connections.
 
     *In Android*：
 
-    Only local connections are forwarded. To share your VPN connection over hotspot or repeater,
-    use [VPNHotspot](https://github.com/Mygod/VPNHotspot).
+    Only local connections are forwarded. To share your VPN connection
+    over hotspot or repeater, use [VPNHotspot](https://github.com/Mygod/VPNHotspot).
 
     *In Linux*:
 
-    `auto_route` with `auto_redirect` now works as expected on routers **without intervention**.
+    `auto_route` with `auto_redirect` now works as expected on routers
+    **without intervention**.
     """
     auto_redirect_input_mark: str | None = None
     """
-    Connection input mark used by `route_address_set` and `route_exclude_address_set`.
+    Connection input mark used by `route_address_set` and
+    `route_exclude_address_set`.
 
     `0x2023` is used by default.
     """
     auto_redirect_output_mark: str | None = None
     """
-
-    Connection output mark used by `route_address_set` and `route_exclude_address_set`.
+    Connection output mark used by `route_address_set` and
+    `route_exclude_address_set`.
 
     `0x2024` is used by default.
     """
@@ -229,46 +238,49 @@ class TunInbound(SingBoxInbound):
     * Add firewall rules to prevent DNS leak caused by
     Windows' [ordinary multihomed DNS resolution behavior](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/dd197552%28v%3Dws.10%29)
 
-    It may prevent some applications (such as VirtualBox) from working properly in certain situations.
+    It may prevent some applications (such as VirtualBox) from working
+    properly in certain situations.
     """
     route_address: Sequence[str] | None = None
-    """
-    Use custom routes instead of default when `auto_route` is enabled.
-    """
+    """Use custom routes instead of default when `auto_route` is enabled."""
     route_exclude_address: Sequence[str] | None = None
-    """
-    Exclude custom routes when `auto_route` is enabled.
-    """
+    """Exclude custom routes when `auto_route` is enabled."""
     route_address_set: Sequence[str | BaseRuleSet] | None = None
     """
-    Only supported on Linux with nftables and requires `auto_route` and `auto_redirect` enabled.
+    > ![NOTE]
+    >
+    > Only supported on Linux with nftables and requires `auto_route` and
+    > `auto_redirect` enabled.
 
-    Add the destination IP CIDR rules in the specified rule-sets to the firewall.
-    Unmatched traffic will bypass the sing-box routes.
+    Add the destination IP CIDR rules in the specified rule-sets to
+    the firewall. Unmatched traffic will bypass the sing-box routes.
 
     Conflict with `route.default_mark` and `[dialOptions].routing_mark`.
     """
     route_exclude_address_set: Sequence[str | BaseRuleSet] | None = None
     """
-    Only supported on Linux with nftables and requires `auto_route` and `auto_redirect` enabled.
+    > ![NOTE]
+    >
+    > Only supported on Linux with nftables and requires `auto_route` and
+    > `auto_redirect` enabled.
 
-    Add the destination IP CIDR rules in the specified rule-sets to the firewall.
-    Matched traffic will bypass the sing-box routes.
+    Add the destination IP CIDR rules in the specified rule-sets to the
+    firewall. Matched traffic will bypass the sing-box routes.
 
     Conflict with `route.default_mark` and `[dialOptions].routing_mark`.
     """
     endpoint_independent_nat: bool | None = None
     """
-    This item is only available on the gvisor stack, other stacks are endpoint-independent NAT by default.
+    This item is only available on the gvisor stack, other stacks are
+    endpoint-independent NAT by default.
 
     Enable endpoint-independent NAT.
 
-    Performance may degrade slightly, so it is not recommended to enable on when it is not needed.
+    Performance may degrade slightly, so it is not recommended to enable on
+    when it is not needed.
     """
     udp_timeout: float | None = None
-    """
-    UDP NAT expiration time in seconds, default is 300 (5 minutes).
-    """
+    """UDP NAT expiration time in seconds, default is 300 (5 minutes)."""
     stack: TunStack | None = None
     """
     TCP/IP stack.
@@ -283,8 +295,9 @@ class TunInbound(SingBoxInbound):
     """
     include_interface: Sequence[str] | None = None
     """
-
-        Interface rules are only supported on Linux and require auto_route.
+    > ![NOTE]
+    >
+    > Interface rules are only supported on Linux and require `auto_route`.
 
     Limit interfaces in route. Not limited by default.
 
@@ -292,8 +305,11 @@ class TunInbound(SingBoxInbound):
     """
     exclude_interface: Sequence[str] | None = None
     """
-
-        When `strict_route` enabled, return traffic to excluded interfaces will not be automatically excluded, so add them as well (example: `br-lan` and `pppoe-wan`).
+    > ![NOTE]
+    >
+    > When `strict_route` enabled, return traffic to excluded interfaces will
+    > not be automatically excluded, so add them as well
+    > (example: `br-lan` and `pppoe-wan`).
 
     Exclude interfaces in route.
 
@@ -301,27 +317,24 @@ class TunInbound(SingBoxInbound):
     """
     include_uid: Sequence[int] | None = None
     """
-
-        UID rules are only supported on Linux and require auto_route.
+    > ![NOTE]
+    >
+    > UID rules are only supported on Linux and require `auto_route`.
 
     Limit users in route. Not limited by default.
     """
     include_uid_range: Sequence[str] | None = None
-    """
-    Limit users in route, but in range.
-    """
+    """Limit users in route, but in range."""
     exclude_uid: Sequence[int] | None = None
-    """
-    Exclude users in route.
-    """
+    """Exclude users in route."""
     exclude_uid_range: Sequence[str] | None = None
-    """
-    Exclude users in route, but in range.
-    """
+    """Exclude users in route, but in range."""
     include_android_user: Sequence[int] | None = None
     """
-
-        Android user and package rules are only supported on Android and require auto_route.
+    > ![NOTE]
+    >
+    > Android user and package rules are only supported on Android
+    > and require `auto_route`.
 
     Limit android users in route.
 
@@ -331,20 +344,19 @@ class TunInbound(SingBoxInbound):
     | Work Profile | 10 |
     """
     include_package: Sequence[str] | None = None
-    """
-    Limit android packages in route.
-    """
+    """Limit android packages in route."""
     exclude_package: Sequence[str] | None = None
-    """
-    Exclude android packages in route.
-    """
+    """Exclude android packages in route."""
     platform: Platform | None = None
-    """
-    Platform-specific settings, provided by client applications.
-    """
+    """Platform-specific settings, provided by client applications."""
+
+    sniff: bool | None = None
 
     type: Literal["tun"] = "tun"
 
+
+@define
+class TunInbound(ListenFieldsMixin, TunMixin, SingBoxInbound):
     def __attrs_post_init__(self):
         if self.include_interface and self.exclude_interface:
             raise ValueError(

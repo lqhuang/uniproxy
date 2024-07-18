@@ -3,23 +3,58 @@ from __future__ import annotations
 from typing import Literal, Sequence
 from uniproxy.typing import IPAddress, ServerAddress, ShadowsocksCipher, VmessCipher
 
-from attrs import define
+from attrs import define, field
 
 from uniproxy.protocols import ShadowsocksProtocol, VmessProtocol
+from uniproxy.utils import map_to_str
 
 from .base import BaseOutbound
-from .shared import BaseTransport, OutboundMultiplex, OutboundTLS
+from .shared import BaseTransport, DialFieldsMixin, OutboundMultiplex, OutboundTLS
 from .typing import SingBoxNetwork
 
+PROTOCOL_OUTBOUNDS = {
+    "direct",
+    "block",
+    "socks",
+    "http",
+    "shadowsocks",
+    "vmess",
+    "trojan",
+    "wireguard",
+    "hysteria",
+    "shadowtls",
+    "vless",
+    "tuic",
+    "hysteria2",
+    "tor",
+    "ssh",
+    "dns",
+}
+GROUP_OUTBOUNDS = {"selector", "urltest"}
 
-@define
+
+@define(slots=False)
 class SingBoxOutbound(BaseOutbound): ...
 
 
-@define
-class DirectOutbound(SingBoxOutbound):
+@define(slots=False)
+class DirectMixin:
+    override_address: ServerAddress | None = None
+    """Override the connection destination address."""
+    override_port: int | None = None
+    """Override the connection destination port."""
+    proxy_protocol: Literal[1, 2] | None = None
+    """
+    Write [Proxy Protocol](https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt)
+    in the connection header. Protocol value can be `1` or `2`.
     """
 
+    type: Literal["direct"] = "direct"
+
+
+@define
+class DirectOutbound(DialFieldsMixin, DirectMixin, SingBoxOutbound):
+    """
     Examples:
 
     ```json
@@ -35,18 +70,6 @@ class DirectOutbound(SingBoxOutbound):
     }
     ```
     """
-
-    override_address: ServerAddress | None = None
-    """Override the connection destination address."""
-    override_port: int | None = None
-    """Override the connection destination port."""
-    proxy_protocol: Literal[1, 2] | None = None
-    """
-    Write [Proxy Protocol](https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt)
-    in the connection header. Protocol value can be `1` or `2`.
-    """
-
-    type: Literal["direct"] = "direct"
 
 
 @define
@@ -67,7 +90,25 @@ class BlockOutbound(SingBoxOutbound):
 
 
 @define
-class ShadowsocksOutbound(SingBoxOutbound):
+class DnsOutbound(SingBoxOutbound):
+    """
+
+    Examples:
+
+    ```json
+    {
+        "type": "dns",
+        "tag": "dns-out"
+        ...
+    ```
+    """
+
+    tag: str
+    type: Literal["dns"] = "dns"
+
+
+@define(slots=False)
+class ShadowsocksMixin:
     """
 
     Examples:
@@ -106,7 +147,7 @@ class ShadowsocksOutbound(SingBoxOutbound):
     """Shadowsocks SIP003 plugin options."""
     network: SingBoxNetwork | None = None
     """Enabled network. One of `tcp`, `udp`. Both is enabled by default."""
-    udp_over_tcp: bool | dict | None = False
+    udp_over_tcp: bool | None = None
     """UDP over TCP configuration. Conflict with `multiplex`."""
     multiplex: OutboundMultiplex | None = None
     """See Multiplex for details."""
@@ -121,6 +162,9 @@ class ShadowsocksOutbound(SingBoxOutbound):
                 "Option 'udp_over_tcp' and 'multiplex' cannot be used together"
             )
 
+
+@define
+class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, SingBoxOutbound):
     @classmethod
     def from_uniproxy(cls, ss: ShadowsocksProtocol, **kwargs) -> ShadowsocksOutbound:
         return cls(
@@ -136,8 +180,8 @@ class ShadowsocksOutbound(SingBoxOutbound):
         )
 
 
-@define
-class VmessOutbound(SingBoxOutbound):
+@define(slots=False)
+class VmessMixin:
 
     tag: str
     server: ServerAddress
@@ -153,6 +197,10 @@ class VmessOutbound(SingBoxOutbound):
     transport: BaseTransport | None = None
     multiplex: OutboundMultiplex | None = None
     type: Literal["vmess"] = "vmess"
+
+
+@define
+class VmessOutbound(DialFieldsMixin, VmessMixin, SingBoxOutbound):
 
     @classmethod
     def from_uniproxy(cls, vmess: VmessProtocol, **kwargs) -> VmessOutbound:
@@ -179,8 +227,28 @@ class VmessOutbound(SingBoxOutbound):
         )
 
 
+@define(slots=False)
+class TrojanMixin:
+    server: ServerAddress
+    """The server address."""
+    server_port: int
+    """The server port."""
+    password: str
+    """The Trojan password."""
+    tls: OutboundTLS | None = None
+    """TLS configuration, see [[TLS]]."""
+    multiplex: OutboundMultiplex | None = None
+    """See [[Multiplex]] for details."""
+    transport: BaseTransport | None = None
+    """V2Ray Transport configuration, see V2Ray Transport."""
+    # dial: DialFields | None = None
+    """See Dial Fields for details."""
+
+    type: Literal["trojan"] = "trojan"
+
+
 @define
-class TrojanOutbound(SingBoxOutbound):
+class TrojanOutbound(DialFieldsMixin, TrojanMixin, SingBoxOutbound):
     """
     Examples:
 
@@ -201,21 +269,6 @@ class TrojanOutbound(SingBoxOutbound):
     }
     ```
     """
-
-    server: ServerAddress
-    """The server address."""
-    server_port: int
-    """The server port."""
-    password: str
-    """The Trojan password."""
-    multiplex: OutboundMultiplex | None = None
-    """See Multiplex for details."""
-    transport: BaseTransport | None = None
-    """V2Ray Transport configuration, see V2Ray Transport."""
-    # dial: DialFields | None = None
-    """See Dial Fields for details."""
-
-    type: Literal["trojan"] = "trojan"
 
 
 @define
@@ -243,50 +296,9 @@ class Peer:
     """
 
 
-@define
-class WireguardOutbound(SingBoxOutbound):
-    """
-    Examples:
-
-    ```json
-    {
-    "type": "wireguard",
-    "tag": "wireguard-out",
-
-    "server": "127.0.0.1",
-    "server_port": 1080,
-    "system_interface": false,
-    "gso": false,
-    "interface_name": "wg0",
-    "local_address": [
-        "10.0.0.2/32"
-    ],
-    "private_key": "YNXtAzepDqRv9H52osJVDQnznT5AM11eCK3ESpwSt04=",
-    "peers": [
-        {
-        "server": "127.0.0.1",
-        "server_port": 1080,
-        "public_key": "Z1XXLsKYkYxuiYjJIkRvtIKFepCYHTgON+GwPq7SOV4=",
-        "pre_shared_key": "31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=",
-        "allowed_ips": [
-            "0.0.0.0/0"
-        ],
-        "reserved": [0, 0, 0]
-        }
-    ],
-    "peer_public_key": "Z1XXLsKYkYxuiYjJIkRvtIKFepCYHTgON+GwPq7SOV4=",
-    "pre_shared_key": "31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=",
-    "reserved": [0, 0, 0],
-    "workers": 4,
-    "mtu": 1408,
-    "network": "tcp",
-
-    ... // Dial Fields
-    }
-    ```
-    """
-
-    local_address: list[IPAddress]
+@define(slots=False)
+class WireguardMixin:
+    local_address: Sequence[IPAddress]
     """
     **Required**
 
@@ -344,26 +356,51 @@ class WireguardOutbound(SingBoxOutbound):
     """WireGuard MTU. 1408 will be used if empty."""
     network: SingBoxNetwork | None = None
     """Enabled network. One of tcp udp. Both is enabled by default."""
-
     type: Literal["wireguard"] = "wireguard"
 
 
 @define
-class DnsOutbound(SingBoxOutbound):
+class WireguardOutbound(DialFieldsMixin, WireguardMixin, SingBoxOutbound):
     """
-
     Examples:
 
     ```json
     {
-        "type": "dns",
-        "tag": "dns-out"
-        ...
+    "type": "wireguard",
+    "tag": "wireguard-out",
+
+    "server": "127.0.0.1",
+    "server_port": 1080,
+    "system_interface": false,
+    "gso": false,
+    "interface_name": "wg0",
+    "local_address": [
+        "10.0.0.2/32"
+    ],
+    "private_key": "YNXtAzepDqRv9H52osJVDQnznT5AM11eCK3ESpwSt04=",
+    "peers": [
+        {
+        "server": "127.0.0.1",
+        "server_port": 1080,
+        "public_key": "Z1XXLsKYkYxuiYjJIkRvtIKFepCYHTgON+GwPq7SOV4=",
+        "pre_shared_key": "31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=",
+        "allowed_ips": [
+            "0.0.0.0/0"
+        ],
+        "reserved": [0, 0, 0]
+        }
+    ],
+    "peer_public_key": "Z1XXLsKYkYxuiYjJIkRvtIKFepCYHTgON+GwPq7SOV4=",
+    "pre_shared_key": "31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=",
+    "reserved": [0, 0, 0],
+    "workers": 4,
+    "mtu": 1408,
+    "network": "tcp",
+
+    ... // Dial Fields
+    }
     ```
     """
-
-    tag: str
-    type: Literal["dns"] = "dns"
 
 
 @define
@@ -388,13 +425,13 @@ class SelectorOutbound(SingBoxOutbound):
     ```
     """
 
-    tag: str
-    outbounds: list[BaseOutbound] | list[str]
+    outbounds: Sequence[BaseOutbound | str] = field(converter=map_to_str)
     default: BaseOutbound | str | None = None
     interrupt_exist_connections: bool | None = None
     type: Literal["selector"] = "selector"
 
 
+@define
 class URLTestOutbound(SingBoxOutbound):
     """
     Examples:
@@ -418,13 +455,13 @@ class URLTestOutbound(SingBoxOutbound):
     ```
     """
 
-    outbounds: Sequence[BaseOutbound]
+    outbounds: Sequence[BaseOutbound | str] = field(converter=map_to_str)
     """List of outbound tags to test."""
     url: str | None = None
     """The URL to test. `https://www.gstatic.com/generate_204` will be used if empty."""
     interval: str | None = None
     """The test interval. `3m` will be used if empty."""
-    tolerance: int | None = None
+    tolerance: float | None = None
     """The test tolerance in milliseconds. `50` will be used if empty."""
     idle_timeout: str | None = None
     """The idle timeout. 30m will be used if empty."""
@@ -436,3 +473,34 @@ class URLTestOutbound(SingBoxOutbound):
     """
 
     type: Literal["urltest"] = "urltest"
+
+
+# TODO: bug??
+# ...
+# Not a bug
+# https://www.attrs.org/en/stable/glossary.html#term-slotted-classes
+# https://github.com/python-attrs/attrs/issues/407
+# import gc
+#
+# gc.collect()
+#
+# _SINGBOX_REGISTERED_OUTBOUNDS = {
+#     key: subcls
+#     for subcls in SingBoxOutbound.__subclasses__()
+#     if isinstance(key := getattr(subcls, "type"), str)
+# }
+# for subclss in SingBoxOutbound.__subclasses__():
+#     print(subclss, subclss.type.__name__)
+#     print(dir(subclss.type))
+
+_SINGBOX_REGISTERED_OUTBOUNDS = {
+    "direct": DirectOutbound,
+    "block": BlockOutbound,
+    "dns": DnsOutbound,
+    "shadowsocks": ShadowsocksOutbound,
+    "vmess": VmessOutbound,
+    "wireguard": WireguardOutbound,
+    "trojan": TrojanOutbound,
+    "selector": SelectorOutbound,
+    "urltest": URLTestOutbound,
+}

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from attrs import define
+from attrs import define, field
 
 from .base import BaseInbound, BaseOutbound
 from .dns import DNS

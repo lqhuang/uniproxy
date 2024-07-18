@@ -44,11 +44,14 @@ class BaseProxyProvider(AbstractUniproxy):
 @define
 class BaseRule(AbstractUniproxy):
     type: RuleType
-    matcher: str
-    protocol: str | ProtocolLike
+    matcher: str | Sequence[str]
+    policy: str | ProtocolLike
 
-    def __str__(self) -> str:
-        return f"{self.type},{self.matcher},{self.protocol}"
+    def __str__(self) -> str | Sequence[str]:
+        if isinstance(self.matcher, Sequence):
+            return tuple(f"{self.type},{m},{self.policy}" for m in self.matcher)
+        else:
+            return f"{self.type},{self.matcher},{self.policy}"
 
 
 @define

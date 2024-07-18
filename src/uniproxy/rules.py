@@ -4,204 +4,219 @@ from typing import Literal
 
 from attrs import define
 
-from uniproxy.base import BaseProtocol, BaseRule
+from uniproxy.base import BaseRule, BaseRuleProvider, ProtocolLike
 
 
 @define
-class DomainRule(BaseRule):
+class UniproxyRule(BaseRule): ...
+
+
+@define
+class DomainRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["domain"] = "domain"
 
 
 @define
-class StackedDomainRule(BaseRule):
+class DomainGroupRule(UniproxyRule):
     matcher: list[str]
-    policy: str | BaseProtocol
-    type: Literal["domain"] = "domain"
+    policy: ProtocolLike | str
+    type: Literal["domain-group"] = "domain-group"
 
 
 @define
-class DomainSuffixRule(BaseRule):
+class DomainSuffixRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["domain-suffix"] = "domain-suffix"
 
 
 @define
-class StackedDomainSuffixRule(BaseRule):
+class DomainSuffixGroupRule(UniproxyRule):
     matcher: list[str]
-    policy: str | BaseProtocol
-    type: Literal["domain-suffix"] = "domain-suffix"
+    policy: ProtocolLike | str
+    type: Literal["domain-suffix-group"] = "domain-suffix-group"
 
 
 @define
-class DomainKeywordRule(BaseRule):
+class DomainKeywordRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["domain-keyword"] = "domain-keyword"
 
 
 @define
-class StackedDomainKeywordRule(BaseRule):
-    matchers: list[str]
-    policy: str | BaseProtocol
-    type: Literal["domain-keyword"] = "domain-keyword"
+class DomainKeywordGroupRule(UniproxyRule):
+    matcher: list[str]
+    policy: ProtocolLike | str
+    type: Literal["domain-keyword-group"] = "domain-keyword-group"
 
 
 @define
-class DomainSetRule(BaseRule):
+class IPCidrRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
-    type: Literal["domain-set"] = "domain-set"
-
-
-@define
-class IPCidrRule(BaseRule):
-    matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     no_resolve: bool = True
     type: Literal["ip-cidr"] = "ip-cidr"
 
 
 @define
-class StackedIPCidrRule(BaseRule):
+class IPCidrGroupRule(UniproxyRule):
     matcher: list[str]
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     no_resolve: bool = True
-    type: Literal["ip-cidr"] = "ip-cidr"
+    type: Literal["ip-cidr-group"] = "ip-cidr-group"
 
 
 @define
-class IPCidr6Rule(BaseRule):
+class IPCidr6Rule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     no_resolve: bool = True
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
 
 @define
-class StackedIPCidr6Rule(BaseRule):
+class IPCidr6GroupRule(UniproxyRule):
     matcher: list[str]
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     no_resolve: bool = True
-    type: Literal["ip-cidr6"] = "ip-cidr6"
+    type: Literal["ip-cidr6-group"] = "ip-cidr6-group"
 
 
 @define
-class GeoIPRule(BaseRule):
+class GeoIPRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["geoip"] = "geoip"
 
 
 @define
-class UserAgentRule(BaseRule):
+class UserAgentRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["user-agent"] = "user-agent"
 
 
 @define
-class UrlRegexRule(BaseRule):
+class UrlRegexRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["url-regex"] = "url-regex"
 
 
 @define
-class ProcessNameRule(BaseRule):
+class ProcessNameRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["process-name"] = "process-name"
 
 
 @define
-class AndRule(BaseRule):
+class AndRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["and"] = "and"
 
 
 @define
-class OrRule(BaseRule):
+class OrRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["or"] = "or"
 
 
 @define
-class NotRule(BaseRule):
+class NotRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["not"] = "not"
 
 
 @define
-class SubnetRule(BaseRule):
+class SubnetRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["subnet"] = "subnet"
 
 
 @define
-class DestPortRule(BaseRule):
+class DestPortRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["dest-port"] = "dest-port"
 
 
 @define
-class SrcPortRule(BaseRule):
+class SrcPortRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["src-port"] = "src-port"
 
 
 @define
-class InPortRule(BaseRule):
+class InPortRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["in-port"] = "in-port"
 
 
 @define
-class SrcIPRule(BaseRule):
+class SrcIPRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["src-ip"] = "src-ip"
 
 
 @define
-class ProtocolRule(BaseRule):
+class ProtocolRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["protocol"] = "protocol"
 
 
 @define
-class ScriptRule(BaseRule):
+class ScriptRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["script"] = "script"
 
 
 @define
-class CellularRadioRule(BaseRule):
+class CellularRadioRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["cellular-radio"] = "cellular-radio"
 
 
 @define
-class DeviceNameRule(BaseRule):
+class DeviceNameRule(UniproxyRule):
     matcher: str
-    policy: str | BaseProtocol
+    policy: ProtocolLike | str
     type: Literal["device-name"] = "device-name"
 
 
 @define
-class FinalRule(BaseRule):
-    policy: str | BaseProtocol
+class FinalRule(UniproxyRule):
     matcher: None = None
+    policy: ProtocolLike | str = None  # type: ignore
     type: Literal["final"] = "final"
+
+    def __attrs_post_init__(self):
+        if self.policy is None:
+            raise ValueError("FinalRule must have a policy, cannot be None")
+
+
+@define
+class DomainSetRule(UniproxyRule):
+    matcher: str | BaseRuleProvider
+    policy: ProtocolLike | str
+    type: Literal["domain-set"] = "domain-set"
+
+
+@define
+class RuleSetRule(UniproxyRule):
+    matcher: str | BaseRuleProvider
+    policy: ProtocolLike | str
+    type: Literal["rule-set"] = "rule-set"

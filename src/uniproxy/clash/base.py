@@ -37,7 +37,7 @@ class BaseProxyGroup(AbstractClash):
     proxies: Sequence[ProtocolLike] | None = field(default=None, converter=map_to_str)
     use: Sequence[BaseProxyProvider] | None = field(default=None, converter=map_to_str)
 
-    disable_udp: bool = field(default=False, metadata={"alias_converter": "kebab-case"})
+    disable_udp: bool = False
 
     url: str = "https://www.gstatic.com/generate_204"
     interval: float = 120  # seconds

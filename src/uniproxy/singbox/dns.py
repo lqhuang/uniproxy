@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from typing import Literal, Sequence
+from uniproxy.typing import NetworkCIDR
 
-from attrs import define
+from attrs import define, field
 
 from .base import BaseInbound, BaseOutbound
 from .route import BaseRuleSet
@@ -19,7 +20,9 @@ class DNS:
     rules: Sequence[DnsRule] | None
 
     # Default dns server tag. The first server will be used if empty.
-    final: str | DnsServer | None = None
+    final: str | DnsServer | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
 
     # Default domain strategy for resolving the domain names.
     # One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
@@ -89,7 +92,9 @@ class DnsServer:
 
 @define
 class DnsRule:
-    server: str | DnsServer
+    server: str | DnsServer = field(
+        converter=lambda x: str(x) if x is not None else None
+    )
     outbound: Sequence[BaseOutbound] | Sequence[str] | Literal["any"] | None = None
     inbound: Sequence[BaseInbound] | Sequence[str] | None = None
     ip_version: Literal["4", "6", None] = None
@@ -100,9 +105,9 @@ class DnsRule:
     domain_suffix: str | None = None
     domain_keyword: str | None = None
     domain_regex: str | None = None
-    ip_cidr: Sequence[str] | None = None
+    ip_cidr: Sequence[NetworkCIDR] | None = None
     ip_is_private: bool | None = None
-    source_ip_cidr: Sequence[str] | None = None
+    source_ip_cidr: Sequence[NetworkCIDR] | None = None
     source_ip_is_private: bool | None = None
     source_port: int | None = None
     source_port_range: Sequence[str] | None = None

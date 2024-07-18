@@ -4,7 +4,6 @@ from typing import Literal
 from uniproxy.typing import (
     Network,
     ProtocolType,
-    ProtocolTypeEnum,
     ShadowsocksCipher,
     VmessCipher,
     VmessTransport,
@@ -46,46 +45,6 @@ class Socks5Protocol(UniproxyProtocol):
     network: Network = "tcp_and_udp"
 
     type: Literal["socks5", "socks5-tls"] = "socks5"
-
-    def as_clash(self) -> dict:
-        """
-        YAML example:
-
-        ```yaml
-        name: proxy-socks5
-        type: socks5
-        server: 127.0.0.1
-        port: 1080
-        # username: username
-        # password: password
-        # tls: true
-        # skip-cert-verify: true
-        # udp: true
-        ```
-        """
-        auth_opts = (
-            {
-                "username": self.username,
-                "password": self.password,
-            }
-            if self.username and self.password
-            else {}
-        )
-        tls_opts = (
-            {"tls": self.tls, "skip-cert-verify": not self.tls.verify}
-            if self.tls
-            else {}
-        )
-
-        return {
-            "name": self.name,
-            "type": ProtocolTypeEnum.SOCKS5.value,
-            "server": self.server,
-            "port": self.port,
-            "udp": self.network != "tcp",
-            **auth_opts,
-            **tls_opts,
-        }
 
 
 @define
@@ -185,30 +144,9 @@ class VmessWsTransport:
 
     type: Literal["ws"] = "ws"
 
-    def as_clash(self) -> dict:
-        """
-        YAML example:
-
-        ```yaml
-        ws-opts:
-          path: /path
-          headers:
-            Host: v2ray.com
-        ```
-        """
-        headers = self.headers or {}
-        return {"path": self.path, **headers}
-
-    def as_surge_inline(self) -> str:
-        return f"ws=true, ws-path={self.path}"
-
 
 @define
 class VmessH2Transport(BaseVmessTransport):
-    """
-    YAML example:
-    """
-
     path: str | None
     headers: dict[str, str] | None = None
     type: Literal["h2"] = "h2"

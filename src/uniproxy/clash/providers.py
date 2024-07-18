@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Literal
 
-from attrs import define, frozen, field
+from attrs import define, field, frozen
 
+from uniproxy.providers import ProxyProvider as UniproxyProxyProvider
 
 from .base import BaseProxyProvider, BaseRuleProvider
-from uniproxy.providers import ProxyProvider as UniproxyProxyProvider
 
 
 @frozen
@@ -27,9 +27,7 @@ class ProxyProvider(BaseProxyProvider):
     interval: float | None = None
 
     filter: str | None = None  # golang regex
-    health_check: HealthCheck | None = field(
-        default=HealthCheck(), metadata={"alias_converter": "kebab-case"}
-    )
+    health_check: HealthCheck | None = HealthCheck()
 
     def __str__(self) -> str:
         return str(self.name)

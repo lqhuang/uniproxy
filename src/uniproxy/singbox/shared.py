@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import Literal, Sequence
 from uniproxy.typing import ServerAddress
 
-from abc import ABC
+from ipaddress import IPv4Address, IPv6Address
 from os import PathLike
 
 from attrs import define
 
 from uniproxy.protocols import TLS as UniproxyTLS
 
-from .base import BaseInbound
+from .base import BaseInbound, BaseOutbound
 from .typing import DnsStrategy, TransportType
 
 
@@ -75,13 +75,14 @@ class UTLS:
     fingerprint: str | None = None
 
 
-class BaseTLS(ABC): ...
+@define
+class BaseTLS:
+    enabled: bool | None = None
+    server_name: str | None = None
 
 
 @define
-class InboundTLS:
-    enabled: bool | None = None
-    server_name: str | None = None
+class InboundTLS(BaseTLS):
     alpn: Sequence[str] | None = None
     min_version: str | None = None
     max_version: str | None = None
@@ -96,9 +97,7 @@ class InboundTLS:
 
 @define
 class OutboundTLS(BaseTLS):
-    enabled: bool | None = None
     disable_sni: bool | None = None
-    server_name: str | None = None
     insecure: bool | None = None
     alpn: Sequence[str] | None = None
     min_version: str | None = None
@@ -120,12 +119,8 @@ class OutboundTLS(BaseTLS):
         )
 
 
-@define
-class DialFields: ...
-
-
-@define
-class MixinListenFields:
+@define(slots=False)
+class ListenFieldsMixin:
     listen: str | None = None
     listen_port: int | None = None
     tcp_fast_open: bool | None = None
@@ -159,6 +154,95 @@ class MixinListenFields:
     """
 
     udp_disable_domain_unmapping: bool | None = None
+
+
+@define(slots=False)
+class DialFieldsMixin:
+    """
+    ```json
+    {
+      "detour": "upstream-out",
+      "bind_interface": "en0",
+      "inet4_bind_address": "0.0.0.0",
+      "inet6_bind_address": "::",
+      "routing_mark": 1234,
+      "reuse_addr": false,
+      "connect_timeout": "5s",
+      "tcp_fast_open": false,
+      "tcp_multi_path": false,
+      "udp_fragment": false,
+      "domain_strategy": "prefer_ipv6",
+      "fallback_delay": "300ms"
+    }
+    ```
+
+    - bind_interface
+    - bind_address
+    - routing_mark
+    - reuse_addr
+    - tcp_fast_open
+    - tcp_multi_path
+    - udp_fragment
+    - connect_timeout
+    """
+
+    detour: BaseOutbound | str | None = None
+    """The tag of the upstream outbound."""
+    bind_interface: str | None = None
+    """The network interface to bind to."""
+    inet4_bind_address: str | IPv4Address | None = None
+    """The IPv4 address to bind to."""
+    inet6_bind_address: str | IPv6Address | None = None
+    """The IPv6 address to bind to."""
+    routing_mark: str | None = None
+    """
+    > ![NOTE]
+    > Only supported on Linux.
+
+    Set netfilter routing mark.
+    """
+    reuse_addr: bool | None = None
+    """Reuse listener address."""
+    tcp_fast_open: bool | None = None
+    """Enable TCP Fast Open."""
+    tcp_multi_path: bool | None = None
+    """Enable TCP Multi Path."""
+    udp_fragment: bool | None = None
+    """Enable UDP fragmentation."""
+    connect_timeout: str | None = None
+    """
+    Connect timeout, in golang's Duration format.
+
+    A duration string is a possibly signed sequence of decimal numbers,
+    each with optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m".
+    Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+    """
+    domain_strategy: DnsStrategy | None = None
+    """
+    One of prefer_ipv4 prefer_ipv6 ipv4_only ipv6_only.
+
+    If set, the requested domain name will be resolved to IP before connect.
+
+    | Outbound | Effected domains         | Fallback Value                          |
+    | -------- | ------------------------ | --------------------------------------- |
+    | direct   | Domain in request        | Take inbound.domain_strategy if not set |
+    | others   | Domain in server address | /                                       |
+    """
+    fallback_delay: str | None = None
+    """
+    The length of time to wait before spawning a RFC 6555 Fast Fallback connection.
+    That is, is the amount of time to wait for connection to succeed before assuming
+    that IPv4/IPv6 is misconfigured and falling back to other type of addresses.
+    If zero, a default delay of 300ms is used.
+
+    Only take effect when `domain_strategy` is set.
+    """
+
+    def __attrs_post_init__(self):
+        if hasattr(super(), "__attrs_post_init__"):
+            super().__attrs_post_init__()
+        if self.detour and self.bind_interface:
+            raise ValueError("'detour' and 'bind_interface' are mutually exclusive.")
 
 
 class InboundMultiplex:
@@ -231,14 +315,14 @@ class PlatformHttpProxy:
     """Enable system HTTP proxy."""
     bypass_domain: Sequence[str] | None = None
     """
-    > ![WARNING]
+    > ![WARN]
     > On Apple platforms, `bypass_domain` items matches hostname **suffixes**.
 
     Hostnames that bypass the HTTP proxy.
     """
     match_domain: Sequence[str] | None = None
     """
-    > ![WARNING]
+    > ![WARN]
     > Only supported in graphical clients on Apple platforms.
 
     Hostnames that use the HTTP proxy.

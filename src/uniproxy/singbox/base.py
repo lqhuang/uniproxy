@@ -7,7 +7,7 @@ from uniproxy.abc import AbstractSingBox
 from .typing import InboundType, OutboundType
 
 
-@define
+@define(slots=False)
 class BaseOutbound(AbstractSingBox):
     tag: str
     type: OutboundType
@@ -16,7 +16,7 @@ class BaseOutbound(AbstractSingBox):
         return str(self.tag)
 
 
-@define
+@define(slots=False)
 class BaseInbound(AbstractSingBox):
     tag: str
     type: InboundType
