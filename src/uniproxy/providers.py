@@ -16,7 +16,7 @@ class ProxyProvider(BaseProxyProvider):
 
     interval: float | None = 21600  # 6 hours
     filter: str | None = None  # regex
-    modifiers: dict[str, str] | None = None
+    # modifiers: dict[str, str] | None = None
 
     network: Network | None = "tcp_and_udp"
     health_check: bool = True
@@ -27,5 +27,4 @@ class RuleProvider(BaseRuleProvider):
     name: str
     url: str
     path: str | None = None
-
     interval: float | None = 21600  # 6 hours

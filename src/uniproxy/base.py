@@ -16,12 +16,14 @@ class BaseProtocol(AbstractUniproxy):
     server: ServerAddress
     port: int
 
+    def __str__(self) -> str:
+        return str(self.name)
+
 
 @define
 class BaseProxyGroup(AbstractUniproxy):
     name: str
     type: GroupType
-
     proxies: Sequence[str | ProtocolLike]
     network: Network | None = "tcp_and_udp"
 
@@ -32,6 +34,9 @@ class BaseProxyGroup(AbstractUniproxy):
     # TODO: update to `HealthCheck` class
     health_check: bool = False
 
+    def __str__(self) -> str:
+        return str(self.name)
+
 
 @define
 class BaseProxyProvider(AbstractUniproxy):
@@ -40,16 +45,19 @@ class BaseProxyProvider(AbstractUniproxy):
     url: str
     path: str | None
 
+    def __str__(self) -> str:
+        return str(self.name)
+
 
 @define
 class BaseRule(AbstractUniproxy):
-    type: RuleType
     matcher: str | Sequence[str]
     policy: str | ProtocolLike
+    type: RuleType
 
     def __str__(self) -> str | Sequence[str]:
         if isinstance(self.matcher, Sequence):
-            return tuple(f"{self.type},{m},{self.policy}" for m in self.matcher)
+            return "\n".join(f"{self.type},{m},{self.policy}" for m in self.matcher)
         else:
             return f"{self.type},{self.matcher},{self.policy}"
 
@@ -57,9 +65,7 @@ class BaseRule(AbstractUniproxy):
 @define
 class BaseRuleProvider(AbstractUniproxy):
     name: str
-    type: GroupType
-    proxies: Sequence[ProtocolLike]
-
+    url: str
     interval: float | None
 
 

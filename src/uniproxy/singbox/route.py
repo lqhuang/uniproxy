@@ -114,7 +114,7 @@ class Rule:
                 # TODO: add extra opts to give a prefix or suffix
                 return cls(
                     outbound=str(policy),
-                    rule_set=f"rs-geoio-{matcher}".lower(),
+                    rule_set=f"rs-geoip-{matcher}".lower(),
                 )
             case RuleSetRule(matcher, policy) | DomainSetRule(
                 matcher=matcher, policy=policy
@@ -135,11 +135,40 @@ class Rule:
 @define
 class Route:
     rules: Sequence[Rule]
+    """List of [[Route Rule]]"""
     rule_set: Sequence[BaseRuleSet]
+    """List of [[rule-set]]"""
     final: str | BaseOutbound | None = field(
         converter=lambda x: str(x) if x is not None else None
     )
+    """Default outbound tag. the first outbound will be used if empty."""
     auto_detect_interface: bool | None = None
+    """
+    > [!WARN] Only supported on Linux, Windows and macOS.
+
+    Bind outbound connections to the default NIC by default to prevent routing loops under tun.
+
+    Takes no effect if `outbound.bind_interface` is set.
+    """
     override_android_vpn: bool | None = None
+    """
+    > [!WARN] Only supported on Android.
+
+    Accept Android VPN as upstream NIC when `auto_detect_interface` enabled.
+    """
     default_interface: str | None = None
+    """
+    > [!WARN] Only supported on Linux, Windows and macOS.
+
+    Bind outbound connections to the specified NIC by default to prevent routing loops under tun.
+
+    Takes no effect if `auto_detect_interface` is set.
+    """
     default_mark: int | None = None
+    """
+    > [!WARN] Only supported on Linux.
+
+    Set routing mark by default.
+
+    Takes no effect if `outbound.routing_mark` is set.
+    """

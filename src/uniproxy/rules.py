@@ -57,7 +57,7 @@ class DomainKeywordGroupRule(UniproxyRule):
 class IPCidrRule(UniproxyRule):
     matcher: str
     policy: ProtocolLike | str
-    no_resolve: bool = True
+    no_resolve: bool | None = None
     type: Literal["ip-cidr"] = "ip-cidr"
 
 
@@ -65,7 +65,7 @@ class IPCidrRule(UniproxyRule):
 class IPCidrGroupRule(UniproxyRule):
     matcher: list[str]
     policy: ProtocolLike | str
-    no_resolve: bool = True
+    no_resolve: bool | None = None
     type: Literal["ip-cidr-group"] = "ip-cidr-group"
 
 
@@ -73,7 +73,7 @@ class IPCidrGroupRule(UniproxyRule):
 class IPCidr6Rule(UniproxyRule):
     matcher: str
     policy: ProtocolLike | str
-    no_resolve: bool = True
+    no_resolve: bool | None = None
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
 
@@ -81,7 +81,7 @@ class IPCidr6Rule(UniproxyRule):
 class IPCidr6GroupRule(UniproxyRule):
     matcher: list[str]
     policy: ProtocolLike | str
-    no_resolve: bool = True
+    no_resolve: bool | None = None
     type: Literal["ip-cidr6-group"] = "ip-cidr6-group"
 
 

@@ -1,105 +1,137 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Literal
 
-from attrs import define
+import gc
+
+from attrs import define, fields
+
+from uniproxy.proxy_groups import FallBackGroup as UniproxyFallBackGroup
+from uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
+from uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
+from uniproxy.proxy_groups import UniproxyProxyGroup
+from uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 
 from .base import BaseProxyGroup
-from .typing import SurgeGroupType
 
 
 @define
-class SelectGroup(BaseProxyGroup):
+class SurgeProxyGroup(BaseProxyGroup):
+
+    @classmethod
+    def from_uniproxy(
+        cls, proxy_group: UniproxyProxyGroup, **kwargs
+    ) -> SurgeProxyGroup:
+        gc.collect(1)
+        all_subclasses = cls.__subclasses__()
+        for subcls in all_subclasses:
+            proto_type = fields(subcls).type.default
+            if proto_type == proxy_group.type:
+                inst = subcls.from_uniproxy(proxy_group)
+                break
+        else:
+            implemented = tuple(
+                fields(subcls).type.default for subcls in all_subclasses
+            )
+            raise NotImplementedError(
+                f"Unknown protocol type: '{proxy_group.type}' for implemented SurgeProxyGroup subclasses {implemented}"
+            )
+        return inst
+
+
+@define
+class SelectGroup(SurgeProxyGroup):
     type: Literal["select"] = "select"
 
-    def asdict(self):
-        proxies = ", ".join((p.name for p in self.proxies))
-        return {self.name: f"{self.type}, {proxies}"}
+    @classmethod
+    def from_uniproxy(cls, proxy_group: UniproxySelectGroup, **kwargs) -> SelectGroup:
+        return cls(
+            name=proxy_group.name,
+            # FIXME: convert from UniproxyProtocol into SurgeProtocol
+            proxies=[str(i) for i in proxy_group.proxies],
+            type=proxy_group.type,
+        )
+
+    def __attrs_asdict__(self):
+        return {self.name: f"{self.type}, {self.proxies_opts}"}
 
 
 @define
-class UrlTestGroup(BaseProxyGroup):
+class UrlTestGroup(SurgeProxyGroup):
     interval: float = 60  # seconds
     tolerance: float = 300  # milliseconds
     timeout: float = 5  # seconds
     evaluate_before_use: bool = False
     """
-    By default, when the Automatic Testing policy group is used for the first time, in order not to affect the request, it will first access using the first policy in the policy group while triggering a test of the policy group.
+    By default, when the Automatic Testing policy group is used for the first
+    time, in order not to affect the request, it will first access using the
+    first policy in the policy group while triggering a test of the policy group.
 
-    If this option is enabled, then when using the Automatic Testing policy group for the first time, it will trigger a test of the policy group and wait until testing is finished before making requests with selected results.
+    If this option is enabled, then when using the Automatic Testing policy
+    group for the first time, it will trigger a test of the policy group and
+    wait until testing is finished before making requests with selected results.
     """
 
     url: str = "https://www.gstatic.com/generate_204"
     type: Literal["url-test"] = "url-test"
 
-    def asdict(self):
-        proxies = ", ".join((p.name for p in self.proxies))
+    def __attrs_asdict__(self):
         opts = f"interval={self.interval}, tolerance={self.tolerance}, timeout={self.timeout}"
-        return {self.name: f"{self.type}, {proxies}, {opts}"}
+        return {self.name: f"{self.type}, {self.proxies_opts}, {opts}"}
+
+    @classmethod
+    def from_uniproxy(cls, proxy_group: UniproxyUrlTestGroup, **kwargs) -> UrlTestGroup:
+        return cls(
+            name=proxy_group.name,
+            # FIXME: convert from UniproxyProtocol into SurgeProtocol
+            proxies=[str(i) for i in proxy_group.proxies],
+            interval=proxy_group.interval,
+            timeout=proxy_group.timeout,
+            tolerance=proxy_group.tolerance,
+        )
 
 
 @define
-class FallBackGroup(BaseProxyGroup):
+class FallBackGroup(SurgeProxyGroup):
     interval: float = 120  # milliseconds
     timeout: float = 5  # seconds
 
     type: Literal["fallback"] = "fallback"
 
-    def asdict(self):
-        proxies = ", ".join((p.name for p in self.proxies))
+    def __attrs_asdict__(self):
         opts = f"interval={self.interval}, timeout={self.timeout}"
-        return {self.name: f"{self.type}, {proxies}, {opts}"}
+        return {self.name: f"{self.type}, {self.proxies_opts}, {opts}"}
+
+    @classmethod
+    def from_uniproxy(
+        cls, proxy_group: UniproxyFallBackGroup, **kwargs
+    ) -> FallBackGroup:
+        return cls(
+            name=proxy_group.name,
+            # FIXME: convert from UniproxyProtocol into SurgeProtocol
+            proxies=[str(i) for i in proxy_group.proxies],
+            interval=proxy_group.interval,
+            timeout=proxy_group.timeout,
+        )
 
 
 @define
-class LoadBalanceGroup(BaseProxyGroup):
+class LoadBalanceGroup(SurgeProxyGroup):
     persistent: bool = False
 
     type: Literal["load-balance"] = "load-balance"
 
-    def asdict(self):
-        proxies = ", ".join((p.name for p in self.proxies))
-        opts = f"persistent={self.persistent}"
-        return {self.name: f"{self.type}, {proxies}, {opts}"}
+    def __attrs_asdict__(self):
+        opts = f"persistent={str(self.persistent).lower()}"
+        return {self.name: f"{self.type}, {self.proxies_opts}, {opts}"}
 
-
-@define
-class ExternalGroup(BaseProxyGroup):
-    using_type: SurgeGroupType
-    policy_path: str
-
-    update_interval: float | None = 21600  # 6 hours
-    """The update interval in seconds. Only meaningful when the path is a URL."""
-
-    policy_regex_filter: str | None = None
-    """Only use the policies that the regex matches the policy name."""
-
-    external_policy_modifier: str | None = None
-    """
-    You may use this parameter to modify the parameters of external policies.
-    For example, enabling TFO and changing the testing URL:
-
-        external-policy-modifier="test-url=http://apple.com/,tfo=true"
-    """
-
-    proxies: Sequence = ()
-    type: Literal["external"] = "external"
-
-    def __post_init__(self) -> None:
-        if self.using_type == "external":
-            raise ValueError("The using_type cannot be 'external'.")
-
-    def asdict(self):
-        external_policy_modifier = (
-            '"%s"' % self.external_policy_modifier.strip("'").strip('"')
-            if self.external_policy_modifier is not None
-            else None
+    @classmethod
+    def from_uniproxy(
+        cls, proxy_group: UniproxyLoadBalanceGroup, **kwargs
+    ) -> LoadBalanceGroup:
+        return cls(
+            name=proxy_group.name,
+            # FIXME: convert from UniproxyProtocol into SurgeProtocol
+            proxies=[str(i) for i in proxy_group.proxies],
+            persistent=proxy_group.strategy == "consistent-hashing",
         )
-        conf = {
-            "policy-path": self.policy_path,
-            "update-interval": self.update_interval,
-            "policy-regex-filter": self.policy_regex_filter,
-            "external-policy-modifier": external_policy_modifier,
-        }
-        opts = ", ".join(f"{k}={v}" for k, v in conf.items() if v is not None)
-        return {self.name: f"{self.using_type}, {opts}"}

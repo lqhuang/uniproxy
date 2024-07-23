@@ -63,3 +63,7 @@ def merge_pairs_by_key(
     if key is None:
         key = itemgetter(0)
     return [each[1] for each in sorted(chain(*seqs), key=key)]
+
+
+def _map_from_uniproxy(pairs, cls):
+    return [(i, cls.from_uniproxy(each)) for i, each in pairs]

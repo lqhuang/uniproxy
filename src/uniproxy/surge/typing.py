@@ -19,4 +19,6 @@ SurgeGroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet", "smart"
 ]
 
+SurgeRuleProviderType = Literal["domain-set", "rule-set"]
+
 _ProtocolOptions: TypeAlias = dict[str, str | None]

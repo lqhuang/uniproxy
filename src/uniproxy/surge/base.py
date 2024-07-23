@@ -7,7 +7,7 @@ from attrs import define
 
 from uniproxy.abc import AbstractSurge
 
-from .typing import SurgeGroupType, SurgeProtocolType
+from .typing import SurgeGroupType, SurgeProtocolType, SurgeRuleProviderType
 
 
 @define
@@ -29,19 +29,26 @@ class BaseProtocol(AbstractSurge):
 
 
 @define
+class BaseProxyProvider(AbstractSurge):
+    name: str
+
+    def __str__(self) -> str:
+        return str(self.name)
+
+
+@define
 class BaseProxyGroup(AbstractSurge):
     name: str
-    proxies: Sequence[BaseProtocol | BaseProxyGroup]
+    proxies: Sequence[ProtocolLike | str]
     type: SurgeGroupType
     # url: str = "http://www.gstatic.com/generate_204"
 
-    def asdict(self) -> dict[str, str]:
-        raise NotImplementedError
-
     @property
-    def proxies_opts(self) -> str | None:
-        opts = ", ".join((proxy.name for proxy in self.proxies))
-        return opts if opts else None
+    def proxies_opts(self) -> str:
+        opts = ", ".join(
+            (proxy if isinstance(proxy, str) else proxy.name for proxy in self.proxies)
+        )
+        return opts
 
     @property
     def include_other_group(self) -> tuple[BaseProxyGroup, ...]:
@@ -49,3 +56,29 @@ class BaseProxyGroup(AbstractSurge):
         return tuple(
             group for group in self.proxies if isinstance(group, BaseProxyGroup)
         )
+
+    def __str__(self) -> str:
+        return str(self.name)
+
+
+@define
+class BaseRule(AbstractSurge):
+    matcher: str | BaseRuleProvider
+    policy: ProtocolLike
+    type: str
+
+    def __str__(self) -> str:
+        return f"{self.type.upper()},{self.matcher},{self.policy}"
+
+
+@define
+class BaseRuleProvider(AbstractSurge):
+    name: str
+    url: str
+    type: SurgeRuleProviderType
+
+    def __str__(self) -> str:
+        return str(self.name)
+
+
+ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup

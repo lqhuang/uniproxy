@@ -54,3 +54,32 @@ class NTP:
     """
 
     ...
+
+
+@define
+class Experimental:
+    """
+    Ref: https://sing-box.sagernet.org/configuration/experimental/
+    """
+
+    cache_file: CacheFile | None = None
+    clash_api: dict | None = None
+    v2ray_api: dict | None = None
+
+
+@define
+class CacheFile:
+    """
+        Ref: https://sing-box.sagernet.org/configuration/experimental/cache-file/
+
+    ```json
+    {
+      "enabled": true,
+      "path": "",
+      "cache_id": "",
+      "store_fakeip": false,
+      "store_rdrc": false,
+      "rdrc_timeout": ""
+    }
+    ```
+    """

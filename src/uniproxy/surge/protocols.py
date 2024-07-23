@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
-from uniproxy.typing import IPAddress, ShadowsocksCipher, VmessCipher
+from typing import Literal, Mapping, Sequence
+from uniproxy.typing import IPAddress, ProtocolType, ShadowsocksCipher, VmessCipher
 
+import gc
 from ipaddress import IPv4Address, IPv6Address
 
-from attrs import define
+from attrs import define, fields
 
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
+from uniproxy.protocols import TrojanProtocol as UniproxyTrojanProtocol
+from uniproxy.protocols import UniproxyProtocol
 from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 
 from .base import AbstractSurge, BaseProtocol
@@ -16,7 +19,25 @@ from .typing import _ProtocolOptions
 
 
 @define
-class SurgeProtocol(BaseProtocol): ...
+class SurgeProtocol(BaseProtocol):
+    @classmethod
+    def from_uniproxy(cls, protocol: UniproxyProtocol, **kwargs) -> SurgeProtocol:
+        gc.collect(1)
+        for subcls in cls.__subclasses__():
+            _fields = fields(subcls)
+            proto_type = _fields.type.default
+            proto_type = "shadowsocks" if proto_type == "ss" else proto_type
+            if proto_type == protocol.type:
+                inst = subcls.from_uniproxy(protocol)
+                break
+        else:
+            raise NotImplementedError(
+                f"Unknown protocol type '{protocol.type}' while transforming uniproxy protocol to surge protocol"
+            )
+        return inst
+
+    def to_uniproxy(self, **kwargs) -> UniproxyProtocol:
+        return self.to_uniproxy()
 
 
 @define
@@ -88,7 +109,23 @@ class ShadowsocksProtocol(SurgeProtocol):
     obfs_host: str | None = None
     obfs_uri: str | None = None
 
+    ecn: bool | None = None
+
     type: Literal["ss"] = "ss"
+
+    @classmethod
+    def from_uniproxy(
+        cls, protocol: UniproxyShadowsocksProtocol, **kwargs
+    ) -> ShadowsocksProtocol:
+        return cls(
+            name=protocol.name,
+            server=protocol.server,
+            port=protocol.port,
+            password=protocol.password,
+            encrypt_method=protocol.method,
+            udp_relay=protocol.network != "tcp",
+            **kwargs,
+        )
 
     def __attrs_asdict__(self):
         """
@@ -110,6 +147,8 @@ class ShadowsocksProtocol(SurgeProtocol):
             "encrypt-method": self.encrypt_method,
             "password": self.password,
             "udp-relay": str(self.udp_relay).lower(),
+            # FIXME: incorrect position
+            "ecn": str(self.ecn).lower() if self.ecn is not None else None,
         }
         ss_opts = ", ".join(f"{k}={v}" for k, v in ss_conf.items())
 
@@ -121,19 +160,35 @@ class ShadowsocksProtocol(SurgeProtocol):
             )
         }
 
+
+@define
+class TrojanProtocol(SurgeProtocol):
+    password: str
+    tls: SurgeTLS | None = None
+
+    type: Literal["trojan"] = "trojan"
+
+    def __attrs_asdict__(self):
+        """
+        Config (ini) example:
+
+        ```ini
+        Proxy-Trojan = trojan, 192.168.20.6, 443, password=password1
+        ```
+        """
+        must_opts = f"{self.type}, {self.server}, {self.port}, password={self.password}"
+        tls_opts = str(self.tls) if self.tls else None
+        return {
+            self.name: ", ".join(
+                i for i in (must_opts, tls_opts) if i is not None and i != ""
+            )
+        }
+
     @classmethod
     def from_uniproxy(
-        cls, protocol: UniproxyShadowsocksProtocol, **kwargs
-    ) -> ShadowsocksProtocol:
-        return cls(
-            name=protocol.name,
-            server=protocol.server,
-            port=protocol.port,
-            password=protocol.password,
-            encrypt_method=protocol.method,
-            udp_relay=protocol.network != "tcp",
-            **kwargs,
-        )
+        cls, protocol: UniproxyTrojanProtocol, **kwargs
+    ) -> TrojanProtocol:
+        raise NotImplementedError("Not implemented yet")
 
 
 @define
@@ -315,3 +370,15 @@ class WireguardSection(AbstractSurge):
 
     def __attrs_asdict__(self):
         return {f"WireGuard {self.name}": {}}
+
+
+SURGE_PROTOCOLS_MAPPER: Mapping[ProtocolType, type[SurgeProtocol]] = {
+    "http": HttpProtocol,
+    "https": HttpProtocol,
+    "socks5": Socks5Protocol,
+    "socks5-tls": Socks5Protocol,
+    "shadowsocks": ShadowsocksProtocol,
+    "vmess": VmessProtocol,
+    "trojan": TrojanProtocol,
+    "wireguard": WireguardProtocol,
+}

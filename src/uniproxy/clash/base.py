@@ -57,12 +57,7 @@ class BaseProxyGroup(AbstractClash):
 @define
 class BaseRuleProvider:
     name: str
-    behavior: Literal["domain", "ipcidr", "classical"]
-    format: Literal["yaml", "text"]
-
     url: str
-    path: str
-    interval: int
 
     def __str__(self) -> str:
         return str(self.name)
@@ -70,9 +65,9 @@ class BaseRuleProvider:
 
 @define
 class BaseRule(AbstractClash):
-    matcher: str
-    protocol: BaseProtocol | BaseProxyGroup | BaseProxyProvider
-    type: RuleType | BaseRuleProvider
+    matcher: str | BaseRuleProvider
+    policy: BaseProtocol | BaseProxyGroup | BaseProxyProvider
+    type: RuleType
 
     def __str__(self) -> str:
         return f"{self.type},{self.matcher},{str(self.protocol)}"

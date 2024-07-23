@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Literal, cast
 from uniproxy.typing import ShadowsocksCipher, VmessCipher, VmessTransport
 
+import gc
+
 from attrs import define, field, fields
 from xattrs._metadata import _Metadata
 
@@ -24,23 +26,22 @@ class ClashProtocol(BaseProtocol):
 
     @classmethod
     def from_uniproxy(cls, protocol: UniproxyProtocol, **kwargs) -> ClashProtocol:
+        gc.collect(1)
         for subcls in cls.__subclasses__():
             _fields = fields(subcls)
-            clash_type = _fields.type.default
-            clash_type = "shadowsocks" if clash_type == "ss" else clash_type
-            if clash_type == protocol.type:
+            proto_type = _fields.type.default
+            proto_type = "shadowsocks" if proto_type == "ss" else proto_type
+            if proto_type == protocol.type:
                 inst = subcls.from_uniproxy(protocol)
                 break
         else:
-            raise NotImplementedError(f"Unknown protocol type: {protocol.type}")
-
+            raise NotImplementedError(
+                f"Unknown protocol type '{protocol.type}' while transforming uniproxy protocol to clash protocol"
+            )
         return inst
 
     def to_uniproxy(self, **kwargs) -> UniproxyProtocol:
         return self.to_uniproxy()
-
-    def __str__(self) -> str:
-        return str(self.name)
 
 
 @define

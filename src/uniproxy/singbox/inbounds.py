@@ -164,6 +164,7 @@ class TunMixin(SingBoxInbound):
     gso: bool | None = None
     """
     > ![NOTE]
+    >
     > Only supported on Linux with `auto_route` enabled.
 
     Enable generic segmentation offload.
@@ -172,8 +173,9 @@ class TunMixin(SingBoxInbound):
     """
     Set the default route to the Tun.
 
-    To avoid traffic loopback, set `route.auto_detect_interface` or
-    `route.default_interface` or `outbound.bind_interface`
+    > [!WARN]
+    > To avoid traffic loopback, set `route.auto_detect_interface` or
+    > `route.default_interface` or `outbound.bind_interface`
 
     By default, VPN takes precedence over tun. To make tun go through VPN,
     enable `route.override_android_vpn`.
@@ -192,8 +194,7 @@ class TunMixin(SingBoxInbound):
     """
     auto_redirect: bool | None = None
     """
-    > ![NOTE]
-    > Only supported on Linux with `auto_route` enabled.
+    > ![WARN] Only supported on Linux with `auto_route` enabled.
 
     Automatically configure iptables/nftables to redirect connections.
 
@@ -296,7 +297,6 @@ class TunMixin(SingBoxInbound):
     include_interface: Sequence[str] | None = None
     """
     > ![NOTE]
-    >
     > Interface rules are only supported on Linux and require `auto_route`.
 
     Limit interfaces in route. Not limited by default.
@@ -306,7 +306,6 @@ class TunMixin(SingBoxInbound):
     exclude_interface: Sequence[str] | None = None
     """
     > ![NOTE]
-    >
     > When `strict_route` enabled, return traffic to excluded interfaces will
     > not be automatically excluded, so add them as well
     > (example: `br-lan` and `pppoe-wan`).

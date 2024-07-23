@@ -7,6 +7,7 @@ from attrs import define, field, frozen
 from uniproxy.providers import ProxyProvider as UniproxyProxyProvider
 
 from .base import BaseProxyProvider, BaseRuleProvider
+from .typing import RuleProviderBehaviorType, RuleProviderFormat
 
 
 @frozen
@@ -56,12 +57,51 @@ class ProxyProvider(BaseProxyProvider):
 @define
 class RuleProvider(BaseRuleProvider):
     name: str
-    behavior: Literal["domain", "ipcidr", "classical"]
+    format: RuleProviderFormat
+    behavior: RuleProviderBehaviorType
+
+    url: str | None = None
+    path: str | None = None
+    interval: int | None = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.url is None and self.path is None:
+            raise ValueError("Either 'url' or 'path' must be provided")
+        if self.path is None:
+            self.path = f"./rule-providers/{self.name}.{self.format}"
+
+
+@define
+class DomainRuleProvider(RuleProvider):
+    name: str
     format: Literal["yaml", "text"]
 
     url: str
-    path: str
-    interval: int
+    path: str | None = None
+    interval: int | None = None
 
-    def __str__(self) -> str:
-        return str(self.name)
+    behavior: Literal["domain"] = "domain"
+
+
+@define
+class IPCidrRuleProvider(RuleProvider):
+    name: str
+    format: Literal["yaml", "text"]
+
+    url: str
+    path: str | None = None
+    interval: int | None = None
+
+    behavior: Literal["ipcidr"] = "ipcidr"
+
+
+@define
+class ClassicalRuleProvider(RuleProvider):
+    name: str
+    format: Literal["yaml", "text"]
+
+    url: str
+    path: str | None = None
+    interval: int | None = None
+
+    behavior: Literal["classical"] = "classical"

@@ -2,9 +2,15 @@ from __future__ import annotations
 
 from typing import Literal, Sequence
 
+import gc
+
 from attrs import define, fields
 
-from uniproxy._helpers import merge_pairs_by_key, split_uniproxy_protocol_like
+from uniproxy._helpers import (
+    _map_from_uniproxy,
+    merge_pairs_by_key,
+    split_uniproxy_protocol_like,
+)
 from uniproxy.clash.protocols import ClashProtocol
 from uniproxy.clash.providers import ProxyProvider as ClashProxyProvider
 from uniproxy.protocols import UniproxyProtocol
@@ -15,10 +21,6 @@ from uniproxy.proxy_groups import UniproxyProxyGroup
 from uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 
 from .base import BaseProtocol, BaseProxyGroup, BaseProxyProvider
-
-
-def _map_from_uniproxy(pairs, cls):
-    return [(i, cls.from_uniproxy(each)) for i, each in pairs]
 
 
 def _split_proxy_and_provider(proxies: Sequence[UniproxyProtocol]) -> tuple[
@@ -42,9 +44,10 @@ class ClashProxyGroup(BaseProxyGroup):
 
     @classmethod
     def from_uniproxy(cls, protocol: UniproxyProxyGroup, **kwargs) -> ClashProxyGroup:
+        gc.collect(1)
         for subcls in cls.__subclasses__():
-            clash_type = fields(subcls).type.default
-            if clash_type == protocol.type:
+            proto_type = fields(subcls).type.default
+            if proto_type == protocol.type:
                 inst = subcls.from_uniproxy(protocol)
                 break
         else:
