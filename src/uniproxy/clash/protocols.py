@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, cast
-from uniproxy.typing import ShadowsocksCipher, VmessCipher, VmessTransport
+from typing import Literal, Sequence, cast
+from uniproxy.typing import ALPN, ShadowsocksCipher, VmessCipher, VmessTransport
 
 import gc
 
@@ -13,6 +13,7 @@ from uniproxy.protocols import (
 )
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
 from uniproxy.protocols import ShadowsocksV2RayPlugin as UniproxyShadowsocksV2RayPlugin
+from uniproxy.protocols import TrojanProtocol as UniproxyTrojanProtocol
 from uniproxy.protocols import UniproxyProtocol
 from uniproxy.protocols import VmessH2Transport as UniproxyVmessH2Transport
 from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
@@ -164,6 +165,56 @@ class ShadowsocksProtocol(ClashProtocol):
             udp=protocol.network != "tcp",
             plugin="obfs" if plugin == "obfs-local" else plugin,
             plugin_opts=plugin_opts,
+        )
+
+
+@define
+class TrojanProtocol(ClashProtocol):
+    """
+    ```yaml
+    name: trojan
+    type: trojan
+    server: server
+    port: 443
+    password: yourpassword
+    # udp: true
+    # sni: example.com # Server Name Indication, value of `server` will be used if not set
+    # alpn:
+    #   - h2
+    #   - http/1.1
+    # skip-cert-verify: true
+    ```
+    """
+
+    password: str
+    sni: str | None = None
+    skip_cert_verify: bool | None = None
+    alpn: Sequence[ALPN] | None = None
+
+    udp: bool | None = None
+
+    type: Literal["trojan"] = "trojan"
+
+    @classmethod
+    def from_uniproxy(cls, protocol: UniproxyTrojanProtocol) -> TrojanProtocol:
+        if protocol.tls is not None:
+            skip_cert_verify = not protocol.tls.verify
+            sni = protocol.tls.server_name
+            alpn = protocol.tls.alpn
+        else:
+            skip_cert_verify = None
+            sni = None
+            alpn = None
+
+        return cls(
+            protocol.name,
+            protocol.server,
+            protocol.port,
+            password=protocol.password,
+            sni=sni,
+            skip_cert_verify=skip_cert_verify,
+            alpn=alpn,
+            udp=protocol.network != "tcp",
         )
 
 
