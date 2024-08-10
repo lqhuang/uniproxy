@@ -21,8 +21,8 @@ class UniproxyProtocol(BaseProtocol): ...
 
 @define
 class HttpProtocol(UniproxyProtocol):
-    username: str
-    password: str
+    username: str | None = None
+    password: str | None = None
     tls: TLS | None = None
 
     type: Literal["http", "https"] = "http"
@@ -106,18 +106,45 @@ class ShadowsocksServer(ShadowsocksProtocol): ...
 class ShadowsocksLocal(ShadowsocksProtocol): ...
 
 
-class TrojanProtocol: ...
+@define
+class TrojanProtocol(UniproxyProtocol):
+    password: str
+    tls: TLS | None = None
+    network: Network = "tcp_and_udp"
+
+    type: Literal["trojan"] = "trojan"
 
 
 @define
 class TuicProtocol(UniproxyProtocol):
     token: str
-    version: int
     tls: TLS
-    disable_sni: bool = False
+
     udp_mode: Literal["naive", "quic"] = "quic"
+    """
+    Set the UDP relay mode. Available: "native", "quic".
+
+    Default: "native"
+    """
+
     congestion_control: Literal["cubic", "new_reno", "bbr"] = "bbr"
-    reduce_rtt: bool = False
+    """
+    Set the congestion control algorithm. Available: "cubic", "new_reno", "bbr".
+
+    Default: "cubic"
+    """
+
+    heartbeat_interval: float | None = None
+    """
+    Set the heartbeat interval to ensures that the QUIC connection is not
+    closed when there are relay tasks but no data transfer, in milliseconds.
+
+    Default: 10000
+    """
+
+    reduce_rtt: bool | None = False
+    """Enable 0-RTT QUIC handshake"""
+
     type: Literal["tuic"] = "tuic"
 
 

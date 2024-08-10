@@ -17,7 +17,7 @@ class DNS:
     """
 
     servers: Sequence[DnsServer] | None
-    rules: Sequence[DnsRule] | None
+    rules: Sequence[DnsRule] | None = None
 
     # Default dns server tag. The first server will be used if empty.
     final: str | DnsServer | None = field(
@@ -67,7 +67,9 @@ class DnsServer:
     # Required if address contains domain
     #
     # Tag of a another server to resolve the domain name in the address.
-    address_resolver: str | DnsServer | None = None
+    address_resolver: str | DnsServer | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
 
     # The domain strategy for resolving the domain name in the address.
     # One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
@@ -82,7 +84,9 @@ class DnsServer:
     # Tag of an outbound for connecting to the dns server.
     #
     # Default outbound will be used if empty.
-    detour: str | None = None
+    detour: BaseOutbound | str | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
 
     client_subnet: str | None = None
 
@@ -92,9 +96,7 @@ class DnsServer:
 
 @define
 class DnsRule:
-    server: str | DnsServer = field(
-        converter=lambda x: str(x) if x is not None else None
-    )
+    server: str | DnsServer = field(converter=str)
     outbound: Sequence[BaseOutbound] | Sequence[str] | Literal["any"] | None = None
     inbound: Sequence[BaseInbound] | Sequence[str] | None = None
     ip_version: Literal["4", "6", None] = None

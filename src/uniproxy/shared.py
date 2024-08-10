@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import Sequence
+from uniproxy.typing import ALPN
+
 from os import PathLike
 
 from attrs import frozen
@@ -8,11 +11,12 @@ from attrs import frozen
 @frozen
 class TLS:
     server_name: str | None = None
-    enable_sni: bool | None = None
-    alpn: list[str] | None = None
+    sni: bool | None = None
+    # https://github.com/quicwg/base-drafts/wiki/ALPN-IDs-used-with-QUIC
+    alpn: Sequence[ALPN] | None = None
     verify: bool = True
-    cert_ca: str | PathLike | None = None
-    cert_private_key: str | PathLike | None = None
+    cert_ca: Sequence[str] | PathLike | None = None
+    cert_private_key: Sequence[str] | PathLike | None = None
     cert_private_password: str | None = None
 
 

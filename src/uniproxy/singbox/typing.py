@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Mapping, Protocol
+from uniproxy.typing import ALPN, ServerAddress
 
-SingBoxNetwork = Literal["tcp", "udp", ""]
+SingBoxNetwork = Literal["tcp", "udp", None]
 LogLevel = Literal["trace", "debug", "info", "warn", "error", "fatal", "panic"]
 
 TunStack = Literal["system", "gvisor", "mixed"]
@@ -45,6 +46,8 @@ OutboundType = Literal[
     "urltest",
 ]
 
+TLSVersion = Literal["1.0", "1.1", "1.2", "1.3"]
+
 # DNS
 DnsReturnCode = Literal[
     "rcode://success",
@@ -62,3 +65,11 @@ TransportType = Literal["http", "ws", "quic", "grpc", "httpupgrade"]
 
 # Route
 RuleSetType = Literal["local", "remote"]
+
+
+class Fallback(Protocol):
+    server: ServerAddress
+    server_port: int
+
+
+FallbackAlpn = Mapping[ALPN, Fallback]

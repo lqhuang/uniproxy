@@ -85,3 +85,6 @@ RuleType = Literal[
     "ip-cidr-group",
     "ip-cidr6-group",
 ]
+
+
+ALPN = Literal["http/1.1", "h2", "h3"]

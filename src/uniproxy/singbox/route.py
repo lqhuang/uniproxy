@@ -136,10 +136,10 @@ class Rule:
 class Route:
     rules: Sequence[Rule]
     """List of [[Route Rule]]"""
-    rule_set: Sequence[BaseRuleSet]
+    rule_set: Sequence[BaseRuleSet] | None = None
     """List of [[rule-set]]"""
     final: str | BaseOutbound | None = field(
-        converter=lambda x: str(x) if x is not None else None
+        default=None, converter=lambda x: str(x) if x is not None else None
     )
     """Default outbound tag. the first outbound will be used if empty."""
     auto_detect_interface: bool | None = None

@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 from typing import Literal, Mapping, Sequence
-from uniproxy.typing import IPAddress, ProtocolType, ShadowsocksCipher, VmessCipher
+from uniproxy.typing import ALPN, IPAddress
+from uniproxy.typing import ProtocolType as UniproxyProtocolType
+from uniproxy.typing import ShadowsocksCipher, VmessCipher
 
-import gc
 from ipaddress import IPv4Address, IPv6Address
 
-from attrs import define, fields
+from attrs import define
 
+from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
 from uniproxy.protocols import TrojanProtocol as UniproxyTrojanProtocol
+from uniproxy.protocols import TuicProtocol as UniproxyTuicProtocol
 from uniproxy.protocols import UniproxyProtocol
 from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 
@@ -22,15 +25,12 @@ from .typing import _ProtocolOptions
 class SurgeProtocol(BaseProtocol):
     @classmethod
     def from_uniproxy(cls, protocol: UniproxyProtocol, **kwargs) -> SurgeProtocol:
-        gc.collect(1)
-        for subcls in cls.__subclasses__():
-            _fields = fields(subcls)
-            proto_type = _fields.type.default
-            proto_type = "shadowsocks" if proto_type == "ss" else proto_type
-            if proto_type == protocol.type:
-                inst = subcls.from_uniproxy(protocol)
-                break
-        else:
+
+        try:
+            inst = UNIPROXY_SURGE_MAPPER[protocol.type].from_uniproxy(
+                protocol, **kwargs
+            )
+        except KeyError:
             raise NotImplementedError(
                 f"Unknown protocol type '{protocol.type}' while transforming uniproxy protocol to surge protocol"
             )
@@ -42,8 +42,6 @@ class SurgeProtocol(BaseProtocol):
 
 @define
 class HttpProtocol(SurgeProtocol):
-    server: str
-    port: int
     username: str | None = None
     password: str | None = None
     tls: SurgeTLS | None = None
@@ -53,6 +51,49 @@ class HttpProtocol(SurgeProtocol):
 
     type: Literal["http", "https"] = "http"
 
+    def __attrs_asdict__(self):
+        """
+        Config (ini) example:
+
+        ```ini
+        ProxyHTTP = http, 1.2.3.4, 443, username, password
+        ProxyHTTPS = https, 1.2.3.4, 443, username, password, skip-cert-verify=true
+        ```
+        """
+        if self.type == "https":
+            protocl = "socks5-tls"
+            tls_opt = str(self.tls) if self.tls else ""
+        else:
+            protocl = "socks5"
+            tls_opt = ""
+
+        auth_opt = (
+            f"{self.username}, {self.password}"
+            if self.username and self.password
+            else ""
+        )
+
+        must_opts = f"{protocl}, {self.server}, {self.port}"
+        return {
+            self.name: ", ".join(
+                filter(lambda x: bool(x), (must_opts, auth_opt, tls_opt))
+            )
+        }
+
+    @classmethod
+    def from_uniproxy(cls, protocol: UniproxyHttpProtocol, **kwargs) -> HttpProtocol:
+        tls = None if protocol.tls is None else SurgeTLS.from_uniproxy(protocol.tls)
+        return cls(
+            name=protocol.name,
+            server=protocol.server,
+            port=protocol.port,
+            username=protocol.username,
+            password=protocol.password,
+            tls=tls,
+            always_use_connect=False,
+            type=protocol.type,
+        )
+
 
 @define
 class Socks5Protocol(SurgeProtocol):
@@ -60,7 +101,7 @@ class Socks5Protocol(SurgeProtocol):
     password: str | None = None
     tls: SurgeTLS | None = None
 
-    udp_relay: bool = False
+    udp_relay: bool | None = None
 
     type: Literal["socks5", "socks5-tls"] = "socks5"
 
@@ -84,16 +125,22 @@ class Socks5Protocol(SurgeProtocol):
             protocl = "socks5"
             tls_opt = ""
 
-        auth_ops = (
+        auth_opt = (
             f"{self.username}, {self.password}"
             if self.username and self.password
+            else ""
+        )
+
+        udp_opt = (
+            f"udp-relay={str(self.udp_relay).lower()}"
+            if self.udp_relay is not None
             else ""
         )
 
         must_opts = f"{protocl}, {self.server}, {self.port}"
         return {
             self.name: ", ".join(
-                filter(lambda x: bool(x), (must_opts, auth_ops, tls_opt))
+                filter(lambda x: bool(x), (must_opts, auth_opt, tls_opt, udp_opt))
             )
         }
 
@@ -103,7 +150,7 @@ class ShadowsocksProtocol(SurgeProtocol):
     password: str
     encrypt_method: ShadowsocksCipher
 
-    udp_relay: bool = False
+    udp_relay: bool | None = None
 
     obfs: Literal["http", "tls"] | None = None
     obfs_host: str | None = None
@@ -159,36 +206,6 @@ class ShadowsocksProtocol(SurgeProtocol):
                 + (", " + obfs_opts if obfs_opts else "")
             )
         }
-
-
-@define
-class TrojanProtocol(SurgeProtocol):
-    password: str
-    tls: SurgeTLS | None = None
-
-    type: Literal["trojan"] = "trojan"
-
-    def __attrs_asdict__(self):
-        """
-        Config (ini) example:
-
-        ```ini
-        Proxy-Trojan = trojan, 192.168.20.6, 443, password=password1
-        ```
-        """
-        must_opts = f"{self.type}, {self.server}, {self.port}, password={self.password}"
-        tls_opts = str(self.tls) if self.tls else None
-        return {
-            self.name: ", ".join(
-                i for i in (must_opts, tls_opts) if i is not None and i != ""
-            )
-        }
-
-    @classmethod
-    def from_uniproxy(
-        cls, protocol: UniproxyTrojanProtocol, **kwargs
-    ) -> TrojanProtocol:
-        raise NotImplementedError("Not implemented yet")
 
 
 @define
@@ -289,6 +306,92 @@ class VmessProtocol(SurgeProtocol):
         )
 
 
+@define
+class TrojanProtocol(SurgeProtocol):
+    password: str
+    tls: SurgeTLS | None = None
+
+    udp_relay: bool | None = None
+
+    type: Literal["trojan"] = "trojan"
+
+    def __attrs_asdict__(self):
+        """
+        Config (ini) example:
+
+        ```ini
+        Proxy-Trojan = trojan, 192.168.20.6, 443, password=password1
+        ```
+        """
+        must_opts = f"{self.type}, {self.server}, {self.port}, password={self.password}"
+        tls_opts = str(self.tls) if self.tls else ""
+        udp_opts = (
+            f"udp-relay={str(self.udp_relay).lower()}"
+            if self.udp_relay is not None
+            else ""
+        )
+        return {self.name: ", ".join(filter(bool, (must_opts, tls_opts, udp_opts)))}
+
+    @classmethod
+    def from_uniproxy(
+        cls, protocol: UniproxyTrojanProtocol, **kwargs
+    ) -> TrojanProtocol:
+        return cls(
+            name=protocol.name,
+            server=protocol.server,
+            port=protocol.port,
+            password=protocol.password,
+            tls=SurgeTLS.from_uniproxy(protocol.tls) if protocol.tls else None,
+            udp_relay=UniproxyTrojanProtocol.network != "tcp",
+        )
+
+
+@define
+class TuicProtocol(SurgeProtocol):
+    """
+    ```ini
+    [Proxy]
+    Proxy-TUIC = tuic, 192.168.20.6, 443, token=pwd, alpn=h3
+    ```
+    """
+
+    token: str
+    alpn: ALPN | None = None
+
+    tls: SurgeTLS | None = None
+    udp_relay: bool | None = True
+
+    type: Literal["tuic"] = "tuic"
+
+    def __attrs_asdict__(self) -> dict:
+        must_opts = f"{self.type}, {self.server}, {self.port}, token={self.token}"
+        alpn_opts = f"alpn={self.alpn}" if self.alpn is not None else ""
+        tls_opts = str(self.tls) if self.tls else ""
+        udp_opts = (
+            f"udp-relay={str(self.udp_relay).lower()}"
+            if self.udp_relay is not None
+            else ""
+        )
+        return {
+            self.name: ", ".join(
+                filter(bool, (must_opts, alpn_opts, tls_opts, udp_opts))
+            )
+        }
+
+    @classmethod
+    def from_uniproxy(cls, protocol: UniproxyTuicProtocol, **kwargs) -> TuicProtocol:
+        tls = protocol.tls
+        return cls(
+            name=protocol.name,
+            server=protocol.server,
+            port=protocol.port,
+            token=protocol.token,
+            alpn=tls.alpn[0] if tls.alpn else None,
+            udp_relay=True,
+            **kwargs,
+        )
+
+
 class WireguardProtocol(SurgeProtocol):
     """
     ```ini
@@ -372,7 +475,7 @@ class WireguardSection(AbstractSurge):
         return {f"WireGuard {self.name}": {}}
 
 
-SURGE_PROTOCOLS_MAPPER: Mapping[ProtocolType, type[SurgeProtocol]] = {
+UNIPROXY_SURGE_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
     "http": HttpProtocol,
     "https": HttpProtocol,
     "socks5": Socks5Protocol,
@@ -380,5 +483,6 @@ SURGE_PROTOCOLS_MAPPER: Mapping[ProtocolType, type[SurgeProtocol]] = {
     "shadowsocks": ShadowsocksProtocol,
     "vmess": VmessProtocol,
     "trojan": TrojanProtocol,
+    "tuic": TuicProtocol,
     "wireguard": WireguardProtocol,
 }

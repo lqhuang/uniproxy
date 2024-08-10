@@ -1,67 +1,124 @@
 from __future__ import annotations
 
 from typing import Literal, Sequence
-from uniproxy.typing import ServerAddress
+from uniproxy.typing import ALPN, ServerAddress
 
 from ipaddress import IPv4Address, IPv6Address
 from os import PathLike
 
 from attrs import define
 
+from uniproxy.abc import AbstractSingBox
 from uniproxy.protocols import TLS as UniproxyTLS
 
 from .base import BaseInbound, BaseOutbound
-from .typing import DnsStrategy, TransportType
+from .typing import DnsStrategy, TLSVersion, TransportType
 
 
 @define
-class User:
-    username: str
-    password: str
+class Fallback(AbstractSingBox):
+    server: ServerAddress
+    server_port: int
 
 
 @define
-class ExternalAccount:
+class ExternalAccount(AbstractSingBox):
     key_id: str | None = None
+    """The key identifier."""
     mac_key: str | None = None
+    """The MAC key."""
 
 
 @define
-class DNS01Challenge:
+class DNS01Challenge(AbstractSingBox):
     provider: Literal["cloudflare", "alidns"]
 
 
 @define
 class CloudflareDNS01Challenge(DNS01Challenge):
-    provider: Literal["cloudflare"]
     api_token: str
+    provider: Literal["cloudflare"] = "cloudflare"
 
 
 @define
 class AliDNS01Challenge(DNS01Challenge):
-    provider: Literal["alidns"]
     access_key_id: str
     access_key_secret: str
     region_id: str
+    provider: Literal["alidns"] = "alidns"
 
 
 @define
-class ACME:
+class ACME(AbstractSingBox):
     domain: Sequence[str] | None = None
+    """
+    List of domain.
+
+    ACME will be disabled if empty.
+    """
+
     data_directory: str | None = None
+    """
+    The directory to store ACME data.
+
+    `$XDG_DATA_HOME/certmagic|$HOME/.local/share/certmagic` will be used if empty.
+    """
+
     default_server_name: str | None = None
+    """Server name to use when choosing a certificate if the ClientHello's ServerName field is empty."""
+
     email: str | None = None
+    """The email address to use when creating or selecting an existing ACME server account"""
+
     provider: Literal["letsencrypt", "zerossl"] | str | None = None
+    """
+    The ACME CA provider to use.
+
+    | Value                      | Provider       |
+    |----------------------------|----------------|
+    | `letsencrypt (default)`    | Let's Encrypt  |
+    | `zerossl`                  | ZeroSSL        |
+    | `https://...`              | Custom         |
+    """
+
     disable_http_challenge: bool | None = None
+    """Disable all HTTP challenges."""
+
     disable_tls_alpn_challenge: bool | None = None
+    """Disable all TLS-ALPN challenges."""
+
     alternative_http_port: int | None = None
+    """
+    The alternate port to use for the ACME HTTP challenge;
+    if non-empty, this port will be used instead of 80 to spin up
+    a listener for the HTTP challenge.
+    """
+
     alternative_tls_port: int | None = None
+    """
+    The alternate port to use for the ACME TLS-ALPN challenge;
+    the system must forward 443 to this port for challenge to succeed.
+    """
+
     external_account: ExternalAccount | None = None
+    """
+    EAB (External Account Binding) contains information necessary to bind or
+    map an ACME account to some other account known by the CA.
+
+    External account bindings are "used to associate an ACME account with an
+    existing account in a non-ACME system, such as a CA customer database.
+
+    To enable ACME account binding, the CA operating the ACME server needs to
+    provide the ACME client with a MAC key and a key identifier, using some
+    mechanism outside of ACME.
+    """
+
     dns01_challenge: DNS01Challenge | None = None
+    """ACME DNS01 challenge field. If configured, other challenge methods will be disabled."""
 
 
 @define
-class ECH:
+class ECH(AbstractSingBox):
     enabled: bool | None = None
     pq_signature_schemes_enabled: bool | None = None
     dynamic_record_sizing_disabled: bool | None = None
@@ -76,43 +133,99 @@ class UTLS:
 
 
 @define
-class BaseTLS:
-    enabled: bool | None = None
+class BaseTLS(AbstractSingBox):
+    enabled: bool
+    """Enable TLS."""
+
     server_name: str | None = None
+    """
+    Used to verify the hostname on the returned certificates unless insecure is given.
+
+    It is also included in the client's handshake to support virtual hosting unless it is an IP address.
+    """
+
+    alpn: Sequence[ALPN] | None = None
+    """
+    List of supported application level protocols, in order of preference.
+
+    If both peers support ALPN, the selected protocol will be one from this list,
+    and the connection will fail if there is no mutually supported protocol.
+
+    See [Application-Layer Protocol Negotiation](https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation).
+    """
+
+    min_version: TLSVersion | None = None
+    """
+    The minimum TLS version that is acceptable.
+
+    By default, TLS 1.2 is currently used as the minimum when acting as a
+    client, and TLS 1.0 when acting as a server.
+    """
+
+    max_version: TLSVersion | None = None
+    """
+    The maximum TLS version that is acceptable.
+
+    By default, the maximum version is currently TLS 1.3.
+    """
+
+    cipher_suites: Sequence[str] | None = None
+    """
+    A list of enabled TLS 1.0–1.2 cipher suites. The order of the list is
+    ignored. Note that TLS 1.3 cipher suites are not configurable.
+
+    If empty, a safe default list is used. The default cipher suites might change over time.
+    """
+
+    certificate: Sequence[str] | None = None
+    """The server certificate line array, in PEM format."""
+    certificate_path: PathLike | None = None
+    """
+    > [!NOTE]
+    >
+    >  Will be automatically reloaded if file modified.
+
+    The path to the server certificate, in PEM format.
+    """
 
 
 @define
 class InboundTLS(BaseTLS):
-    alpn: Sequence[str] | None = None
-    min_version: str | None = None
-    max_version: str | None = None
-    cipher_suites: Sequence[str] | None = None
-    certificate: Sequence[str] | None = None
-    certificate_path: PathLike | None = None
+
     key: Sequence[str] | None = None
+    """The server private key line array, in PEM format."""
+
     key_path: PathLike | None = None
+    """
+    > [!NOTE]
+    >
+    >  Will be automatically reloaded if file modified.
+
+    The path to the server certificate, in PEM format.
+    """
+
     acme: ACME | None = None
+
     ech: ECH | None = None
 
 
 @define
 class OutboundTLS(BaseTLS):
     disable_sni: bool | None = None
+    """Do not send server name in ClientHello."""
+
     insecure: bool | None = None
-    alpn: Sequence[str] | None = None
-    min_version: str | None = None
-    max_version: str | None = None
-    cipher_suites: Sequence[str] | None = None
-    certificate: Sequence[str] | None = None
-    certificate_path: PathLike | None = None
-    ech: ECH | None = None
+    """Accepts any server certificate."""
+
     utls: UTLS | None = None
+
+    ech: ECH | None = None
 
     @classmethod
     def from_uniproxy(cls, tls: UniproxyTLS, **kwargs) -> OutboundTLS:
         return cls(
             enabled=tls is not None,
-            disable_sni=not tls.enable_sni,
+            disable_sni=not tls.sni,
             server_name=tls.server_name,
             insecure=not tls.verify,
             alpn=tls.alpn,
@@ -121,11 +234,14 @@ class OutboundTLS(BaseTLS):
 
 @define(slots=False)
 class ListenFieldsMixin:
-    listen: str | None = None
-    listen_port: int | None = None
     tcp_fast_open: bool | None = None
+    """Enable TCP Fast Open."""
+
     tcp_multi_path: bool | None = None
+    """Enable TCP Multi Path."""
+
     udp_fragment: bool | None = None
+    """Enable UDP fragmentation."""
 
     udp_timeout: str | None = None
     """
@@ -133,6 +249,7 @@ class ListenFieldsMixin:
 
     `5m` is used by default.
     """
+
     detour: BaseInbound | str | None = None
     """
     If set, connections will be forwarded to the specified inbound.
@@ -141,8 +258,21 @@ class ListenFieldsMixin:
     """
 
     sniff: bool | None = None
+    """Enable sniffing."""
+
     sniff_override_destination: bool | None = None
+    """
+    Override the connection destination address with the sniffed domain.
+
+    If the domain name is invalid (like tor), this will not work.
+    """
+
     sniff_timeout: str | None = None
+    """
+    Timeout for sniffing.
+
+    300ms is used by default.
+    """
 
     domain_strategy: DnsStrategy | None = None
     """
@@ -154,6 +284,13 @@ class ListenFieldsMixin:
     """
 
     udp_disable_domain_unmapping: bool | None = None
+    """
+    If enabled, for UDP proxy requests addressed to a domain, the original
+    packet address will be sent in the response instead of the mapped domain.
+
+    This option is used for compatibility with clients that do not support
+    receiving UDP packets with domain addresses, such as Surge.
+    """
 
 
 @define(slots=False)
@@ -188,27 +325,36 @@ class DialFieldsMixin:
 
     detour: BaseOutbound | str | None = None
     """The tag of the upstream outbound."""
+
     bind_interface: str | None = None
     """The network interface to bind to."""
+
     inet4_bind_address: str | IPv4Address | None = None
     """The IPv4 address to bind to."""
+
     inet6_bind_address: str | IPv6Address | None = None
     """The IPv6 address to bind to."""
+
     routing_mark: str | None = None
     """
-    > ![NOTE]
+    > [!NOTE]
     > Only supported on Linux.
 
     Set netfilter routing mark.
     """
+
     reuse_addr: bool | None = None
     """Reuse listener address."""
+
     tcp_fast_open: bool | None = None
     """Enable TCP Fast Open."""
+
     tcp_multi_path: bool | None = None
     """Enable TCP Multi Path."""
+
     udp_fragment: bool | None = None
     """Enable UDP fragmentation."""
+
     connect_timeout: str | None = None
     """
     Connect timeout, in golang's Duration format.
@@ -217,6 +363,7 @@ class DialFieldsMixin:
     each with optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m".
     Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
     """
+
     domain_strategy: DnsStrategy | None = None
     """
     One of prefer_ipv4 prefer_ipv6 ipv4_only ipv6_only.
@@ -228,6 +375,7 @@ class DialFieldsMixin:
     | direct   | Domain in request        | Take inbound.domain_strategy if not set |
     | others   | Domain in server address | /                                       |
     """
+
     fallback_delay: str | None = None
     """
     The length of time to wait before spawning a RFC 6555 Fast Fallback connection.
@@ -239,8 +387,6 @@ class DialFieldsMixin:
     """
 
     def __attrs_post_init__(self):
-        if hasattr(super(), "__attrs_post_init__"):
-            super().__attrs_post_init__()
         if self.detour and self.bind_interface:
             raise ValueError("'detour' and 'bind_interface' are mutually exclusive.")
 
@@ -268,6 +414,7 @@ class OutboundMultiplex:
 
     enabled: bool | None = None
     """Enable multiplex."""
+
     protocol: Literal["smux", "yamux", "h2mux"] | None = None
     """
     Multiplex protocol.
@@ -280,22 +427,27 @@ class OutboundMultiplex:
 
     `h2mux` is used by default.
     """
+
     max_connections: int | None = None
     """Max connections. Conflict with `max_streams`."""
+
     min_streams: int | None = None
     """
     Minimum multiplexed streams in a connection before opening a new connection.
 
     Conflict with `max_streams`.
     """
+
     max_streams: int | None = None
     """
     Maximum multiplexed streams in a connection before opening a new connection.
 
     Conflict with `max_connections` and `min_streams`.
     """
+
     padding: bool | None = None
     """Enable padding for each stream."""
+
     brutal: dict | None = None
     """See TCP Brutal for details."""
 
@@ -308,21 +460,26 @@ class BaseTransport:
 @define
 class PlatformHttpProxy:
     server: ServerAddress
-    """**Required** HTTP proxy server address."""
+    """HTTP proxy server address."""
+
     server_port: int
-    """**Required** HTTP proxy server port."""
+    """HTTP proxy server port."""
+
     enabled: bool | None = None
     """Enable system HTTP proxy."""
+
     bypass_domain: Sequence[str] | None = None
     """
-    > ![WARN]
+    > [!WARN]
+    >
     > On Apple platforms, `bypass_domain` items matches hostname **suffixes**.
 
     Hostnames that bypass the HTTP proxy.
     """
+
     match_domain: Sequence[str] | None = None
     """
-    > ![WARN]
+    > [!WARN]
     > Only supported in graphical clients on Apple platforms.
 
     Hostnames that use the HTTP proxy.

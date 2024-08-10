@@ -1,21 +1,36 @@
 from __future__ import annotations
 
 from typing import Literal, Sequence
-from uniproxy.typing import NetworkCIDR
+from uniproxy.typing import NetworkCIDR, ShadowsocksCipher
 
-from attrs import define
+from attrs import define, frozen
+
+from uniproxy.common import User
 
 from .base import BaseInbound
 from .route import BaseRuleSet
-from .shared import InboundTLS, ListenFieldsMixin, Platform, User
-from .typing import SingBoxNetwork, TunStack
+from .shared import (
+    BaseTransport,
+    Fallback,
+    InboundMultiplex,
+    InboundTLS,
+    ListenFieldsMixin,
+    Platform,
+)
+from .typing import FallbackAlpn, SingBoxNetwork, TunStack
 
 __all__ = (
     "SingBoxInbound",
     "DirectInbound",
     "HTTPInbound",
     "Socks5Inbound",
+    "ShadowsocksInbound",
+    "TrojanInbound",
+    "TuicInbound",
     "TunInbound",
+    #
+    "User",
+    "TuicUser",
 )
 
 
@@ -24,7 +39,7 @@ class SingBoxInbound(BaseInbound): ...
 
 
 @define(slots=False)
-class DirectMixin(SingBoxInbound):
+class DirectMixin:
     """
     {
     "type": "direct",
@@ -53,7 +68,7 @@ class DirectMixin(SingBoxInbound):
 
 
 @define
-class DirectInbound(DirectMixin, ListenFieldsMixin, SingBoxInbound): ...
+class DirectInbound(ListenFieldsMixin, DirectMixin, SingBoxInbound): ...
 
 
 @define
@@ -68,8 +83,256 @@ class Socks5Inbound(SingBoxInbound):
     users: Sequence[User] | None = None
 
 
+@define(slots=False)
+class ShadowsocksMixin:
+    """
+    Structure
+
+    ```json
+    {
+      "type": "shadowsocks",
+      "tag": "ss-in",
+
+      ... // Listen Fields
+
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "8JCsPssfgS8tiRwiMlhARg==",
+      "multiplex": {}
+    }
+
+    ```
+
+
+    Multi-User Structure
+
+    ```json
+    {
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "8JCsPssfgS8tiRwiMlhARg==",
+      "users": [
+        {
+          "name": "sekai",
+          "password": "PCD2Z4o12bKUoFa3cC97Hw=="
+        }
+      ],
+      "multiplex": {}
+    }
+
+    ```
+
+    Relay Structure
+
+    ```json
+    {
+      "type": "shadowsocks",
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "8JCsPssfgS8tiRwiMlhARg==",
+      "destinations": [
+        {
+          "name": "test",
+          "server": "example.com",
+          "server_port": 8080,
+          "password": "PCD2Z4o12bKUoFa3cC97Hw=="
+        }
+      ],
+      "multiplex": {}
+    }
+    ```
+    """
+
+    method: ShadowsocksCipher
+    """
+    |Method                       |Key Length|
+    |-----------------------------|----------|
+    |2022-blake3-aes-128-gcm      |16        |
+    |2022-blake3-aes-256-gcm      |32        |
+    |2022-blake3-chacha20-poly1305|32        |
+    |none                         |/         |
+    |aes-128-gcm                  |/         |
+    |aes-192-gcm                  |/         |
+    |aes-256-gcm                  |/         |
+    |chacha20-ietf-poly1305       |/         |
+    |xchacha20-ietf-poly1305      |/         |
+    """
+
+    password: str
+    """Password for the Shadowsocks server."""
+
+    network: SingBoxNetwork = None
+    """
+    Listen network, one of `tcp` `udp`.
+
+    Both if empty.
+    """
+
+    users: Sequence[User] | None = None
+    """Multi-user configuration."""
+
+    # destinations: Sequence[dict] | None = None
+    # """Relay configuration."""
+
+    multiplex: InboundMultiplex | None = None
+    """
+    See [Multiplex](https://sing-box.sagernet.org/configuration/shared/multiplex#inbound) for details.
+    """
+
+
 @define
-class TunMixin(SingBoxInbound):
+class ShadowsocksInbound(ListenFieldsMixin, ShadowsocksMixin, SingBoxInbound):
+    type: Literal["shadowsocks"] = "shadowsocks"
+
+
+@define(slots=False)
+class TrojanMixin:
+    """
+    ```json
+    {
+      "type": "trojan",
+      "tag": "trojan-in",
+
+      ... // Listen Fields
+
+      "users": [
+        {
+          "name": "sekai",
+          "password": "8JCsPssfgS8tiRwiMlhARg=="
+        }
+      ],
+      "tls": {},
+      "fallback": {
+        "server": "127.0.0.1",
+        "server_port": 8080
+      },
+      "fallback_for_alpn": {
+        "http/1.1": {
+          "server": "127.0.0.1",
+          "server_port": 8081
+        }
+      },
+      "multiplex": {},
+      "transport": {}
+    }
+    ```
+    """
+
+    users: Sequence[User]
+    """Trojan users."""
+
+    tls: InboundTLS
+    """TLS configuration, see [TLS](https://sing-box.sagernet.org/configuration/shared/tls/#inbound)."""
+
+    fallback: Fallback | None = None
+    """
+    There is no evidence that GFW detects and blocks Trojan servers based on HTTP responses, and opening the standard http/s port on the server is a much bigger signature.
+
+    Fallback server configuration. Disabled if `fallback` and `fallback_for_alpn` are empty.
+    """
+
+    fallback_for_alpn: FallbackAlpn | None = None
+    """
+    Fallback server configuration for specified ALPN.
+
+    If not empty, TLS fallback requests with ALPN not in this table will be rejected.
+    """
+
+    multiplex: InboundMultiplex | None = None
+    """
+    See [Multiplex](https://sing-box.sagernet.org/configuration/shared/multiplex#inbound) for details.
+    """
+
+    transport: BaseTransport | None = None
+    """
+    V2Ray Transport configuration, see [V2Ray Transport](https://sing-box.sagernet.org/configuration/shared/v2ray-transport/).
+    """
+
+
+@define
+class TrojanInbound(ListenFieldsMixin, TrojanMixin, SingBoxInbound):
+    type: Literal["trojan"] = "trojan"
+
+
+@frozen
+class TuicUser:
+    uuid: str
+    """TUIC user uuid"""
+    name: str | None = None
+    """TUIC user name"""
+    password: str | None = None
+    """TUIC user password"""
+
+
+@define(slots=False)
+class TuicMixin:
+    """
+    ```json
+    {
+      "type": "tuic",
+      "tag": "tuic-in",
+
+      ... // Listen Fields
+
+      "users": [
+        {
+          "name": "sekai",
+          "uuid": "059032A9-7D40-4A96-9BB1-36823D848068",
+          "password": "hello"
+        }
+      ],
+      "congestion_control": "cubic",
+      "auth_timeout": "3s",
+      "zero_rtt_handshake": false,
+      "heartbeat": "10s",
+      "tls": {}
+    }
+    ```
+    """
+
+    users: Sequence[TuicUser]
+    """TUIC users"""
+
+    tls: InboundTLS
+    """TLS configuration"""
+
+    congestion_control: Literal["cubic", "new_reno", "bbr"] | None = None
+    """
+    QUIC congestion control algorithm One of: `cubic`, `new_reno`, `bbr`.
+
+    `cubic` is used by default.
+    """
+
+    auth_timeout: str | None = None
+    """
+    How long the server should wait for the client to send the authentication command
+
+    `3s` is used by default.
+    """
+
+    zero_rtt_handshake: bool | None = None
+    """
+    Enable 0-RTT QUIC connection handshake on the client side
+    This is not impacting much on the performance, as the protocol is fully multiplexed
+
+    > [!WARN]
+    >
+    > Disabling this is highly recommended, as it is vulnerable to replay attacks.
+    > See [Attack of the clones](https://blog.cloudflare.com/even-faster-connection-establishment-with-quic-0-rtt-resumption/#attack-of-the-clones).
+    """
+
+    heartbeat: str | None = None
+    """
+    Interval for sending heartbeat packets for keeping the connection alive
+
+    `10s` is used by default.
+    """
+
+
+@define
+class TuicInbound(ListenFieldsMixin, TuicMixin, SingBoxInbound):
+    type: Literal["tuic"] = "tuic"
+
+
+@define
+class TunMixin:
     """
     ```json
     {
@@ -351,11 +614,11 @@ class TunMixin(SingBoxInbound):
 
     sniff: bool | None = None
 
-    type: Literal["tun"] = "tun"
-
 
 @define
 class TunInbound(ListenFieldsMixin, TunMixin, SingBoxInbound):
+    type: Literal["tun"] = "tun"
+
     def __attrs_post_init__(self):
         if self.include_interface and self.exclude_interface:
             raise ValueError(
