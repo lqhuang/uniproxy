@@ -117,9 +117,7 @@ class DomainSetRule(SurgeRule):
         converter=lambda x: x if isinstance(x, str) else x.url
     )
     policy: ProtocolLike | str
-
     force_remote_dns: bool | None = None
-
     type: Literal["domain-set"] = "domain-set"
 
 

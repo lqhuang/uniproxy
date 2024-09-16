@@ -70,7 +70,7 @@ class BaseRule(AbstractClash):
     type: RuleType
 
     def __str__(self) -> str:
-        return f"{self.type},{self.matcher},{str(self.protocol)}"
+        return f"{self.type.upper()},{self.matcher},{str(self.policy)}"
 
 
 ProtocolLike = BaseProtocol | BaseProxyGroup | BaseProxyProvider
