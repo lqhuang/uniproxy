@@ -20,6 +20,7 @@ from uniproxy.rules import (
     RuleSetRule,
     UniproxyRule,
 )
+from uniproxy.utils import flatmap_to_tag
 
 from .base import BaseInbound, BaseOutbound
 from .typing import RuleSetType, SniffProtocol
@@ -27,8 +28,8 @@ from .typing import RuleSetType, SniffProtocol
 
 @define
 class BaseRuleSet:
-    type: RuleSetType
     tag: str
+    type: RuleSetType
     format: Literal["binary", "source"]
 
 
@@ -69,7 +70,11 @@ class Rule:
     source_port_range: str | Sequence[str] | None = None
     port: int | Sequence[int] | None = None
     port_range: str | Sequence[str] | None = None
-    rule_set: str | Sequence[str] | BaseRuleSet | Sequence[BaseRuleSet] | None = None
+    rule_set: str | Sequence[str] | BaseRuleSet | Sequence[BaseRuleSet] | None = field(
+        default=None,
+        # FIXME: This is a hack to make the converter work
+        converter=flatmap_to_tag,
+    )
     rule_set_ip_cidr_match_source: bool | None = None
     invert: bool | None = None
 

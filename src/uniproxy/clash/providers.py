@@ -7,7 +7,7 @@ from attrs import define, field, frozen
 from uniproxy.providers import ProxyProvider as UniproxyProxyProvider
 
 from .base import BaseProxyProvider, BaseRuleProvider
-from .typing import RuleProviderBehaviorType, RuleProviderFormat
+from .typing import RuleProviderBehaviorType, RuleProviderFormatType, RuleProviderType
 
 
 @frozen
@@ -57,7 +57,8 @@ class ProxyProvider(BaseProxyProvider):
 @define
 class RuleProvider(BaseRuleProvider):
     name: str
-    format: RuleProviderFormat
+    type: RuleProviderType
+    format: RuleProviderFormatType
     behavior: RuleProviderBehaviorType
 
     url: str | None = None
@@ -67,16 +68,27 @@ class RuleProvider(BaseRuleProvider):
     def __attrs_post_init__(self) -> None:
         if self.url is None and self.path is None:
             raise ValueError("Either 'url' or 'path' must be provided")
+        match self.format:
+            # https://wiki.metacubex.one/config/rule-providers/
+            case "yaml":
+                ext = "yaml"
+            case "text":
+                ext = "txt"
+            case "mrs":
+                ext = "mrs"
+            case _:
+                raise ValueError(f"Unsupported format: {self.format}")
         if self.path is None:
-            self.path = f"./rule-providers/{self.name}.{self.format}"
+            self.path = f"./rule-providers/{self.name}.{ext}"
 
 
 @define
 class DomainRuleProvider(RuleProvider):
     name: str
+    type: RuleProviderType
     format: Literal["yaml", "text"]
 
-    url: str
+    url: str | None = None
     path: str | None = None
     interval: int | None = None
 
@@ -86,9 +98,10 @@ class DomainRuleProvider(RuleProvider):
 @define
 class IPCidrRuleProvider(RuleProvider):
     name: str
-    format: Literal["yaml", "text"]
+    type: RuleProviderType
+    format: Literal["yaml", "text", "mrs"]
 
-    url: str
+    url: str | None = None
     path: str | None = None
     interval: int | None = None
 
@@ -98,9 +111,10 @@ class IPCidrRuleProvider(RuleProvider):
 @define
 class ClassicalRuleProvider(RuleProvider):
     name: str
-    format: Literal["yaml", "text"]
+    type: RuleProviderType
+    format: Literal["yaml", "text", "mrs"]
 
-    url: str
+    url: str | None = None
     path: str | None = None
     interval: int | None = None
 

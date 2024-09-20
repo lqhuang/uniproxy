@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Sequence
 from uniproxy.typing import ServerAddress
 
 from attrs import define, field
@@ -31,11 +31,23 @@ class BaseProxyProvider(AbstractClash):
 
 
 @define
+class BaseRule(AbstractClash):
+    matcher: str | BaseRuleProvider
+    policy: BaseProtocol | BaseProxyGroup | BaseProxyProvider
+    type: RuleType
+
+    def __str__(self) -> str:
+        return f"{self.type.upper()},{self.matcher},{str(self.policy)}"
+
+
+@define
 class BaseProxyGroup(AbstractClash):
     name: str
     type: GroupType
     proxies: Sequence[ProtocolLike] | None = field(default=None, converter=map_to_str)
-    use: Sequence[BaseProxyProvider] | None = field(default=None, converter=map_to_str)
+    use: Sequence[BaseRuleProvider | str] | None = field(
+        default=None, converter=map_to_str
+    )
 
     disable_udp: bool = False
 
@@ -57,21 +69,10 @@ class BaseProxyGroup(AbstractClash):
 @define
 class BaseRuleProvider:
     name: str
-    url: str
 
     def __str__(self) -> str:
         return str(self.name)
 
 
-@define
-class BaseRule(AbstractClash):
-    matcher: str | BaseRuleProvider
-    policy: BaseProtocol | BaseProxyGroup | BaseProxyProvider
-    type: RuleType
-
-    def __str__(self) -> str:
-        return f"{self.type.upper()},{self.matcher},{str(self.policy)}"
-
-
-ProtocolLike = BaseProtocol | BaseProxyGroup | BaseProxyProvider
-RuleLike = BaseRule | BaseRuleProvider
+ProtocolLike = BaseProtocol | BaseProxyGroup | BaseProxyProvider | str
+RuleLike = BaseRule | BaseRuleProvider | str

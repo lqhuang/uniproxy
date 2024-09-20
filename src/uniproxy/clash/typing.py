@@ -14,12 +14,14 @@ ProtocolType = Literal[
 ]
 GroupType = Literal["select", "url-test", "fallback", "load-balance", "external"]
 
+RuleProviderType = Literal["http", "file"]
 RuleProviderBehaviorType = Literal[
     "domain",
     "ipcidr",
     "classical",
 ]
-RuleProviderFormat = Literal["text", "yaml"]
+RuleProviderFormatType = Literal["text", "yaml", "mrs"]
+
 RuleType = Literal[
     # Domain-based Rule
     "domain",

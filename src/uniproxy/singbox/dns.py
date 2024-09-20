@@ -115,8 +115,11 @@ class DnsRule:
     source_port_range: Sequence[str] | None = None
     port: Sequence[int] | None = None
     port_range: Sequence[str] | None = None
-    rule_set: Sequence[str | BaseRuleSet] | None = field(
-        default=None, converter=lambda x: [str(i) for i in x] if x is not None else None
+    rule_set: Sequence[str | BaseRuleSet] | str | BaseRuleSet | None = field(
+        # FIXME: `converter` requires reimplementation
+        # non iterable input is acceptable
+        default=None,
+        converter=lambda x: [str(i) for i in x] if x is not None else None,
     )
     rule_set_ip_cidr_match_source: bool | None = None
     rule_set_ip_cidr_accept_empty: bool | None = None
