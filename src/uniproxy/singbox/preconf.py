@@ -10,6 +10,8 @@ TAG_DIRECT_OUTBOUND = "DIRECT"
 TAG_BLOCK_OUTBOUND = "REJECT"
 TAG_AUTO_OUTBOUND = "Auto"
 TAG_CDN_OUTBOUND = "CDN"
+TAG_DOWNLOAD_OUTBOUND = "CDN"  # "Download"
+TAG_DEFAULT_OUTBOUND = "Proxy"
 
 TAG_DNSSERVER_SYSTEM = "dns-system"
 TAG_DNSSERVER_REJECT = "dns-reject"
@@ -52,29 +54,24 @@ rs_geosite_gfw = RemoteRuleSet(
     tag="rs-geosite-gfw",
     format="binary",
     url="https://github.com/MetaCubeX/meta-rules-dat/raw/sing/geo/geosite/gfw.srs",
-    download_detour="Auto",
+    download_detour=TAG_AUTO_OUTBOUND,
 )
-
-rs_geoip_cdn = {
+rs_geosite_cn = RemoteRuleSet(
+    tag="rs-geosite-cn",
+    format="binary",
+    url="https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs",
+    download_detour=TAG_AUTO_OUTBOUND,
+)
+rs_cdn_ip_collection = {
     vendor: RemoteRuleSet(
         tag=f"rs-geoip-{vendor}",
         format="binary",
         url=f"https://github.com/MetaCubeX/meta-rules-dat/raw/sing/geo/geoip/{vendor}.srs",
-        download_detour="Auto",
+        download_detour=TAG_AUTO_OUTBOUND,
     )
     for vendor in ("cloudflare", "cloudfront", "fastly")  # "akamai", "google"
 }
 
-# Site
-rs_geosite_cn = {
-    suffix: RemoteRuleSet(
-        tag=f"rs-geosite-{suffix}",
-        format="binary",
-        url=f"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-{suffix}.srs",
-        download_detour="Auto",
-    )
-    for suffix in ("geolocation-cn", "cn")
-}
 
 #### ------------- Snippets for DNS Rules ------------- ####
 dns_rule_private = DnsRule(
@@ -83,11 +80,11 @@ dns_rule_private = DnsRule(
 )
 dns_rule_gfw = DnsRule(
     server=dns_server_fakeip,
-    rule_set=(rs_geosite_gfw,),
+    rule_set=rs_geosite_gfw,
     outbound=TAG_AUTO_OUTBOUND,
 )
 dns_rule_cn = DnsRule(
     server=dns_server_system,
-    rule_set=tuple(rs_geosite_cn.values()),
+    rule_set=rs_geosite_cn,
     outbound=TAG_DIRECT_OUTBOUND,
 )

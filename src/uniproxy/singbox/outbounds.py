@@ -12,6 +12,20 @@ from .base import BaseOutbound
 from .shared import BaseTransport, DialFieldsMixin, OutboundMultiplex, OutboundTLS
 from .typing import SingBoxNetwork
 
+__all__ = (
+    "SingBoxOutbound",
+    "DirectOutbound",
+    "BlockOutbound",
+    "DnsOutbound",
+    "ShadowsocksOutbound",
+    "VmessOutbound",
+    "TrojanOutbound",
+    "Peer",
+    "WireguardOutbound",
+    "SelectorOutbound",
+    "URLTestOutbound",
+)
+
 PROTOCOL_OUTBOUNDS = {
     "direct",
     "block",
@@ -49,8 +63,6 @@ class DirectMixin:
     in the connection header. Protocol value can be `1` or `2`.
     """
 
-    type: Literal["direct"] = "direct"
-
 
 @define
 class DirectOutbound(DialFieldsMixin, DirectMixin, SingBoxOutbound):
@@ -70,6 +82,8 @@ class DirectOutbound(DialFieldsMixin, DirectMixin, SingBoxOutbound):
     }
     ```
     """
+
+    type: Literal["direct"] = "direct"
 
 
 @define
@@ -109,6 +123,37 @@ class DnsOutbound(SingBoxOutbound):
 
 @define(slots=False)
 class ShadowsocksMixin:
+
+    server: ServerAddress
+    """The server address."""
+    server_port: int
+    """The server port."""
+    method: ShadowsocksCipher
+    """Encryption methods."""
+    password: str
+    """The shadowsocks password."""
+    plugin: Literal["obfs-local", "v2ray-plugin"] | str | None = None
+    """Shadowsocks SIP003 plugin, implemented in internal."""
+    plugin_opts: str | None = None
+    """Shadowsocks SIP003 plugin options."""
+    network: SingBoxNetwork | None = None
+    """Enabled network. One of `tcp`, `udp`. Both is enabled by default."""
+    udp_over_tcp: bool | None = None
+    """UDP over TCP configuration. Conflict with `multiplex`."""
+    multiplex: OutboundMultiplex | None = None
+    """See Multiplex for details."""
+    # dial: DialFields | None = None
+    # """See Dial Fields for details."""
+
+    def __attrs_post_init__(self):
+        if self.udp_over_tcp and self.multiplex:
+            raise ValueError(
+                "Option 'udp_over_tcp' and 'multiplex' cannot be used together"
+            )
+
+
+@define
+class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, SingBoxOutbound):
     """
 
     Examples:
@@ -133,38 +178,8 @@ class ShadowsocksMixin:
     ```
     """
 
-    server: ServerAddress
-    """The server address."""
-    server_port: int
-    """The server port."""
-    method: ShadowsocksCipher
-    """Encryption methods."""
-    password: str
-    """The shadowsocks password."""
-    plugin: Literal["obfs-local", "v2ray-plugin"] | str | None = None
-    """Shadowsocks SIP003 plugin, implemented in internal."""
-    plugin_opts: str | None = None
-    """Shadowsocks SIP003 plugin options."""
-    network: SingBoxNetwork | None = None
-    """Enabled network. One of `tcp`, `udp`. Both is enabled by default."""
-    udp_over_tcp: bool | None = None
-    """UDP over TCP configuration. Conflict with `multiplex`."""
-    multiplex: OutboundMultiplex | None = None
-    """See Multiplex for details."""
-    # dial: DialFields | None = None
-    # """See Dial Fields for details."""
-
     type: Literal["shadowsocks"] = "shadowsocks"
 
-    def __attrs_post_init__(self):
-        if self.udp_over_tcp and self.multiplex:
-            raise ValueError(
-                "Option 'udp_over_tcp' and 'multiplex' cannot be used together"
-            )
-
-
-@define
-class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, SingBoxOutbound):
     @classmethod
     def from_uniproxy(cls, ss: ShadowsocksProtocol, **kwargs) -> ShadowsocksOutbound:
         return cls(
@@ -196,11 +211,11 @@ class VmessMixin:
     packet_encoding: Literal["packetaddr", "xudp"] | None = None
     transport: BaseTransport | None = None
     multiplex: OutboundMultiplex | None = None
-    type: Literal["vmess"] = "vmess"
 
 
 @define
 class VmessOutbound(DialFieldsMixin, VmessMixin, SingBoxOutbound):
+    type: Literal["vmess"] = "vmess"
 
     @classmethod
     def from_uniproxy(cls, vmess: VmessProtocol, **kwargs) -> VmessOutbound:
@@ -244,8 +259,6 @@ class TrojanMixin:
     # dial: DialFields | None = None
     """See Dial Fields for details."""
 
-    type: Literal["trojan"] = "trojan"
-
 
 @define
 class TrojanOutbound(DialFieldsMixin, TrojanMixin, SingBoxOutbound):
@@ -269,6 +282,8 @@ class TrojanOutbound(DialFieldsMixin, TrojanMixin, SingBoxOutbound):
     }
     ```
     """
+
+    type: Literal["trojan"] = "trojan"
 
 
 @define
@@ -356,7 +371,6 @@ class WireguardMixin:
     """WireGuard MTU. 1408 will be used if empty."""
     network: SingBoxNetwork | None = None
     """Enabled network. One of tcp udp. Both is enabled by default."""
-    type: Literal["wireguard"] = "wireguard"
 
 
 @define
@@ -401,6 +415,8 @@ class WireguardOutbound(DialFieldsMixin, WireguardMixin, SingBoxOutbound):
     }
     ```
     """
+
+    type: Literal["wireguard"] = "wireguard"
 
 
 @define

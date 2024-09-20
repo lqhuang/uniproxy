@@ -69,7 +69,7 @@ class Rule:
     source_port_range: str | Sequence[str] | None = None
     port: int | Sequence[int] | None = None
     port_range: str | Sequence[str] | None = None
-    rule_set: str | Sequence[str] | None = None
+    rule_set: str | Sequence[str] | BaseRuleSet | Sequence[BaseRuleSet] | None = None
     rule_set_ip_cidr_match_source: bool | None = None
     invert: bool | None = None
 

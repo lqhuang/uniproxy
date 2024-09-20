@@ -4,6 +4,8 @@ from typing import Literal
 
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 
+Backend = Literal["surge", "clash", "sing-box"]
+
 ServerAddress = str | IPv4Address | IPv6Address
 IPAddress = str | IPv4Address | IPv6Address
 NetworkCIDR = str | IPv4Network | IPv6Network
