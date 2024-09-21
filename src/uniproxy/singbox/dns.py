@@ -5,13 +5,15 @@ from uniproxy.typing import NetworkCIDR
 
 from attrs import define, field
 
+from uniproxy.abc import AbstractSingBox
+
 from .base import BaseInbound, BaseOutbound
 from .route import BaseRuleSet
 from .typing import DnsReturnCode, DnsStrategy, SniffProtocol
 
 
 @define
-class DNS:
+class DNS(AbstractSingBox):
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/
     """
@@ -60,7 +62,7 @@ class DNS:
 
 
 @define
-class DnsServer:
+class DnsServer(AbstractSingBox):
     tag: str
     address: str | DnsReturnCode | Literal["local", "dhcp://auto", "fakeip"]
 
@@ -95,7 +97,7 @@ class DnsServer:
 
 
 @define
-class DnsRule:
+class DnsRule(AbstractSingBox):
     server: str | DnsServer = field(converter=str)
     outbound: Sequence[BaseOutbound] | Sequence[str] | Literal["any"] | None = None
     inbound: Sequence[BaseInbound] | Sequence[str] | None = None
@@ -127,7 +129,7 @@ class DnsRule:
 
 
 @define
-class FakeIP:
+class FakeIP(AbstractSingBox):
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/fakeip/
 

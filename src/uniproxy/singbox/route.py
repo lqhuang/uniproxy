@@ -4,6 +4,7 @@ from typing import Literal, Sequence
 
 from attrs import define, field
 
+from uniproxy.abc import AbstractSingBox
 from uniproxy.rules import (
     DomainGroupRule,
     DomainKeywordGroupRule,
@@ -27,10 +28,13 @@ from .typing import RuleSetType, SniffProtocol
 
 
 @define
-class BaseRuleSet:
+class BaseRuleSet(AbstractSingBox):
     tag: str
     type: RuleSetType
     format: Literal["binary", "source"]
+
+    def __str__(self) -> str:
+        return str(self.tag)
 
 
 @define
@@ -50,7 +54,7 @@ class RemoteRuleSet(BaseRuleSet):
 
 
 @define
-class Rule:
+class Rule(AbstractSingBox):
     outbound: BaseOutbound | str
 
     inbound: Sequence[BaseInbound] | Sequence[str] | None = None
@@ -138,7 +142,7 @@ class Rule:
 
 
 @define
-class Route:
+class Route(AbstractSingBox):
     rules: Sequence[Rule]
     """List of [[Route Rule]]"""
     rule_set: Sequence[BaseRuleSet] | None = None

@@ -127,7 +127,7 @@ class ECH(AbstractSingBox):
 
 
 @define
-class UTLS:
+class UTLS(AbstractSingBox):
     enabled: bool | None = None
     fingerprint: str | None = None
 
@@ -453,12 +453,12 @@ class OutboundMultiplex:
 
 
 @define
-class BaseTransport:
+class BaseTransport(AbstractSingBox):
     type: TransportType
 
 
 @define
-class PlatformHttpProxy:
+class PlatformHttpProxy(AbstractSingBox):
     server: ServerAddress
     """HTTP proxy server address."""
 
@@ -487,6 +487,6 @@ class PlatformHttpProxy:
 
 
 @define
-class Platform:
+class Platform(AbstractSingBox):
     http_proxy: PlatformHttpProxy
     """System HTTP proxy settings."""

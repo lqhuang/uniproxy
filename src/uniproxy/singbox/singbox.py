@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from attrs import define, field
+from attrs import define
+
+from uniproxy.abc import AbstractSingBox
 
 from .base import BaseInbound, BaseOutbound
 from .dns import DNS
@@ -11,7 +13,7 @@ from .typing import LogLevel
 
 
 @define
-class SingBoxConfig:
+class SingBoxConfig(AbstractSingBox):
     """
     `sing-box` uses JSON for configuration files.
 
@@ -28,7 +30,7 @@ class SingBoxConfig:
 
 
 @define
-class Log:
+class Log(AbstractSingBox):
     """
     Ref: https://sing-box.sagernet.org/configuration/log/
     """
@@ -43,7 +45,7 @@ class Log:
     """Add time to each line."""
 
 
-class NTP:
+class NTP(AbstractSingBox):
     """
     Built-in NTP client service.
 
@@ -57,7 +59,7 @@ class NTP:
 
 
 @define
-class Experimental:
+class Experimental(AbstractSingBox):
     """
     Ref: https://sing-box.sagernet.org/configuration/experimental/
     """
@@ -68,7 +70,7 @@ class Experimental:
 
 
 @define
-class CacheFile:
+class CacheFile(AbstractSingBox):
     """
         Ref: https://sing-box.sagernet.org/configuration/experimental/cache-file/
 

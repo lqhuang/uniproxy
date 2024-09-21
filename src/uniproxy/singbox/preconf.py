@@ -15,7 +15,7 @@ TAG_DNSSERVER_FAKEIP = "dns-fakeip"
 
 #### ------------- Snippets for DNS Servers ------------- ####
 dns_server_system = DnsServer(
-    tag=TAG_DNSSERVER_SYSTEM, address="127.0.0.1", detour=TAG_DIRECT_OUTBOUND
+    tag=TAG_DNSSERVER_SYSTEM, address="localhost", detour=TAG_DIRECT_OUTBOUND
 )
 dns_server_reject = DnsServer(tag=TAG_DNSSERVER_REJECT, address="rcode://success")
 dns_server_fakeip = DnsServer(tag=TAG_DNSSERVER_FAKEIP, address="fakeip")
