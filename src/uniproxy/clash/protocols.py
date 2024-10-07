@@ -126,7 +126,7 @@ class ShadowsocksProtocol(ClashProtocol):
 
     @classmethod
     def from_uniproxy(
-        cls, protocol: UniproxyShadowsocksProtocol
+        cls, protocol: UniproxyShadowsocksProtocol, **kwargs
     ) -> ShadowsocksProtocol:
 
         plugin = protocol.plugin.command if protocol.plugin else None
@@ -196,7 +196,9 @@ class TrojanProtocol(ClashProtocol):
     type: Literal["trojan"] = "trojan"
 
     @classmethod
-    def from_uniproxy(cls, protocol: UniproxyTrojanProtocol) -> TrojanProtocol:
+    def from_uniproxy(
+        cls, protocol: UniproxyTrojanProtocol, **kwargs
+    ) -> TrojanProtocol:
         if protocol.tls is not None:
             skip_cert_verify = not protocol.tls.verify
             sni = protocol.tls.server_name
@@ -307,7 +309,7 @@ class VmessProtocol(ClashProtocol):
             raise ValueError("'ws_opts' is set but network is 'h2'")
 
     @classmethod
-    def from_uniproxy(cls, protocol: UniproxyVmessProtocol) -> VmessProtocol:
+    def from_uniproxy(cls, protocol: UniproxyVmessProtocol, **kwargs) -> VmessProtocol:
         if protocol.tls is not None:
             skip_cert_verify = not protocol.tls.verify
             servername = protocol.tls.server_name
@@ -315,9 +317,9 @@ class VmessProtocol(ClashProtocol):
             skip_cert_verify = None
             servername = None
 
-        if transport := protocol.transport is not None:
-            network = protocol.transport.type
-            match network:
+        if (transport := protocol.transport) is not None:
+            transport_network = transport.type
+            match transport_network:
                 case "ws":
                     ws_transport = cast(UniproxyVmessWsTransport, transport)
                     ws_opts = VmessWsTransport(
@@ -335,9 +337,11 @@ class VmessProtocol(ClashProtocol):
                         headers=h2_transport.headers,
                     )
                 case _:
-                    raise NotImplementedError(f"Unknown transport type: {network}")
+                    raise NotImplementedError(
+                        f"Unknown transport type: {transport_network}"
+                    )
         else:
-            network = None
+            transport_network = None
             ws_opts = None
             h2_opts = None
 
@@ -352,7 +356,7 @@ class VmessProtocol(ClashProtocol):
             skip_cert_verify=skip_cert_verify,
             udp=protocol.network != "tcp",
             servername=servername,
-            network=network,
+            network=transport_network,
             ws_opts=ws_opts,
             h2_opts=h2_opts,
         )
