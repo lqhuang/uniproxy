@@ -13,6 +13,7 @@ from attrs import define
 
 from uniproxy.base import BaseProtocol
 from uniproxy.shared import TLS
+from uniproxy.uri import parse_ss_uri
 
 
 @define
@@ -96,6 +97,12 @@ class ShadowsocksProtocol(UniproxyProtocol):
     ) = None
 
     type: Literal["shadowsocks"] = "shadowsocks"
+
+    @classmethod
+    def from_uri(cls, uri: str, overwrites: dict | None = None) -> ShadowsocksProtocol:
+        extra = overwrites or {}
+        kwargs = {**parse_ss_uri(uri), **extra}
+        return cls(**kwargs)
 
 
 @define

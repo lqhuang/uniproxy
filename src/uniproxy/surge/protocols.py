@@ -197,7 +197,7 @@ class ShadowsocksProtocol(SurgeProtocol):
             # FIXME: incorrect position
             "ecn": str(self.ecn).lower() if self.ecn is not None else None,
         }
-        ss_opts = ", ".join(f"{k}={v}" for k, v in ss_conf.items())
+        ss_opts = ", ".join(f"{k}={v}" for k, v in ss_conf.items() if v is not None)
 
         return {
             self.name: (
@@ -279,12 +279,17 @@ class VmessProtocol(SurgeProtocol):
         if protocol.transport is not None and protocol.transport.type != "ws":
             raise ValueError("Only ws transport is supported for surge for now")
 
+        if protocol.security in {"chacha20-ietf-poly1305", "aes-128-gcm"}:
+            encrypt_method = protocol.security
+        else:
+            encrypt_method = None
+
         return cls(
             name=protocol.name,
             server=protocol.server,
             port=protocol.port,
             username=protocol.uuid,
-            encrypt_method=protocol.security,
+            encrypt_method=encrypt_method,
             tls=(
                 None
                 if protocol.tls is None
