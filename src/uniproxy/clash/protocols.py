@@ -228,11 +228,11 @@ class VmessWsTransport:
     ```yaml
     network: ws
     ws-opts:
-    path: /path
-    headers:
-        Host: v2ray.com
-    max-early-data: 2048
-    early-data-header-name: Sec-WebSocket-Protocol
+      path: /path
+      headers:
+          Host: v2ray.com
+      max-early-data: 2048
+      early-data-header-name: Sec-WebSocket-Protocol
     ```
     """
 
@@ -249,9 +249,9 @@ class VmessH2Transport:
 
     ```yaml
     h2-opts:
-        path: /path
-        headers:
-        Host: v2ray.com
+      path: /path
+      headers:
+      Host: v2ray.com
     ```
     """
 
@@ -282,9 +282,7 @@ class VmessProtocol(ClashProtocol):
     """
 
     uuid: str
-    alter_id: int = field(default=0) | _Metadata(
-        alias="alterId"
-    )  # pyright: ignore[reportOperatorIssue]
+    alter_id: int = field(default=0) | _Metadata(name="alterId")  # type: ignore[assignment,operator]
     cipher: VmessCipher = "auto"
     udp: bool | None = None
     tls: bool | None = None
