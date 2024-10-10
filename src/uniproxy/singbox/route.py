@@ -19,7 +19,7 @@ from uniproxy.rules import (
     IPCidrGroupRule,
     IPCidrRule,
     RuleSetRule,
-    UniproxyRule,
+    UniproxyBasicRule,
 )
 from uniproxy.utils import flatmap_to_tag
 
@@ -83,9 +83,9 @@ class Rule(AbstractSingBox):
     invert: bool | None = None
 
     @classmethod
-    def from_uniproxy(cls, rule: UniproxyRule) -> Rule:
-        if not isinstance(rule, UniproxyRule):
-            raise ValueError(f"Expected UniproxyRule, got {type(rule)}")
+    def from_uniproxy(cls, rule: UniproxyBasicRule) -> Rule:
+        if not isinstance(rule, UniproxyBasicRule):
+            raise ValueError(f"Expected UniproxyBasicRule, got {type(rule)}")
 
         match rule:
             case DomainRule(matcher=matcher, policy=policy) | DomainGroupRule(

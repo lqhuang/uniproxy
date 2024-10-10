@@ -47,7 +47,7 @@ GroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet"
 ]
 
-RuleType = Literal[
+BasicRuleType = Literal[
     # Domain-based Rule
     "domain",
     "domain-suffix",
@@ -81,9 +81,9 @@ RuleType = Literal[
     "rule-set",
     "domain-set",
     # Final Rule
-    "final",
+    # "final",
 ]
-RuleGroupType = Literal[
+GroupRuleType = Literal[
     # Group Rule
     "domain-group",
     "domain-suffix-group",

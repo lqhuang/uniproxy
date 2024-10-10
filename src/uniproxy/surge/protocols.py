@@ -471,7 +471,7 @@ class WireguardSection(AbstractSurge):
         return {f"WireGuard {self.name}": {}}
 
 
-_SURGE_PROTOCOL_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
+_SURGE_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
     "http": HttpProtocol,
     "https": HttpProtocol,
     "socks5": Socks5Protocol,
@@ -486,8 +486,8 @@ _SURGE_PROTOCOL_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
 
 def make_protocol_from_uniproxy(protocol: UniproxyProtocol, **kwargs) -> SurgeProtocol:
     try:
-        return _SURGE_PROTOCOL_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
+        return _SURGE_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
     except KeyError:
-        raise NotImplementedError(
+        raise ValueError(
             f"Unknown protocol type '{protocol.type}' when transforming uniproxy protocol to surge protocol"
         )

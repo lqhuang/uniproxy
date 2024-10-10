@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Literal, Sequence
 from uniproxy.typing import (
+    BasicRuleType,
+    GroupRuleType,
     GroupType,
     Network,
     ProtocolType,
-    RuleGroupType,
-    RuleType,
     ServerAddress,
 )
 
@@ -56,17 +56,27 @@ class BaseProxyProvider(AbstractUniproxy):
 
 
 @define
-class BaseRule(AbstractUniproxy):
-    matcher: str | BaseRuleProvider | None
-    policy: ProtocolLike
-    type: RuleType
+class BaseRule(AbstractUniproxy): ...
 
 
 @define
-class BaseGroupRule(AbstractUniproxy):
+class BaseBasicRule(BaseRule):
+    matcher: str | BaseRuleProvider
+    policy: ProtocolLike
+    type: BasicRuleType
+
+
+@define
+class FinalRule(BaseRule):
+    policy: ProtocolLike
+    type: Literal["final"] = "final"
+
+
+@define
+class BaseGroupRule(BaseRule):
     matcher: Sequence[str | BaseRuleProvider]
     policy: ProtocolLike
-    type: RuleGroupType
+    type: GroupRuleType
 
 
 @define

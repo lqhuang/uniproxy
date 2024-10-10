@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal, Mapping
-from uniproxy.typing import RuleType
+from uniproxy.typing import BasicRuleType
 
 from attrs import define
 
@@ -11,7 +11,8 @@ from uniproxy.rules import (
     DomainSuffixGroupRule,
     IPCidr6GroupRule,
     IPCidrGroupRule,
-    UniproxyRule,
+    UniproxyBasicRule,
+    UniproxyGroupRule,
 )
 from uniproxy.utils import to_name
 
@@ -216,7 +217,7 @@ class FinalRule(ClashRule):
             return f"{self.type.upper()},{self.policy}"
 
 
-_CLASH_MAPPER: Mapping[RuleType, type[ClashRule]] = {
+_CLASH_MAPPER: Mapping[BasicRuleType, type[ClashRule]] = {
     "domain": DomainRule,
     "domain-suffix": DomainSuffixRule,
     "domain-keyword": DomainKeywordRule,
@@ -239,25 +240,17 @@ _CLASH_MAPPER: Mapping[RuleType, type[ClashRule]] = {
     "cellular-radio": CellularRadioRule,
     "device-name": DeviceNameRule,
     "rule-set": RuleSetRule,
-    "final": FinalRule,
     "domain-set": DomainSetRule,
 }
 
 
 def make_rules_from_uniproxy(
-    rule: (
-        UniproxyRule
-        | DomainKeywordGroupRule
-        | DomainSuffixGroupRule
-        | DomainGroupRule
-        | IPCidrGroupRule
-        | IPCidr6GroupRule
-    ),
+    rule: UniproxyBasicRule | UniproxyGroupRule,
 ) -> tuple[ClashRule, ...]:
     policy = to_name(rule.policy)
 
     match rule:
-        case UniproxyRule(matcher=matcher, type=typ):
+        case UniproxyBasicRule(matcher=matcher, type=typ):
             if typ == "ip-asn":
                 raise NotImplementedError(
                     "`ip-asn` rule type not implemented yet for Clash"
@@ -270,23 +263,25 @@ def make_rules_from_uniproxy(
                 ),
             )
         case DomainGroupRule(matcher=matcher):
-            return tuple(DomainRule(matcher=each, policy=policy) for each in matcher)
+            return tuple(
+                DomainRule(matcher=str(each), policy=policy) for each in matcher
+            )
         case DomainSuffixGroupRule(matcher=matcher):
             return tuple(
-                DomainSuffixRule(matcher=each, policy=policy) for each in matcher
+                DomainSuffixRule(matcher=str(each), policy=policy) for each in matcher
             )
         case DomainKeywordGroupRule(matcher=matcher):
             return tuple(
-                DomainKeywordRule(matcher=each, policy=policy) for each in matcher
+                DomainKeywordRule(matcher=str(each), policy=policy) for each in matcher
             )
         case IPCidrGroupRule(matcher=matcher, no_resolve=no_resolve):
             return tuple(
-                IPCidrRule(matcher=each, policy=policy, no_resolve=no_resolve)
+                IPCidrRule(matcher=str(each), policy=policy, no_resolve=no_resolve)
                 for each in matcher
             )
         case IPCidr6GroupRule(matcher=matcher, no_resolve=no_resolve):
             return tuple(
-                IPCidr6Rule(matcher=each, policy=policy, no_resolve=no_resolve)
+                IPCidr6Rule(matcher=str(each), policy=policy, no_resolve=no_resolve)
                 for each in matcher
             )
         case _:

@@ -8,8 +8,8 @@ from .base import (
     AbstractClash,
     BaseProtocol,
     BaseProxyGroup,
-    BaseRule,
     BaseProxyProvider,
+    BaseRule,
 )
 from .rules import RuleProvider
 

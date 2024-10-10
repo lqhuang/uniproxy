@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal, Mapping
-from uniproxy.typing import RuleType
+from uniproxy.typing import BasicRuleType
 
 from attrs import define, field
 
@@ -11,32 +11,29 @@ from uniproxy.rules import (
     DomainSuffixGroupRule,
     IPCidr6GroupRule,
     IPCidrGroupRule,
-    UniproxyRule,
+    UniproxyBasicRule,
+    UniproxyGroupRule,
 )
 from uniproxy.utils import to_name
 
-from .base import BaseRule as SurgeRule
-from .base import BaseRuleProvider, ProtocolLike
+from .base import BaseBasicRule as SurgeRule
+from .base import BaseRuleProvider
+from .base import FinalRule as FinalRule
+from .base import ProtocolLike
 
 
 @define
 class DomainRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["domain"] = "domain"
 
 
 @define
 class DomainSuffixRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["domain-suffix"] = "domain-suffix"
 
 
 @define
 class DomainKeywordRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["domain-keyword"] = "domain-keyword"
 
 
@@ -45,15 +42,13 @@ class DomainSetRule(SurgeRule):
     matcher: str | BaseRuleProvider = field(
         converter=lambda x: x if isinstance(x, str) else x.url
     )
-    policy: ProtocolLike | str
+    policy: ProtocolLike
     force_remote_dns: bool | None = None
     type: Literal["domain-set"] = "domain-set"
 
 
 @define
 class IPCidrRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     no_resolve: bool | None = None
     type: Literal["ip-cidr"] = "ip-cidr"
 
@@ -66,8 +61,6 @@ class IPCidrRule(SurgeRule):
 
 @define
 class IPCidr6Rule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     no_resolve: bool | None = None
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
@@ -80,8 +73,6 @@ class IPCidr6Rule(SurgeRule):
 
 @define
 class GeoIPRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     no_resolve: bool | None = None
     type: Literal["geoip"] = "geoip"
 
@@ -94,8 +85,6 @@ class GeoIPRule(SurgeRule):
 
 @define
 class IPAsn(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     no_resolve: bool | None = None
     type: Literal["ip-asn"] = "ip-asn"
 
@@ -108,106 +97,76 @@ class IPAsn(SurgeRule):
 
 @define
 class UserAgentRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["user-agent"] = "user-agent"
 
 
 @define
 class UrlRegexRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["url-regex"] = "url-regex"
 
 
 @define
 class ProcessNameRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["process-name"] = "process-name"
 
 
 @define
 class AndRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["and"] = "and"
 
 
 @define
 class OrRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["or"] = "or"
 
 
 @define
 class NotRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["not"] = "not"
 
 
 @define
 class SubnetRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["subnet"] = "subnet"
 
 
 @define
 class DestPortRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["dest-port"] = "dest-port"
 
 
 @define
 class InPortRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["in-port"] = "in-port"
 
 
 @define
 class SrcPortRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["src-port"] = "src-port"
 
 
 @define
 class SrcIPRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["src-ip"] = "src-ip"
 
 
 @define
 class ProtocolRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["protocol"] = "protocol"
 
 
 @define
 class ScriptRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["script"] = "script"
 
 
 @define
 class CellularRadioRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["cellular-radio"] = "cellular-radio"
 
 
 @define
 class DeviceNameRule(SurgeRule):
-    matcher: str
-    policy: ProtocolLike | str
     type: Literal["device-name"] = "device-name"
 
 
@@ -220,21 +179,7 @@ class RuleSetRule(SurgeRule):
     type: Literal["rule-set"] = "rule-set"
 
 
-@define
-class FinalRule(SurgeRule):
-    matcher: None
-    policy: ProtocolLike | str
-    dns_failed: bool | None = None
-    type: Literal["final"] = "final"
-
-    def __str__(self) -> str:
-        if self.dns_failed:
-            return f"{self.type.upper()},{self.policy},dns-failed"
-        else:
-            return f"{self.type.upper()},{self.policy}"
-
-
-_SURGE_MAPPER: Mapping[RuleType, type[SurgeRule]] = {
+_SURGE_MAPPER: Mapping[BasicRuleType, type[SurgeRule]] = {
     "domain": DomainRule,
     "domain-suffix": DomainSuffixRule,
     "domain-keyword": DomainKeywordRule,
@@ -258,50 +203,40 @@ _SURGE_MAPPER: Mapping[RuleType, type[SurgeRule]] = {
     "cellular-radio": CellularRadioRule,
     "device-name": DeviceNameRule,
     "rule-set": RuleSetRule,
-    "final": FinalRule,
     "domain-set": DomainSetRule,
 }
 
 
 def make_rules_from_uniproxy(
-    rule: (
-        UniproxyRule
-        | DomainKeywordGroupRule
-        | DomainSuffixGroupRule
-        | DomainGroupRule
-        | IPCidrGroupRule
-        | IPCidr6GroupRule
-    ),
+    rule: UniproxyBasicRule | UniproxyGroupRule,
 ) -> tuple[SurgeRule, ...]:
     policy = to_name(rule.policy)
 
     match rule:
-        case UniproxyRule(matcher=matcher, type=typ):
+        case UniproxyBasicRule(matcher=matcher, type=typ):
             return (
-                _SURGE_MAPPER[typ](
-                    matcher=to_name(matcher) if matcher is not None else None,
-                    policy=policy,
-                    type=typ,
-                ),
+                _SURGE_MAPPER[typ](matcher=to_name(matcher), policy=policy, type=typ),
             )
         case DomainGroupRule(matcher=matcher):
-            return tuple(DomainRule(matcher=each, policy=policy) for each in matcher)
+            return tuple(
+                DomainRule(matcher=str(each), policy=policy) for each in matcher
+            )
         case DomainSuffixGroupRule(matcher=matcher):
             return tuple(
-                DomainSuffixRule(matcher=each, policy=policy) for each in matcher
+                DomainSuffixRule(matcher=str(each), policy=policy) for each in matcher
             )
         case DomainKeywordGroupRule(matcher=matcher):
             return tuple(
-                DomainKeywordRule(matcher=each, policy=policy) for each in matcher
+                DomainKeywordRule(matcher=str(each), policy=policy) for each in matcher
             )
         case IPCidrGroupRule(matcher=matcher, no_resolve=no_resolve):
             return tuple(
-                IPCidrRule(matcher=each, policy=policy, no_resolve=no_resolve)
+                IPCidrRule(matcher=str(each), policy=policy, no_resolve=no_resolve)
                 for each in matcher
             )
         case IPCidr6GroupRule(matcher=matcher, no_resolve=no_resolve):
             return tuple(
-                IPCidr6Rule(matcher=each, policy=policy, no_resolve=no_resolve)
+                IPCidr6Rule(matcher=str(each), policy=policy, no_resolve=no_resolve)
                 for each in matcher
             )
         case _:

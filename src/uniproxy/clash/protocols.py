@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence, cast
-from uniproxy.typing import ALPN, ShadowsocksCipher, VmessCipher, VmessTransport
+from typing import Literal, Mapping, Sequence, cast
+from uniproxy.typing import (
+    ALPN,
+    ProtocolType,
+    ShadowsocksCipher,
+    VmessCipher,
+    VmessTransport,
+)
 
-import gc
-
-from attrs import define, field, fields
+from attrs import define, field
 from xattrs._metadata import _Metadata
 
 from uniproxy.protocols import (
@@ -26,20 +30,8 @@ from .base import BaseProtocol
 class ClashProtocol(BaseProtocol):
 
     @classmethod
-    def from_uniproxy(cls, protocol: UniproxyProtocol, **kwargs) -> ClashProtocol:
-        gc.collect(1)
-        for subcls in cls.__subclasses__():
-            _fields = fields(subcls)
-            proto_type = _fields.type.default
-            proto_type = "shadowsocks" if proto_type == "ss" else proto_type
-            if proto_type == protocol.type:
-                inst = subcls.from_uniproxy(protocol)
-                break
-        else:
-            raise NotImplementedError(
-                f"Unknown protocol type '{protocol.type}' while transforming uniproxy protocol to clash protocol"
-            )
-        return inst
+    def from_uniproxy(cls, protocol, **kwargs) -> ClashProtocol:
+        raise NotImplementedError
 
     def to_uniproxy(self, **kwargs) -> UniproxyProtocol:
         return self.to_uniproxy()
@@ -357,4 +349,28 @@ class VmessProtocol(ClashProtocol):
             network=transport_network,
             ws_opts=ws_opts,
             h2_opts=h2_opts,
+        )
+
+
+_CLASH_MAPPER: Mapping[ProtocolType, type[ClashProtocol]] = {
+    "http": HttpProtocol,
+    "https": HttpProtocol,
+    "socks5": Socks5Protocol,
+    "socks5-tls": Socks5Protocol,
+    "shadowsocks": ShadowsocksProtocol,
+    "vmess": VmessProtocol,
+    "trojan": TrojanProtocol,
+    # "tuic": TuicProtocol,
+    # "wireguard": WireguardProtocol,
+}
+
+
+def make_clash_protocol_from_uniproxy(
+    protocol: UniproxyProtocol, **kwargs
+) -> ClashProtocol:
+    try:
+        return _CLASH_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
+    except KeyError:
+        raise ValueError(
+            f"Unknown protocol type '{protocol.type}' while transforming uniproxy protocol to clash protocol"
         )
