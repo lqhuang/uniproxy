@@ -16,7 +16,8 @@ from uniproxy.rules import (
 )
 from uniproxy.utils import to_name
 
-from .base import BaseRule as ClashRule
+from .base import BaseBasicRule as ClashRule
+from .base import FinalRule as FinalRule
 from .base import ProtocolLike
 from .providers import RuleProvider
 
@@ -203,20 +204,6 @@ class RuleSetRule(ClashRule):
     type: Literal["rule-set"] = "rule-set"
 
 
-@define
-class FinalRule(ClashRule):
-    matcher: None
-    policy: ProtocolLike | str
-    dns_failed: bool | None = None
-    type: Literal["final"] = "final"
-
-    def __str__(self) -> str:
-        if self.dns_failed:
-            return f"{self.type.upper()},{self.policy},dns-failed"
-        else:
-            return f"{self.type.upper()},{self.policy}"
-
-
 _CLASH_MAPPER: Mapping[BasicRuleType, type[ClashRule]] = {
     "domain": DomainRule,
     "domain-suffix": DomainSuffixRule,
@@ -257,7 +244,7 @@ def make_rules_from_uniproxy(
                 )
             return (
                 _CLASH_MAPPER[typ](
-                    matcher=to_name(matcher) if matcher is not None else None,
+                    matcher=to_name(matcher),
                     policy=policy,
                     type=typ,
                 ),

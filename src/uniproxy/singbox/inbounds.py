@@ -7,7 +7,7 @@ from attrs import define, frozen
 
 from uniproxy.common import User
 
-from .base import BaseInbound
+from .base import BaseInbound as SingBoxInbound
 from .route import BaseRuleSet
 from .shared import (
     BaseTransport,
@@ -20,7 +20,6 @@ from .shared import (
 from .typing import FallbackAlpn, SingBoxNetwork, TunStack
 
 __all__ = (
-    "SingBoxInbound",
     "DirectInbound",
     "HTTPInbound",
     "Socks5Inbound",
@@ -32,10 +31,6 @@ __all__ = (
     "User",
     "TuicUser",
 )
-
-
-@define(slots=False)
-class SingBoxInbound(BaseInbound): ...
 
 
 @define(slots=False)
@@ -68,7 +63,7 @@ class DirectMixin:
 
 
 @define
-class DirectInbound(ListenFieldsMixin, DirectMixin, SingBoxInbound): ...
+class DirectInbound(ListenFieldsMixin, DirectMixin, SingBoxInbound): ...  # type: ignore[misc]
 
 
 @define
@@ -178,7 +173,7 @@ class ShadowsocksMixin:
 
 
 @define
-class ShadowsocksInbound(ListenFieldsMixin, ShadowsocksMixin, SingBoxInbound):
+class ShadowsocksInbound(ListenFieldsMixin, ShadowsocksMixin, SingBoxInbound):  # type: ignore[misc]
     type: Literal["shadowsocks"] = "shadowsocks"
 
 
@@ -247,7 +242,7 @@ class TrojanMixin:
 
 
 @define
-class TrojanInbound(ListenFieldsMixin, TrojanMixin, SingBoxInbound):
+class TrojanInbound(ListenFieldsMixin, TrojanMixin, SingBoxInbound):  # type: ignore[misc]
     type: Literal["trojan"] = "trojan"
 
 
@@ -327,7 +322,7 @@ class TuicMixin:
 
 
 @define
-class TuicInbound(ListenFieldsMixin, TuicMixin, SingBoxInbound):
+class TuicInbound(ListenFieldsMixin, TuicMixin, SingBoxInbound):  # type: ignore[misc]
     type: Literal["tuic"] = "tuic"
 
 
@@ -616,7 +611,7 @@ class TunMixin:
 
 
 @define
-class TunInbound(ListenFieldsMixin, TunMixin, SingBoxInbound):
+class TunInbound(ListenFieldsMixin, TunMixin, SingBoxInbound):  # type: ignore[misc]
     type: Literal["tun"] = "tun"
 
     def __attrs_post_init__(self):

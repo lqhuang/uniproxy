@@ -15,6 +15,14 @@ from uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 
 from .base import BaseProxyGroup
 
+__all__ = [
+    "SelectGroup",
+    "UrlTestGroup",
+    "FallBackGroup",
+    "LoadBalanceGroup",
+    "make_proxy_group_from_uniproxy",
+]
+
 
 @define
 class SurgeProxyGroup(BaseProxyGroup):

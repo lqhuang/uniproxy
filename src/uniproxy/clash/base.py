@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Literal, Sequence
 from uniproxy.typing import ServerAddress
 
 from attrs import define, field
 
 from uniproxy.abc import AbstractClash
-from uniproxy.utils import map_to_str
+from uniproxy.utils import maybe_map_to_str
 
 from .typing import GroupType, ProtocolType, RuleType
 
@@ -31,8 +31,12 @@ class BaseProxyProvider(AbstractClash):
 
 
 @define
-class BaseRule(AbstractClash):
-    matcher: RuleProviderLike | None
+class BaseRule(AbstractClash): ...
+
+
+@define
+class BaseBasicRule(BaseRule):
+    matcher: RuleProviderLike
     policy: ProtocolLike
     type: RuleType
 
@@ -41,12 +45,23 @@ class BaseRule(AbstractClash):
 
 
 @define
+class FinalRule(BaseRule):
+    policy: ProtocolLike
+    type: Literal["final"] = "final"
+
+    def __str__(self) -> str:
+        return f"MATCH,{self.policy}"
+
+
+@define
 class BaseProxyGroup(AbstractClash):
     name: str
     type: GroupType
-    proxies: Sequence[ProtocolLike] | None = field(default=None, converter=map_to_str)
+    proxies: Sequence[ProtocolLike] | None = field(
+        default=None, converter=maybe_map_to_str
+    )
     use: Sequence[BaseRuleProvider | str] | None = field(
-        default=None, converter=map_to_str
+        default=None, converter=maybe_map_to_str
     )
 
     disable_udp: bool = False

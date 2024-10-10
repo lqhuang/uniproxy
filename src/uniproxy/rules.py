@@ -6,6 +6,7 @@ from attrs import define
 
 from uniproxy.base import BaseBasicRule as UniproxyBasicRule
 from uniproxy.base import BaseGroupRule as UniproxyGroupRule
+from uniproxy.base import BaseRule as UniproxyRule  # noqa: F401
 from uniproxy.base import FinalRule as FinalRule
 
 

@@ -20,8 +20,9 @@ from uniproxy.rules import (
     IPCidrRule,
     RuleSetRule,
     UniproxyBasicRule,
+    UniproxyGroupRule,
 )
-from uniproxy.utils import flatmap_to_tag
+from uniproxy.utils import maybe_flatmap_to_tag
 
 from .base import BaseInbound, BaseOutbound
 from .typing import RuleSetType, SniffProtocol
@@ -77,48 +78,36 @@ class Rule(AbstractSingBox):
     rule_set: str | Sequence[str] | BaseRuleSet | Sequence[BaseRuleSet] | None = field(
         default=None,
         # FIXME: This is a hack to make the converter work
-        converter=flatmap_to_tag,
+        converter=maybe_flatmap_to_tag,
     )
     rule_set_ip_cidr_match_source: bool | None = None
     invert: bool | None = None
 
     @classmethod
-    def from_uniproxy(cls, rule: UniproxyBasicRule) -> Rule:
-        if not isinstance(rule, UniproxyBasicRule):
+    def from_uniproxy(cls, rule: UniproxyBasicRule | UniproxyGroupRule) -> Rule:
+        if not isinstance(rule, (UniproxyBasicRule, UniproxyGroupRule)):
             raise ValueError(f"Expected UniproxyBasicRule, got {type(rule)}")
 
         match rule:
             case DomainRule(matcher=matcher, policy=policy) | DomainGroupRule(
                 matcher=matcher, policy=policy
             ):
-                return cls(
-                    outbound=str(policy),
-                    domain=matcher,
-                )
+                return cls(outbound=str(policy), domain=matcher)  # type: ignore[reportArgumentType, arg-type]
             case DomainSuffixRule(
                 matcher=matcher, policy=policy
             ) | DomainSuffixGroupRule(matcher=matcher, policy=policy):
-                return cls(
-                    outbound=str(policy),
-                    domain_suffix=matcher,
-                )
+                return cls(outbound=str(policy), domain_suffix=matcher)  # type: ignore[reportArgumentType, arg-type]
             case DomainKeywordRule(
                 matcher=matcher, policy=policy
             ) | DomainKeywordGroupRule(matcher=matcher, policy=policy):
-                return cls(
-                    outbound=str(policy),
-                    domain_keyword=matcher,
-                )
+                return cls(outbound=str(policy), domain_keyword=matcher)  # type: ignore[reportArgumentType, arg-type]
             case (
                 IPCidrRule(matcher=matcher, policy=policy)
                 | IPCidrGroupRule(matcher=matcher, policy=policy)
                 | IPCidr6Rule(matcher=matcher, policy=policy)
                 | IPCidr6GroupRule(matcher=matcher, policy=policy)
             ):
-                return cls(
-                    outbound=str(policy),
-                    ip_cidr=matcher,
-                )
+                return cls(outbound=str(policy), ip_cidr=matcher)  # type: ignore[reportArgumentType, arg-type]
             case GeoIPRule(matcher=matcher, policy=policy):
                 # TODO: add extra opts to give a prefix or suffix
                 return cls(

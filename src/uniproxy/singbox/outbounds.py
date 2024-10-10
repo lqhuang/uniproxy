@@ -8,12 +8,11 @@ from attrs import define, field
 from uniproxy.protocols import ShadowsocksProtocol, VmessProtocol
 from uniproxy.utils import map_to_str
 
-from .base import BaseOutbound
+from .base import BaseOutbound as SingBoxOutbound
 from .shared import BaseTransport, DialFieldsMixin, OutboundMultiplex, OutboundTLS
 from .typing import SingBoxNetwork
 
 __all__ = (
-    "SingBoxOutbound",
     "DirectOutbound",
     "BlockOutbound",
     "DnsOutbound",
@@ -48,10 +47,6 @@ GROUP_OUTBOUNDS = {"selector", "urltest"}
 
 
 @define(slots=False)
-class SingBoxOutbound(BaseOutbound): ...
-
-
-@define(slots=False)
 class DirectMixin:
     override_address: ServerAddress | None = None
     """Override the connection destination address."""
@@ -65,7 +60,7 @@ class DirectMixin:
 
 
 @define
-class DirectOutbound(DialFieldsMixin, DirectMixin, SingBoxOutbound):
+class DirectOutbound(DialFieldsMixin, DirectMixin, SingBoxOutbound):  # type: ignore[misc]
     """
     Examples:
 
@@ -153,7 +148,7 @@ class ShadowsocksMixin:
 
 
 @define
-class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, SingBoxOutbound):
+class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, SingBoxOutbound):  # type: ignore[misc]
     """
 
     Examples:
@@ -182,6 +177,12 @@ class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, SingBoxOutbound):
 
     @classmethod
     def from_uniproxy(cls, ss: ShadowsocksProtocol, **kwargs) -> ShadowsocksOutbound:
+
+        if ss.plugin is not None:
+            raise NotImplementedError(
+                "Plugin for SingBox Shadowsocks protocol is not supported yet for now"
+            )
+
         return cls(
             tag=ss.name,
             server=ss.server,
@@ -189,8 +190,8 @@ class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, SingBoxOutbound):
             method=ss.method,
             password=ss.password,
             network=None if ss.network == "tcp_and_udp" else ss.network,
-            plugin=ss.plugin.command if ss.plugin else None,
-            plugin_opts=ss.plugin.opts if ss.plugin else None,
+            plugin=None,
+            plugin_opts=None,
             **kwargs,
         )
 
@@ -214,20 +215,22 @@ class VmessMixin:
 
 
 @define
-class VmessOutbound(DialFieldsMixin, VmessMixin, SingBoxOutbound):
+class VmessOutbound(DialFieldsMixin, VmessMixin, SingBoxOutbound):  # type: ignore[misc]
     type: Literal["vmess"] = "vmess"
 
     @classmethod
     def from_uniproxy(cls, vmess: VmessProtocol, **kwargs) -> VmessOutbound:
-        transport_mapping = {
-            # "ws": "ws",
-            # "h2": "h2",
-            # "quic": "quic",
-            "httpupgrade": NotImplementedError("httpupgrade"),
-        }
+        # transport_mapping = {
+        #     "ws": "ws",
+        #     "h2": "h2",
+        #     "quic": "quic",
+        #     "httpupgrade": NotImplementedError("httpupgrade"),
+        # }
         if vmess.transport is not None:
             # transport = transport_mapping[vmess.transport]
-            raise NotImplementedError("unsupported transport type for now")
+            raise NotImplementedError(
+                f"unsupported transport type {vmess.transport.type} for now"
+            )
 
         return cls(
             tag=vmess.name,
@@ -261,7 +264,7 @@ class TrojanMixin:
 
 
 @define
-class TrojanOutbound(DialFieldsMixin, TrojanMixin, SingBoxOutbound):
+class TrojanOutbound(DialFieldsMixin, TrojanMixin, SingBoxOutbound):  # type: ignore[misc]
     """
     Examples:
 
@@ -374,7 +377,7 @@ class WireguardMixin:
 
 
 @define
-class WireguardOutbound(DialFieldsMixin, WireguardMixin, SingBoxOutbound):
+class WireguardOutbound(DialFieldsMixin, WireguardMixin, SingBoxOutbound):  # type: ignore[misc]
     """
     Examples:
 
@@ -441,8 +444,8 @@ class SelectorOutbound(SingBoxOutbound):
     ```
     """
 
-    outbounds: Sequence[BaseOutbound | str] = field(converter=map_to_str)
-    default: BaseOutbound | str | None = None
+    outbounds: Sequence[SingBoxOutbound | str] = field(converter=map_to_str)
+    default: SingBoxOutbound | str | None = None
     interrupt_exist_connections: bool | None = None
     type: Literal["selector"] = "selector"
 
@@ -471,7 +474,7 @@ class URLTestOutbound(SingBoxOutbound):
     ```
     """
 
-    outbounds: Sequence[BaseOutbound | str] = field(converter=map_to_str)
+    outbounds: Sequence[SingBoxOutbound | str] = field(converter=map_to_str)
     """List of outbound tags to test."""
     url: str | None = None
     """The URL to test. `https://www.gstatic.com/generate_204` will be used if empty."""

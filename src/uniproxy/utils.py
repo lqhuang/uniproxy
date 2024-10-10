@@ -33,13 +33,13 @@ def to_name(x: HasName | str) -> str:
         return x.name
 
 
-def map_to_name(xs: Iterable[HasName | str] | None) -> Sequence[str] | None:
+def maybe_map_to_name(xs: Iterable[HasName | str] | None) -> Sequence[str] | None:
     if xs is None:
         return None
     return [to_name(each) for each in xs]
 
 
-def flatmap_to_tag(
+def maybe_flatmap_to_tag(
     xs: Iterable[HasTag | str] | HasTag | str | None,
 ) -> Sequence[str] | None:
     if xs is None:
@@ -52,7 +52,7 @@ def flatmap_to_tag(
         return to_tag(xs)
 
 
-def flatmap_to_name(
+def maybe_flatmap_to_name(
     xs: Iterable[HasName | str] | HasName | str | None,
 ) -> Sequence[str] | None:
     if xs is None:
@@ -65,7 +65,11 @@ def flatmap_to_name(
         return to_name(xs)
 
 
-def map_to_str(xs: Iterable[Any | str] | None) -> Sequence[str] | None:
+def maybe_map_to_str(xs: Iterable[Any | str] | None) -> list[str] | None:
     if xs is None:
         return None
+    return [str(each) for each in xs]
+
+
+def map_to_str(xs: Iterable[Any | str]) -> list[str]:
     return [str(each) for each in xs]

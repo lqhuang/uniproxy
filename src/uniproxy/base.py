@@ -61,7 +61,7 @@ class BaseRule(AbstractUniproxy): ...
 
 @define
 class BaseBasicRule(BaseRule):
-    matcher: str | BaseRuleProvider
+    matcher: RuleProviderLike
     policy: ProtocolLike
     type: BasicRuleType
 
@@ -74,7 +74,7 @@ class FinalRule(BaseRule):
 
 @define
 class BaseGroupRule(BaseRule):
-    matcher: Sequence[str | BaseRuleProvider]
+    matcher: Sequence[RuleProviderLike]
     policy: ProtocolLike
     type: GroupRuleType
 
@@ -83,8 +83,10 @@ class BaseGroupRule(BaseRule):
 class BaseRuleProvider(AbstractUniproxy):
     name: str
     url: str
+    path: str | None
     interval: float | None
 
 
 ProtocolLike = BaseProtocol | BaseProxyGroup | str
 ProxyProviderLike = BaseProxyProvider | str
+RuleProviderLike = str | BaseRuleProvider

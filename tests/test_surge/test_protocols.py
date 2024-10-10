@@ -6,8 +6,8 @@ from uniproxy.surge.protocols import (
     ShadowsocksProtocol,
     Socks5Protocol,
     SurgeTLS,
-    SurgeVmessTransport,
     VmessProtocol,
+    VmessTransport,
 )
 from uniproxy.utils import load_ini_without_section
 
@@ -71,7 +71,7 @@ def test_proxy_vmess__ws():
         username="692b215d-ee58-4a4c-a430-b686c9a658fe",
         encrypt_method="auto",
         tls=SurgeTLS(skip_cert_verify=True, sni="example.com"),
-        transport=SurgeVmessTransport(path="/ws-path"),
+        transport=VmessTransport(path="/ws-path"),
     )
     surge_config = (
         "proxy-vmess = vmess, localhost, 1080, "

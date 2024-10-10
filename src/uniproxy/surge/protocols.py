@@ -20,6 +20,20 @@ from .base import AbstractSurge, BaseProtocol
 from .shared import SurgeTLS
 from .typing import _ProtocolOptions
 
+__all__ = [
+    "HttpProtocol",
+    "Socks5Protocol",
+    "ShadowsocksProtocol",
+    "VmessProtocol",
+    "VmessTransport",
+    "TrojanProtocol",
+    "TuicProtocol",
+    "WireguardProtocol",
+    "WireguardPeer",
+    "WireguardSection",
+    "make_protocol_from_uniproxy",
+]
+
 
 @define
 class SurgeProtocol(BaseProtocol):
@@ -200,7 +214,7 @@ class ShadowsocksProtocol(SurgeProtocol):
 
 
 @define
-class SurgeVmessTransport(AbstractSurge):
+class VmessTransport(AbstractSurge):
     path: str | None = None
     headers: dict[str, str] | None = None
     vmess_aead: bool | None = None
@@ -235,7 +249,7 @@ class VmessProtocol(SurgeProtocol):
 
     encrypt_method: VmessCipher | None = None
     tls: SurgeTLS | None = None
-    transport: SurgeVmessTransport | None = None
+    transport: VmessTransport | None = None
 
     type: Literal["vmess"] = "vmess"
 
@@ -293,7 +307,7 @@ class VmessProtocol(SurgeProtocol):
             transport=(
                 None
                 if protocol.transport is None
-                else SurgeVmessTransport(
+                else VmessTransport(
                     path=protocol.transport.path,
                     headers=protocol.transport.headers,
                 )

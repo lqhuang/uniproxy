@@ -365,9 +365,7 @@ _CLASH_MAPPER: Mapping[ProtocolType, type[ClashProtocol]] = {
 }
 
 
-def make_clash_protocol_from_uniproxy(
-    protocol: UniproxyProtocol, **kwargs
-) -> ClashProtocol:
+def make_protocol_from_uniproxy(protocol: UniproxyProtocol, **kwargs) -> ClashProtocol:
     try:
         return _CLASH_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
     except KeyError:
