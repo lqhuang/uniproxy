@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Literal, Mapping
+from uniproxy.typing import RuleType
 
-import gc
+from attrs import define, field
 
-from attrs import define, field, fields
-
-from uniproxy.providers import RuleProvider as UniproxyRuleProvider
 from uniproxy.rules import (
     DomainGroupRule,
     DomainKeywordGroupRule,
@@ -15,79 +13,10 @@ from uniproxy.rules import (
     IPCidrGroupRule,
     UniproxyRule,
 )
+from uniproxy.utils import to_name
 
-from .base import BaseRule, BaseRuleProvider, ProtocolLike
-
-
-@define
-class SurgeRule(BaseRule):
-
-    @classmethod
-    def from_uniproxy(cls, rule: UniproxyRule) -> SurgeRule:
-        gc.collect(1)
-        for subcls in cls.__subclasses__():
-            _fields = fields(subcls)
-            if _fields.type.default == rule.type:
-                if isinstance(rule.matcher, UniproxyRuleProvider):
-                    matcher = rule.matcher.url
-                else:
-                    matcher = str(rule.matcher)
-
-                if rule.type.find("ip-cidr") != -1:
-                    inst = subcls(  # pyright: ignore[reportCallIssue]
-                        policy=str(rule.policy),
-                        matcher=matcher,
-                        no_resolve=rule.no_resolve,  # type: ignore
-                    )
-                    print("yesh")
-                else:
-                    inst = subcls(  # pyright: ignore[reportCallIssue]
-                        policy=str(rule.policy),
-                        matcher=matcher,
-                    )
-                break
-        else:
-            raise NotImplementedError(
-                f"Unknown rule type '{rule.type}' while transforming uniproxy rule to surge rule"
-            )
-        return inst
-
-    @classmethod
-    def from_group_rules(
-        cls,
-        rule: (
-            DomainKeywordGroupRule
-            | DomainSuffixGroupRule
-            | DomainGroupRule
-            | IPCidrGroupRule
-            | IPCidr6GroupRule
-        ),
-    ) -> Sequence[SurgeRule]:
-        match rule:
-            case DomainGroupRule(matcher=matcher, policy=policy):
-                return [DomainRule(matcher=each, policy=policy) for each in matcher]
-            case DomainSuffixGroupRule(matcher=matcher, policy=policy):
-                return [
-                    DomainSuffixRule(matcher=each, policy=policy) for each in matcher
-                ]
-            case DomainKeywordGroupRule(matcher=matcher, policy=policy):
-                return [
-                    DomainKeywordRule(matcher=each, policy=policy) for each in matcher
-                ]
-            case IPCidrGroupRule(matcher=matcher, policy=policy, no_resolve=no_resolve):
-                return [
-                    IPCidrRule(matcher=each, policy=policy, no_resolve=no_resolve)
-                    for each in matcher
-                ]
-            case IPCidr6GroupRule(
-                matcher=matcher, policy=policy, no_resolve=no_resolve
-            ):
-                return [
-                    IPCidr6Rule(matcher=each, policy=policy, no_resolve=no_resolve)
-                    for each in matcher
-                ]
-            case _:
-                raise TypeError("Invalid rule type")
+from .base import BaseRule as SurgeRule
+from .base import BaseRuleProvider, ProtocolLike
 
 
 @define
@@ -291,10 +220,10 @@ class RuleSetRule(SurgeRule):
     type: Literal["rule-set"] = "rule-set"
 
 
-@define(kw_only=True)
+@define
 class FinalRule(SurgeRule):
+    matcher: None
     policy: ProtocolLike | str
-    matcher: None = None
     dns_failed: bool | None = None
     type: Literal["final"] = "final"
 
@@ -303,3 +232,79 @@ class FinalRule(SurgeRule):
             return f"{self.type.upper()},{self.policy},dns-failed"
         else:
             return f"{self.type.upper()},{self.policy}"
+
+
+_SURGE_MAPPER: Mapping[RuleType, type[SurgeRule]] = {
+    "domain": DomainRule,
+    "domain-suffix": DomainSuffixRule,
+    "domain-keyword": DomainKeywordRule,
+    "ip-cidr": IPCidrRule,
+    "ip-cidr6": IPCidr6Rule,
+    "geoip": GeoIPRule,
+    "ip-asn": IPAsn,
+    "user-agent": UserAgentRule,
+    "url-regex": UrlRegexRule,
+    "process-name": ProcessNameRule,
+    "and": AndRule,
+    "or": OrRule,
+    "not": NotRule,
+    "subnet": SubnetRule,
+    "dest-port": DestPortRule,
+    "in-port": InPortRule,
+    "src-port": SrcPortRule,
+    "src-ip": SrcIPRule,
+    "protocol": ProtocolRule,
+    "script": ScriptRule,
+    "cellular-radio": CellularRadioRule,
+    "device-name": DeviceNameRule,
+    "rule-set": RuleSetRule,
+    "final": FinalRule,
+    "domain-set": DomainSetRule,
+}
+
+
+def make_rules_from_uniproxy(
+    rule: (
+        UniproxyRule
+        | DomainKeywordGroupRule
+        | DomainSuffixGroupRule
+        | DomainGroupRule
+        | IPCidrGroupRule
+        | IPCidr6GroupRule
+    ),
+) -> tuple[SurgeRule, ...]:
+    policy = to_name(rule.policy)
+
+    match rule:
+        case UniproxyRule(matcher=matcher, type=typ):
+            return (
+                _SURGE_MAPPER[typ](
+                    matcher=to_name(matcher) if matcher is not None else None,
+                    policy=policy,
+                    type=typ,
+                ),
+            )
+        case DomainGroupRule(matcher=matcher):
+            return tuple(DomainRule(matcher=each, policy=policy) for each in matcher)
+        case DomainSuffixGroupRule(matcher=matcher):
+            return tuple(
+                DomainSuffixRule(matcher=each, policy=policy) for each in matcher
+            )
+        case DomainKeywordGroupRule(matcher=matcher):
+            return tuple(
+                DomainKeywordRule(matcher=each, policy=policy) for each in matcher
+            )
+        case IPCidrGroupRule(matcher=matcher, no_resolve=no_resolve):
+            return tuple(
+                IPCidrRule(matcher=each, policy=policy, no_resolve=no_resolve)
+                for each in matcher
+            )
+        case IPCidr6GroupRule(matcher=matcher, no_resolve=no_resolve):
+            return tuple(
+                IPCidr6Rule(matcher=each, policy=policy, no_resolve=no_resolve)
+                for each in matcher
+            )
+        case _:
+            raise ValueError(
+                f"Unknown rule type '{rule.type}' while transforming uniproxy rule to surge rule"
+            )

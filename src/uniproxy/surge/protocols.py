@@ -24,17 +24,8 @@ from .typing import _ProtocolOptions
 @define
 class SurgeProtocol(BaseProtocol):
     @classmethod
-    def from_uniproxy(cls, protocol: UniproxyProtocol, **kwargs) -> SurgeProtocol:
-
-        try:
-            inst = UNIPROXY_SURGE_MAPPER[protocol.type].from_uniproxy(
-                protocol, **kwargs
-            )
-        except KeyError:
-            raise NotImplementedError(
-                f"Unknown protocol type '{protocol.type}' while transforming uniproxy protocol to surge protocol"
-            )
-        return inst
+    def from_uniproxy(cls, protocol, **kwargs) -> SurgeProtocol:
+        raise NotImplementedError
 
     def to_uniproxy(self, **kwargs) -> UniproxyProtocol:
         return self.to_uniproxy()
@@ -480,7 +471,7 @@ class WireguardSection(AbstractSurge):
         return {f"WireGuard {self.name}": {}}
 
 
-UNIPROXY_SURGE_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
+_SURGE_PROTOCOL_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
     "http": HttpProtocol,
     "https": HttpProtocol,
     "socks5": Socks5Protocol,
@@ -491,3 +482,12 @@ UNIPROXY_SURGE_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
     "tuic": TuicProtocol,
     "wireguard": WireguardProtocol,
 }
+
+
+def make_protocol_from_uniproxy(protocol: UniproxyProtocol, **kwargs) -> SurgeProtocol:
+    try:
+        return _SURGE_PROTOCOL_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
+    except KeyError:
+        raise NotImplementedError(
+            f"Unknown protocol type '{protocol.type}' when transforming uniproxy protocol to surge protocol"
+        )

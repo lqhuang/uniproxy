@@ -46,6 +46,7 @@ VmessTransport = Literal["http", "ws", "grpc", "h2"]
 GroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet"
 ]
+
 RuleType = Literal[
     # Domain-based Rule
     "domain",
@@ -54,6 +55,7 @@ RuleType = Literal[
     # IP-based Rule
     "ip-cidr",
     "ip-cidr6",
+    "ip-asn",
     "geoip",
     # HTTP Rule
     "user-agent",
@@ -80,6 +82,8 @@ RuleType = Literal[
     "domain-set",
     # Final Rule
     "final",
+]
+RuleGroupType = Literal[
     # Group Rule
     "domain-group",
     "domain-suffix-group",

@@ -38,7 +38,9 @@ def parse_ss_uri(uri: str) -> dict:
         raise ValueError("Invalid fragment value '%s'" % result.fragment)
 
     if result.password is None and result.username is not None:
-        method, password = b64decode(result.username).decode().split(":", 1)
+        padding = "=" * ((4 - len(result.username) % 4) % 4)
+        encoded = result.username + padding
+        method, password = b64decode(encoded).decode().split(":", 1)
     elif result.password is not None and result.username is not None:
         method, password = result.username, result.password
     else:
@@ -61,5 +63,4 @@ def parse_ss_uri(uri: str) -> dict:
         port=result.port,
         method=cast(ShadowsocksCipher, method),
         password=password,
-        network="tcp_and_udp",
     )

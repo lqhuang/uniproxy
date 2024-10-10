@@ -32,8 +32,8 @@ class BaseProxyProvider(AbstractClash):
 
 @define
 class BaseRule(AbstractClash):
-    matcher: str | BaseRuleProvider
-    policy: BaseProtocol | BaseProxyGroup | BaseProxyProvider
+    matcher: RuleProviderLike | None
+    policy: ProtocolLike
     type: RuleType
 
     def __str__(self) -> str:
@@ -75,4 +75,4 @@ class BaseRuleProvider:
 
 
 ProtocolLike = BaseProtocol | BaseProxyGroup | BaseProxyProvider | str
-RuleLike = BaseRule | BaseRuleProvider | str
+RuleProviderLike = BaseRuleProvider | str

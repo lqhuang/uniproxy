@@ -20,7 +20,7 @@ class BaseProtocol(AbstractSurge):
     def __str__(self) -> str:
         return str(self.name)
 
-    def asdict(self) -> dict[str, str]:
+    def __attrs_asdict__(self) -> dict[str, str]:
         raise NotImplementedError
 
     # @classmethod
@@ -63,7 +63,7 @@ class BaseProxyGroup(AbstractSurge):
 
 @define
 class BaseRule(AbstractSurge):
-    matcher: str | BaseRuleProvider
+    matcher: str | BaseRuleProvider | None
     policy: ProtocolLike
     type: str
 
@@ -81,4 +81,4 @@ class BaseRuleProvider(AbstractSurge):
         return str(self.name)
 
 
-ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup
+ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str

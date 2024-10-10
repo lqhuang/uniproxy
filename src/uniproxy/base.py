@@ -1,12 +1,20 @@
 from __future__ import annotations
 
 from typing import Sequence
-from uniproxy.typing import GroupType, Network, ProtocolType, RuleType, ServerAddress
+from uniproxy.typing import (
+    GroupType,
+    Network,
+    ProtocolType,
+    RuleGroupType,
+    RuleType,
+    ServerAddress,
+)
 
 from attrs import define
 
 from uniproxy.abc import AbstractUniproxy
-from uniproxy.shared import HealthCheck
+
+# from uniproxy.shared import HealthCheck
 
 
 @define
@@ -24,7 +32,8 @@ class BaseProtocol(AbstractUniproxy):
 class BaseProxyGroup(AbstractUniproxy):
     name: str
     type: GroupType
-    proxies: Sequence[str | ProtocolLike]
+    proxies: Sequence[ProtocolLike] | None = None
+    providers: Sequence[ProxyProviderLike] | None = None
     network: Network | None = "tcp_and_udp"
 
     url: str = "https://www.gstatic.com/generate_204"
@@ -32,7 +41,7 @@ class BaseProxyGroup(AbstractUniproxy):
     timeout: float = 3
 
     # TODO: update to `HealthCheck` class
-    health_check: bool = False
+    health_check: bool | None = None
 
     def __str__(self) -> str:
         return str(self.name)
@@ -45,21 +54,19 @@ class BaseProxyProvider(AbstractUniproxy):
     url: str
     path: str | None
 
-    def __str__(self) -> str:
-        return str(self.name)
-
 
 @define
 class BaseRule(AbstractUniproxy):
-    matcher: str | Sequence[str]
-    policy: str | ProtocolLike
+    matcher: str | BaseRuleProvider | None
+    policy: ProtocolLike
     type: RuleType
 
-    def __str__(self) -> str | Sequence[str]:
-        if isinstance(self.matcher, Sequence):
-            return "\n".join(f"{self.type},{m},{self.policy}" for m in self.matcher)
-        else:
-            return f"{self.type},{self.matcher},{self.policy}"
+
+@define
+class BaseGroupRule(AbstractUniproxy):
+    matcher: Sequence[str | BaseRuleProvider]
+    policy: ProtocolLike
+    type: RuleGroupType
 
 
 @define
@@ -69,5 +76,5 @@ class BaseRuleProvider(AbstractUniproxy):
     interval: float | None
 
 
-ProtocolLike = BaseProtocol | BaseProxyGroup | BaseProxyProvider
-RuleLike = BaseRule | BaseRuleProvider
+ProtocolLike = BaseProtocol | BaseProxyGroup | str
+ProxyProviderLike = BaseProxyProvider | str

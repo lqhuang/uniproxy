@@ -4,13 +4,13 @@ build-backend = "pdm.backend"
 
 [project]
 name = "uniproxy"
-version = "0.1.0"
+version = "0.0.1"
 description = ""
 readme = "README.md"
 license = { text = "GPLv3" }
 authors = [{ name = "Lanqing Huang", email = "lqhuang@outlook.com" }]
 requires-python = ">=3.11"
-dependencies = ["attrs", "tomlkit", "ruamel.yaml", "httpx[socks]", "pyjson5"]
+dependencies = ["attrs", "tomlkit", "ruamel.yaml"]
 
 [project.optional-dependencies]
 dev = ["mypy", "black", "isort", "ruff", "typing_extensions"]

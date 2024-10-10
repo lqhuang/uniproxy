@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Mapping
+from uniproxy.typing import GroupType as UniproxyGroupType
 
-import gc
+from itertools import chain
 
-from attrs import define, fields
+from attrs import define
 
 from uniproxy.proxy_groups import FallBackGroup as UniproxyFallBackGroup
 from uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
@@ -19,24 +20,8 @@ from .base import BaseProxyGroup
 class SurgeProxyGroup(BaseProxyGroup):
 
     @classmethod
-    def from_uniproxy(
-        cls, proxy_group: UniproxyProxyGroup, **kwargs
-    ) -> SurgeProxyGroup:
-        gc.collect(1)
-        all_subclasses = cls.__subclasses__()
-        for subcls in all_subclasses:
-            proto_type = fields(subcls).type.default
-            if proto_type == proxy_group.type:
-                inst = subcls.from_uniproxy(proxy_group)
-                break
-        else:
-            implemented = tuple(
-                fields(subcls).type.default for subcls in all_subclasses
-            )
-            raise NotImplementedError(
-                f"Unknown protocol type: '{proxy_group.type}' for implemented SurgeProxyGroup subclasses {implemented}"
-            )
-        return inst
+    def from_uniproxy(cls, proxy_group, **kwargs) -> SurgeProxyGroup:
+        raise NotImplementedError
 
 
 @define
@@ -45,10 +30,11 @@ class SelectGroup(SurgeProxyGroup):
 
     @classmethod
     def from_uniproxy(cls, proxy_group: UniproxySelectGroup, **kwargs) -> SelectGroup:
+        proxies = tuple(chain(proxy_group.proxies or [], proxy_group.providers or []))
         return cls(
             name=proxy_group.name,
             # FIXME: convert from UniproxyProtocol into SurgeProtocol
-            proxies=[str(i) for i in proxy_group.proxies],
+            proxies=tuple(str(i) for i in proxies),
             type=proxy_group.type,
         )
 
@@ -81,10 +67,11 @@ class UrlTestGroup(SurgeProxyGroup):
 
     @classmethod
     def from_uniproxy(cls, proxy_group: UniproxyUrlTestGroup, **kwargs) -> UrlTestGroup:
+        proxies = tuple(chain(proxy_group.proxies or [], proxy_group.providers or []))
         return cls(
             name=proxy_group.name,
             # FIXME: convert from UniproxyProtocol into SurgeProtocol
-            proxies=[str(i) for i in proxy_group.proxies],
+            proxies=tuple(str(i) for i in proxies),
             interval=proxy_group.interval,
             timeout=proxy_group.timeout,
             tolerance=proxy_group.tolerance,
@@ -106,10 +93,11 @@ class FallBackGroup(SurgeProxyGroup):
     def from_uniproxy(
         cls, proxy_group: UniproxyFallBackGroup, **kwargs
     ) -> FallBackGroup:
+        proxies = tuple(chain(proxy_group.proxies or [], proxy_group.providers or []))
         return cls(
             name=proxy_group.name,
             # FIXME: convert from UniproxyProtocol into SurgeProtocol
-            proxies=[str(i) for i in proxy_group.proxies],
+            proxies=tuple(str(i) for i in proxies),
             interval=proxy_group.interval,
             timeout=proxy_group.timeout,
         )
@@ -129,9 +117,29 @@ class LoadBalanceGroup(SurgeProxyGroup):
     def from_uniproxy(
         cls, proxy_group: UniproxyLoadBalanceGroup, **kwargs
     ) -> LoadBalanceGroup:
+        proxies = tuple(chain(proxy_group.proxies or [], proxy_group.providers or []))
         return cls(
             name=proxy_group.name,
             # FIXME: convert from UniproxyProtocol into SurgeProtocol
-            proxies=[str(i) for i in proxy_group.proxies],
+            proxies=tuple(str(i) for i in proxies),
             persistent=proxy_group.strategy == "consistent-hashing",
+        )
+
+
+_SURGE_MAPPER: Mapping[UniproxyGroupType, type[SurgeProxyGroup]] = {
+    "select": SelectGroup,
+    "url-test": UrlTestGroup,
+    "load-balance": LoadBalanceGroup,
+    "fallback": FallBackGroup,
+}
+
+
+def make_proxy_group_from_uniproxy(
+    proxy_group: UniproxyProxyGroup, **kwargs
+) -> SurgeProxyGroup:
+    try:
+        return _SURGE_MAPPER[proxy_group.type].from_uniproxy(proxy_group, **kwargs)
+    except KeyError:
+        raise NotImplementedError(
+            f"Unknown protocol type: '{proxy_group.type}' when transforming uniproxy proxy group to surge proxy group."
         )

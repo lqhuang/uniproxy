@@ -11,13 +11,9 @@ from uniproxy.typing import (
 
 from attrs import define
 
-from uniproxy.base import BaseProtocol
+from uniproxy.base import BaseProtocol as UniproxyProtocol
 from uniproxy.shared import TLS
 from uniproxy.uri import parse_ss_uri
-
-
-@define
-class UniproxyProtocol(BaseProtocol): ...
 
 
 @define
@@ -99,10 +95,10 @@ class ShadowsocksProtocol(UniproxyProtocol):
     type: Literal["shadowsocks"] = "shadowsocks"
 
     @classmethod
-    def from_uri(cls, uri: str, overwrites: dict | None = None) -> ShadowsocksProtocol:
-        extra = overwrites or {}
-        kwargs = {**parse_ss_uri(uri), **extra}
-        return cls(**kwargs)
+    def from_uri(cls, uri: str, **kwargs) -> ShadowsocksProtocol:
+        kwargs.setdefault("network", "tcp_and_udp")
+        merged = {**parse_ss_uri(uri), **kwargs}
+        return cls(**merged)
 
 
 @define

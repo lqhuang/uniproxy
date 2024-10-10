@@ -54,4 +54,6 @@ RuleType = Literal[
     "device-name",
     # Ruleset
     "rule-set",
+    # Final Rule
+    "final",
 ]
