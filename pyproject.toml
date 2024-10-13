@@ -13,8 +13,14 @@ requires-python = ">=3.11"
 dependencies = ["attrs", "tomlkit", "ruamel.yaml", 'xattrs']
 
 [project.optional-dependencies]
-dev = ["mypy", "black", "isort", "ruff", "typing_extensions"]
-test = ["pytest"]
+dev = [
+    "mypy>=1.11.2",
+    "black>=24.10.0",
+    "isort>=5.13.2",
+    "ruff>=0.6.9",
+    "typing-extensions>=4.12.2",
+]
+test = ["pytest>=8.3.3"]
 
 [tool.isort]
 profile = "black"
