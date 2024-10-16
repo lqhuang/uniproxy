@@ -4,11 +4,7 @@ from typing import Literal
 
 from attrs import define
 
-from uniproxy.base import BaseProxyGroup
-
-
-@define
-class UniproxyProxyGroup(BaseProxyGroup): ...
+from uniproxy.base import BaseProxyGroup as UniproxyProxyGroup
 
 
 @define

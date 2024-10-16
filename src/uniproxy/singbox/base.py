@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from abc import abstractmethod
+
 from attrs import define
 
 from uniproxy.abc import AbstractSingBox
 
 from .typing import InboundType, OutboundType
+
+if TYPE_CHECKING:
+    from .outbounds import SingBoxOutbound
 
 
 @define(slots=False)
@@ -14,6 +21,10 @@ class BaseOutbound(AbstractSingBox):
 
     def __str__(self) -> str:
         return str(self.tag)
+
+    @classmethod
+    @abstractmethod
+    def from_uniproxy(cls, protocol, **kwargs) -> SingBoxOutbound: ...
 
 
 @define(slots=False)

@@ -1,14 +1,28 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
-from uniproxy.typing import IPAddress, ServerAddress, ShadowsocksCipher, VmessCipher
+from typing import Literal, Mapping, Sequence, cast
+from uniproxy.typing import (
+    GroupType,
+    IPAddress,
+    ProtocolType,
+    ServerAddress,
+    ShadowsocksCipher,
+    VmessCipher,
+)
 
 from attrs import define, field
 
-from uniproxy.protocols import ShadowsocksProtocol, VmessProtocol
+from uniproxy.protocols import ShadowsocksProtocol, UniproxyProtocol, VmessProtocol
+from uniproxy.proxy_groups import (
+    FallBackGroup,
+    LoadBalanceGroup,
+    SelectGroup,
+    UniproxyProxyGroup,
+    UrlTestGroup,
+)
 from uniproxy.utils import map_to_str
 
-from .base import BaseOutbound as SingBoxOutbound
+from .base import BaseOutbound
 from .shared import BaseTransport, DialFieldsMixin, OutboundMultiplex, OutboundTLS
 from .typing import SingBoxNetwork
 
@@ -22,28 +36,8 @@ __all__ = (
     "Peer",
     "WireguardOutbound",
     "SelectorOutbound",
-    "URLTestOutbound",
+    "UrlTestOutbound",
 )
-
-PROTOCOL_OUTBOUNDS = {
-    "direct",
-    "block",
-    "socks",
-    "http",
-    "shadowsocks",
-    "vmess",
-    "trojan",
-    "wireguard",
-    "hysteria",
-    "shadowtls",
-    "vless",
-    "tuic",
-    "hysteria2",
-    "tor",
-    "ssh",
-    "dns",
-}
-GROUP_OUTBOUNDS = {"selector", "urltest"}
 
 
 @define(slots=False)
@@ -60,7 +54,7 @@ class DirectMixin:
 
 
 @define
-class DirectOutbound(DialFieldsMixin, DirectMixin, SingBoxOutbound):  # type: ignore[misc]
+class DirectOutbound(DialFieldsMixin, DirectMixin, BaseOutbound):  # type: ignore[misc]
     """
     Examples:
 
@@ -82,7 +76,7 @@ class DirectOutbound(DialFieldsMixin, DirectMixin, SingBoxOutbound):  # type: ig
 
 
 @define
-class BlockOutbound(SingBoxOutbound):
+class BlockOutbound(BaseOutbound):
     """
 
     Examples:
@@ -99,7 +93,7 @@ class BlockOutbound(SingBoxOutbound):
 
 
 @define
-class DnsOutbound(SingBoxOutbound):
+class DnsOutbound(BaseOutbound):
     """
 
     Examples:
@@ -148,7 +142,7 @@ class ShadowsocksMixin:
 
 
 @define
-class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, SingBoxOutbound):  # type: ignore[misc]
+class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, BaseOutbound):  # type: ignore[misc]
     """
 
     Examples:
@@ -176,20 +170,22 @@ class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, SingBoxOutbound):  
     type: Literal["shadowsocks"] = "shadowsocks"
 
     @classmethod
-    def from_uniproxy(cls, ss: ShadowsocksProtocol, **kwargs) -> ShadowsocksOutbound:
+    def from_uniproxy(
+        cls, protocol: ShadowsocksProtocol, **kwargs
+    ) -> ShadowsocksOutbound:
 
-        if ss.plugin is not None:
+        if protocol.plugin is not None:
             raise NotImplementedError(
                 "Plugin for SingBox Shadowsocks protocol is not supported yet for now"
             )
 
         return cls(
-            tag=ss.name,
-            server=ss.server,
-            server_port=ss.port,
-            method=ss.method,
-            password=ss.password,
-            network=None if ss.network == "tcp_and_udp" else ss.network,
+            tag=protocol.name,
+            server=protocol.server,
+            server_port=protocol.port,
+            method=protocol.method,
+            password=protocol.password,
+            network=None if protocol.network == "tcp_and_udp" else protocol.network,
             plugin=None,
             plugin_opts=None,
             **kwargs,
@@ -215,32 +211,36 @@ class VmessMixin:
 
 
 @define
-class VmessOutbound(DialFieldsMixin, VmessMixin, SingBoxOutbound):  # type: ignore[misc]
+class VmessOutbound(DialFieldsMixin, VmessMixin, BaseOutbound):  # type: ignore[misc]
     type: Literal["vmess"] = "vmess"
 
     @classmethod
-    def from_uniproxy(cls, vmess: VmessProtocol, **kwargs) -> VmessOutbound:
+    def from_uniproxy(cls, protocol: VmessProtocol, **kwargs) -> VmessOutbound:
         # transport_mapping = {
         #     "ws": "ws",
         #     "h2": "h2",
         #     "quic": "quic",
         #     "httpupgrade": NotImplementedError("httpupgrade"),
         # }
-        if vmess.transport is not None:
-            # transport = transport_mapping[vmess.transport]
+        if protocol.transport is not None:
+            # transport = transport_mapping[protocol.transport]
             raise NotImplementedError(
-                f"unsupported transport type {vmess.transport.type} for now"
+                f"unsupported transport type {protocol.transport.type} for now"
             )
 
         return cls(
-            tag=vmess.name,
-            server=vmess.server,
-            server_port=vmess.port,
-            uuid=vmess.uuid,
-            security=vmess.security,
-            alter_id=vmess.alter_id,
-            network=None if vmess.network == "tcp_and_udp" else vmess.network,
-            tls=None if vmess.tls is None else OutboundTLS.from_uniproxy(vmess.tls),
+            tag=protocol.name,
+            server=protocol.server,
+            server_port=protocol.port,
+            uuid=protocol.uuid,
+            security=protocol.security,
+            alter_id=protocol.alter_id,
+            network=None if protocol.network == "tcp_and_udp" else protocol.network,
+            tls=(
+                None
+                if protocol.tls is None
+                else OutboundTLS.from_uniproxy(protocol.tls)
+            ),
             **kwargs,
         )
 
@@ -264,7 +264,7 @@ class TrojanMixin:
 
 
 @define
-class TrojanOutbound(DialFieldsMixin, TrojanMixin, SingBoxOutbound):  # type: ignore[misc]
+class TrojanOutbound(DialFieldsMixin, TrojanMixin, BaseOutbound):  # type: ignore[misc]
     """
     Examples:
 
@@ -377,7 +377,7 @@ class WireguardMixin:
 
 
 @define
-class WireguardOutbound(DialFieldsMixin, WireguardMixin, SingBoxOutbound):  # type: ignore[misc]
+class WireguardOutbound(DialFieldsMixin, WireguardMixin, BaseOutbound):  # type: ignore[misc]
     """
     Examples:
 
@@ -423,7 +423,7 @@ class WireguardOutbound(DialFieldsMixin, WireguardMixin, SingBoxOutbound):  # ty
 
 
 @define
-class SelectorOutbound(SingBoxOutbound):
+class SelectorOutbound(BaseOutbound):
     """
 
     Examples:
@@ -449,9 +449,17 @@ class SelectorOutbound(SingBoxOutbound):
     interrupt_exist_connections: bool | None = None
     type: Literal["selector"] = "selector"
 
+    @classmethod
+    def from_uniproxy(cls, protocol: SelectGroup, **kwargs) -> SelectorOutbound:
+        return cls(
+            tag=protocol.name,
+            outbounds=[str(i) for i in protocol.proxies] if protocol.proxies else [],
+            interrupt_exist_connections=False,
+        )
+
 
 @define
-class URLTestOutbound(SingBoxOutbound):
+class UrlTestOutbound(BaseOutbound):
     """
     Examples:
 
@@ -488,38 +496,105 @@ class URLTestOutbound(SingBoxOutbound):
     """
     Interrupt existing connections when the selected outbound has changed.
 
-    Only inbound connections are affected by this setting, internal connections will always be interrupted.
+    Only outbound connections are affected by this setting, internal connections will always be interrupted.
     """
 
     type: Literal["urltest"] = "urltest"
 
+    @classmethod
+    def from_uniproxy(cls, protocol: UrlTestGroup, **kwargs) -> UrlTestOutbound:
+        return cls(
+            tag=protocol.name,
+            outbounds=[str(i) for i in protocol.proxies] if protocol.proxies else [],
+            url=protocol.url,
+            interval=f"{protocol.interval}s" if protocol.interval else None,
+            tolerance=protocol.tolerance,
+        )
 
-# TODO: bug??
-# ...
-# Not a bug
-# https://www.attrs.org/en/stable/glossary.html#term-slotted-classes
-# https://github.com/python-attrs/attrs/issues/407
-# import gc
-#
-# gc.collect()
-#
-# _SINGBOX_REGISTERED_OUTBOUNDS = {
-#     key: subcls
-#     for subcls in SingBoxOutbound.__subclasses__()
-#     if isinstance(key := getattr(subcls, "type"), str)
-# }
-# for subclss in SingBoxOutbound.__subclasses__():
-#     print(subclss, subclss.type.__name__)
-#     print(dir(subclss.type))
 
-_SINGBOX_REGISTERED_OUTBOUNDS = {
-    "direct": DirectOutbound,
-    "block": BlockOutbound,
-    "dns": DnsOutbound,
+@define
+class PseudoLoadBalanceOutbound(BaseOutbound):
+    outbounds: Sequence[SingBoxOutbound | str] = field(converter=map_to_str)
+    url: str | None = None
+    interval: str | None = None
+    tolerance: float | None = None
+    idle_timeout: str | None = None
+    interrupt_exist_connections: bool | None = None
+    type: Literal["urltest"] = "urltest"
+
+    @classmethod
+    def from_uniproxy(cls, protocol: LoadBalanceGroup, **kwargs) -> UrlTestOutbound:
+        return cls(  # type: ignore
+            tag=protocol.name,
+            outbounds=[str(i) for i in protocol.proxies] if protocol.proxies else [],
+            url=protocol.url,
+            interval=f"{protocol.interval}s" if protocol.interval else None,
+            tolerance=100,
+        )
+
+
+@define
+class PseudoFallbackOutbound(BaseOutbound):
+    outbounds: Sequence[SingBoxOutbound | str] = field(converter=map_to_str)
+    default: SingBoxOutbound | str | None = None
+    interrupt_exist_connections: bool | None = None
+    type: Literal["selector"] = "selector"
+
+    @classmethod
+    def from_uniproxy(cls, protocol: SelectGroup, **kwargs) -> SelectorOutbound:
+        return cls(  # type: ignore
+            tag=protocol.name,
+            outbounds=[str(i) for i in protocol.proxies] if protocol.proxies else [],
+            interrupt_exist_connections=False,
+        )
+
+
+SingBoxProtocolOutbound = (
+    DirectOutbound
+    | BlockOutbound
+    | DnsOutbound
+    | ShadowsocksOutbound
+    | VmessOutbound
+    | TrojanOutbound
+    | WireguardOutbound
+)
+SingBoxGroupOutbound = SelectorOutbound | UrlTestOutbound
+SingBoxOutbound = SingBoxProtocolOutbound | SingBoxGroupOutbound
+
+
+_SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, SingBoxProtocolOutbound] = {
+    # "direct": DirectOutbound,
+    # "block": BlockOutbound,
+    # "dns": DnsOutbound,
     "shadowsocks": ShadowsocksOutbound,
     "vmess": VmessOutbound,
-    "wireguard": WireguardOutbound,
     "trojan": TrojanOutbound,
-    "selector": SelectorOutbound,
-    "urltest": URLTestOutbound,
+    "wireguard": WireguardOutbound,
 }
+_SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, SingBoxGroupOutbound] = {
+    "select": SelectorOutbound,
+    "url-test": UrlTestOutbound,
+    "load-balance": PseudoLoadBalanceOutbound,
+    "fallback": PseudoFallbackOutbound,
+}
+
+
+def make_outbound_from_uniproxy(
+    protocol: UniproxyProtocol | UniproxyProxyGroup, **kwargs
+) -> SingBoxOutbound:
+    if protocol.type in _SINGBOX_REGISTERED_PROTOCOLS.keys():
+        return _SINGBOX_REGISTERED_PROTOCOLS[
+            cast(UniproxyProtocol, protocol).type
+        ].from_uniproxy(
+            protocol, **kwargs  # type: ignore
+        )
+    elif protocol.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys():
+        return _SINGBOX_REGISTERED_PROXY_GROUPS[
+            cast(UniproxyProxyGroup, protocol).type
+        ].from_uniproxy(
+            protocol, **kwargs  # type: ignore
+        )
+    else:
+        raise ValueError(
+            f"Unsupported or not implemented protocol type {protocol.type}"
+        )

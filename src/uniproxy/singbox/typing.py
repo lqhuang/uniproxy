@@ -25,7 +25,7 @@ InboundType = Literal[
     "redirect",
     "tproxy",
 ]
-OutboundType = Literal[
+ProtocolOutboundType = Literal[
     "direct",
     "block",
     "socks",
@@ -42,9 +42,9 @@ OutboundType = Literal[
     "tor",
     "ssh",
     "dns",
-    "selector",
-    "urltest",
 ]
+GroupOutboundType = Literal["selector", "urltest"]
+OutboundType = ProtocolOutboundType | GroupOutboundType
 
 TLSVersion = Literal["1.0", "1.1", "1.2", "1.3"]
 
