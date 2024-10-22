@@ -74,7 +74,7 @@ class UrlTestGroup(SurgeProxyGroup):
 
     @classmethod
     def from_uniproxy(cls, proxy_group: UniproxyUrlTestGroup, **kwargs) -> UrlTestGroup:
-        proxies = tuple(chain(proxy_group.proxies or [], proxy_group.providers or []))
+        proxies = chain(proxy_group.proxies or [], proxy_group.providers or [])
         return cls(
             name=proxy_group.name,
             # FIXME: convert from UniproxyProtocol into SurgeProtocol
@@ -100,7 +100,7 @@ class FallBackGroup(SurgeProxyGroup):
     def from_uniproxy(
         cls, proxy_group: UniproxyFallBackGroup, **kwargs
     ) -> FallBackGroup:
-        proxies = tuple(chain(proxy_group.proxies or [], proxy_group.providers or []))
+        proxies = chain(proxy_group.proxies or [], proxy_group.providers or [])
         return cls(
             name=proxy_group.name,
             # FIXME: convert from UniproxyProtocol into SurgeProtocol
@@ -124,7 +124,7 @@ class LoadBalanceGroup(SurgeProxyGroup):
     def from_uniproxy(
         cls, proxy_group: UniproxyLoadBalanceGroup, **kwargs
     ) -> LoadBalanceGroup:
-        proxies = tuple(chain(proxy_group.proxies or [], proxy_group.providers or []))
+        proxies = chain(proxy_group.proxies or [], proxy_group.providers or [])
         return cls(
             name=proxy_group.name,
             # FIXME: convert from UniproxyProtocol into SurgeProtocol

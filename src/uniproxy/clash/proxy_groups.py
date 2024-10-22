@@ -10,6 +10,7 @@ from uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
 from uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
 from uniproxy.proxy_groups import UniproxyProxyGroup
 from uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
+from uniproxy.utils import maybe_map_to_str
 
 from .base import BaseProxyGroup
 
@@ -33,8 +34,8 @@ class SelectGroup(ClashProxyGroup):
     def from_uniproxy(cls, protocol: UniproxySelectGroup, **kwargs) -> SelectGroup:
         return cls(
             name=protocol.name,
-            proxies=protocol.proxies,
-            use=protocol.providers,
+            proxies=maybe_map_to_str(protocol.proxies),
+            use=maybe_map_to_str(protocol.providers),
             disable_udp=protocol.network == "tcp",
             url=protocol.url,
             interval=protocol.interval,
@@ -51,8 +52,8 @@ class UrlTestGroup(ClashProxyGroup):
 
         return cls(
             name=protocol.name,
-            proxies=protocol.proxies,
-            use=protocol.providers,
+            proxies=maybe_map_to_str(protocol.proxies),
+            use=maybe_map_to_str(protocol.providers),
             disable_udp=protocol.network == "tcp",
             url=protocol.url,
             interval=protocol.interval,
@@ -70,8 +71,8 @@ class FallBackGroup(ClashProxyGroup):
     def from_uniproxy(cls, protocol: UniproxyFallBackGroup, **kwargs) -> FallBackGroup:
         return cls(
             name=protocol.name,
-            proxies=protocol.proxies,
-            use=protocol.providers,
+            proxies=maybe_map_to_str(protocol.proxies),
+            use=maybe_map_to_str(protocol.providers),
             disable_udp=protocol.network == "tcp",
             url=protocol.url,
             interval=protocol.interval,
@@ -92,8 +93,8 @@ class LoadBalanceGroup(ClashProxyGroup):
 
         return cls(
             name=protocol.name,
-            proxies=protocol.proxies,
-            use=protocol.providers,
+            proxies=maybe_map_to_str(protocol.proxies),
+            use=maybe_map_to_str(protocol.providers),
             disable_udp=protocol.network == "tcp",
             url=protocol.url,
             interval=protocol.interval,

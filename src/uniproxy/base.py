@@ -54,6 +54,9 @@ class BaseProxyProvider(AbstractUniproxy):
     url: str
     path: str | None
 
+    def __str__(self) -> str:
+        return str(self.name)
+
 
 @define
 class BaseRule(AbstractUniproxy): ...
