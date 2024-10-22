@@ -66,7 +66,6 @@ class UrlTestGroup(SurgeProxyGroup):
     wait until testing is finished before making requests with selected results.
     """
 
-    url: str = "https://www.gstatic.com/generate_204"
     type: Literal["url-test"] = "url-test"
 
     def __attrs_asdict__(self):

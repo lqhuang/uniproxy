@@ -11,10 +11,18 @@ from .typing import SurgeGroupType
 
 
 @define
-class ExternalProxyProvider(BaseProxyProvider):
+class ExternalPoliciesProvider(BaseProxyProvider):
     using_type: SurgeGroupType
     policy_path: str
+    """
+    A policy group may import policies defined in an external file or from a URL.
 
+    ```
+    egroup = select, policy-path=proxies.txt
+    ```
+
+    This file contains a list of policies, just like the definition lines in the main profile.
+    """
     update_interval: float | None = None
     """The update interval in seconds. Only meaningful when the path is a URL."""
     policy_regex_filter: str | None = None
@@ -50,7 +58,7 @@ class ExternalProxyProvider(BaseProxyProvider):
     @classmethod
     def from_uniproxy(
         cls, uniproxy: UniproxyProxyProvider, **kwargs
-    ) -> ExternalProxyProvider:
+    ) -> ExternalPoliciesProvider:
 
         if "external_policy_modifier" in kwargs:
             external_policy_modifier = kwargs["external_policy_modifier"]
