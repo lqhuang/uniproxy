@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 from typing import Literal
+
+from attrs import define
+
+from uniproxy.base import BaseProtocol as UniproxyProtocol
+from uniproxy.shared import TLS
 from uniproxy.typing import (
     Network,
     ProtocolType,
@@ -8,11 +13,6 @@ from uniproxy.typing import (
     VmessCipher,
     VmessTransport,
 )
-
-from attrs import define
-
-from uniproxy.base import BaseProtocol as UniproxyProtocol
-from uniproxy.shared import TLS
 from uniproxy.uri import parse_ss_uri
 
 
