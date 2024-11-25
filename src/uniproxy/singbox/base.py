@@ -24,7 +24,8 @@ class BaseOutbound(AbstractSingBox):
 
     @classmethod
     @abstractmethod
-    def from_uniproxy(cls, protocol, **kwargs) -> SingBoxOutbound: ...
+    def from_uniproxy(cls, protocol, **kwargs) -> SingBoxOutbound:
+        raise NotImplementedError
 
 
 @define(slots=False)

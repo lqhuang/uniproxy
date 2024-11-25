@@ -12,9 +12,13 @@ from uniproxy.typing import (
 
 from attrs import define, field
 
-from uniproxy.protocols import ShadowsocksProtocol, UniproxyProtocol, VmessProtocol
+from uniproxy.protocols import (
+    ShadowsocksProtocol,
+    TrojanProtocol,
+    UniproxyProtocol,
+    VmessProtocol,
+)
 from uniproxy.proxy_groups import (
-    FallBackGroup,
     LoadBalanceGroup,
     SelectGroup,
     UniproxyProxyGroup,
@@ -112,7 +116,6 @@ class DnsOutbound(BaseOutbound):
 
 @define(slots=False)
 class ShadowsocksMixin:
-
     server: ServerAddress
     """The server address."""
     server_port: int
@@ -173,7 +176,6 @@ class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, BaseOutbound):  # t
     def from_uniproxy(
         cls, protocol: ShadowsocksProtocol, **kwargs
     ) -> ShadowsocksOutbound:
-
         if protocol.plugin is not None:
             raise NotImplementedError(
                 "Plugin for SingBox Shadowsocks protocol is not supported yet for now"
@@ -194,7 +196,6 @@ class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, BaseOutbound):  # t
 
 @define(slots=False)
 class VmessMixin:
-
     tag: str
     server: ServerAddress
     server_port: int
@@ -287,6 +288,22 @@ class TrojanOutbound(DialFieldsMixin, TrojanMixin, BaseOutbound):  # type: ignor
     """
 
     type: Literal["trojan"] = "trojan"
+
+    @classmethod
+    def from_uniproxy(cls, protocol: TrojanProtocol, **kwargs) -> TrojanOutbound:
+        return cls(
+            tag=protocol.name,
+            server=protocol.server,
+            server_port=protocol.port,
+            password=protocol.password,
+            # network=None if protocol.network == "tcp_and_udp" else protocol.network,
+            tls=(
+                None
+                if protocol.tls is None
+                else OutboundTLS.from_uniproxy(protocol.tls)
+            ),
+            **kwargs,
+        )
 
 
 @define
@@ -585,15 +602,11 @@ def make_outbound_from_uniproxy(
     if protocol.type in _SINGBOX_REGISTERED_PROTOCOLS.keys():
         return _SINGBOX_REGISTERED_PROTOCOLS[
             cast(UniproxyProtocol, protocol).type
-        ].from_uniproxy(
-            protocol, **kwargs  # type: ignore
-        )
+        ].from_uniproxy(protocol, **kwargs)  # type: ignore
     elif protocol.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys():
         return _SINGBOX_REGISTERED_PROXY_GROUPS[
             cast(UniproxyProxyGroup, protocol).type
-        ].from_uniproxy(
-            protocol, **kwargs  # type: ignore
-        )
+        ].from_uniproxy(protocol, **kwargs)  # type: ignore
     else:
         raise ValueError(
             f"Unsupported or not implemented protocol type {protocol.type}"

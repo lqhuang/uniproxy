@@ -71,6 +71,7 @@ class HTTPInbound(SingBoxInbound):
     users: Sequence[User] | None = None
     tls: InboundTLS | None = None
     set_system_proxy: bool | None = None
+    type: Literal["http"] = "http"
 
 
 @define
