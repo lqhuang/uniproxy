@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence
-from uniproxy.typing import ALPN, IPAddress
+from typing import Literal, Mapping, Sequence, cast
+from uniproxy.typing import ALPN, IPAddress, ShadowsocksCipher, VmessCipher
 from uniproxy.typing import ProtocolType as UniproxyProtocolType
-from uniproxy.typing import ShadowsocksCipher, VmessCipher
 
 from ipaddress import IPv4Address, IPv6Address
 
 from attrs import define
 
 from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
+from uniproxy.protocols import ShadowsocksObfsPlugin, UniproxyProtocol
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
 from uniproxy.protocols import TrojanProtocol as UniproxyTrojanProtocol
 from uniproxy.protocols import TuicProtocol as UniproxyTuicProtocol
-from uniproxy.protocols import UniproxyProtocol
 from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 
 from .base import AbstractSurge, BaseProtocol
@@ -159,16 +158,27 @@ class ShadowsocksProtocol(SurgeProtocol):
 
     obfs: Literal["http", "tls"] | None = None
     obfs_host: str | None = None
-    obfs_uri: str | None = None
 
     ecn: bool | None = None
 
     type: Literal["ss"] = "ss"
 
+    obfs_uri: str | None = None
+    """deprecated"""
+
     @classmethod
     def from_uniproxy(
         cls, protocol: UniproxyShadowsocksProtocol, **kwargs
     ) -> ShadowsocksProtocol:
+        if protocol.plugin is not None and protocol.plugin.command in {
+            "obfs",
+            "obfs-local",
+        }:
+            plugin = cast(ShadowsocksObfsPlugin, protocol.plugin)
+            kwargs.setdefault("obfs", plugin.obfs)
+            kwargs.setdefault("obfs_host", plugin.obfs_host)
+            # kwargs.setdefault("obfs_uri", plugin.obfs_host)
+
         return cls(
             name=protocol.name,
             server=protocol.server,

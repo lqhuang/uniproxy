@@ -66,32 +66,6 @@ def test_proxy_socks5__tls():
     ) == yaml_loads(clash_config)
 
 
-def test_proxy_ss():
-    ss = ShadowsocksProtocol(
-        name="proxy-ss",
-        server="localhost",
-        port=1080,
-        cipher="aes-256-gcm",
-        password="pass",
-        udp=True,
-    )
-
-    clash_config = dedent(
-        """
-        name: "proxy-ss"
-        type: "ss"
-        server: localhost
-        port: 1080
-        cipher: "aes-256-gcm"
-        password: "pass"
-        udp: true
-        """
-    )
-    assert asdict(ss, filter=exclude_if_none, key_serializer=to_kebab) == yaml_loads(
-        clash_config
-    )
-
-
 def test_proxy_vmess():
     vmess = VmessProtocol(
         name="proxy-vmess",

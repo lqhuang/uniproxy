@@ -1,11 +1,6 @@
 from __future__ import annotations
 
 from typing import Literal
-
-from attrs import define
-
-from uniproxy.base import BaseProtocol as UniproxyProtocol
-from uniproxy.shared import TLS
 from uniproxy.typing import (
     Network,
     ProtocolType,
@@ -13,6 +8,11 @@ from uniproxy.typing import (
     VmessCipher,
     VmessTransport,
 )
+
+from attrs import define
+
+from uniproxy.base import BaseProtocol as UniproxyProtocol
+from uniproxy.shared import TLS
 from uniproxy.uri import parse_ss_uri
 
 
@@ -53,17 +53,16 @@ class ShadowsocksPlugin:
 
 
 @define
-class ShadowsocksObfsLocalPlugin:
-    mode: Literal["tls", "http"]
-    host: str
-    command: Literal["obfs"] | str = "obfs-local"
+class ShadowsocksObfsPlugin:
+    obfs: Literal["tls", "http"]
+    obfs_host: str
+    command: Literal["obfs", "obfs-local"] = "obfs"
 
 
 @define
 class ShadowsocksObfsServerPlugin:
-    mode: Literal["tls", "http"]
-    host: str
-    command: Literal["obfs"] | str = "obfs-server"
+    obfs: Literal["tls", "http"]
+    command: Literal["obfs-server"] = "obfs-server"
 
 
 @define
@@ -75,7 +74,7 @@ class ShadowsocksV2RayPlugin:
     skip_cert_verify: bool | None = None
     headers: dict[str, str] | None = None
     server: bool = False
-    command: Literal["v2ray-plugin"] | str = "v2ray-plugin"
+    command: Literal["v2ray-plugin"] = "v2ray-plugin"
 
 
 @define
@@ -86,8 +85,8 @@ class ShadowsocksProtocol(UniproxyProtocol):
 
     plugin: (
         ShadowsocksPlugin
+        | ShadowsocksObfsPlugin
         | ShadowsocksObfsServerPlugin
-        | ShadowsocksObfsLocalPlugin
         | ShadowsocksV2RayPlugin
         | None
     ) = None

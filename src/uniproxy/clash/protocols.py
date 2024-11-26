@@ -12,9 +12,7 @@ from uniproxy.typing import (
 from attrs import define, field
 from xattrs._metadata import _Metadata
 
-from uniproxy.protocols import (
-    ShadowsocksObfsLocalPlugin as UniproxyShadowsocksObfsPlugin,
-)
+from uniproxy.protocols import ShadowsocksObfsPlugin as UniproxyShadowsocksObfsPlugin
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
 from uniproxy.protocols import ShadowsocksV2RayPlugin as UniproxyShadowsocksV2RayPlugin
 from uniproxy.protocols import TrojanProtocol as UniproxyTrojanProtocol
@@ -123,9 +121,11 @@ class ShadowsocksProtocol(ClashProtocol):
 
         plugin_opts: ShadowsocksPluginObfsOpts | ShadowsocksPluginV2RayOpts | None
         match plugin:
-            case "obfs-local":
+            case "obfs-local" | "obfs":
                 plug = cast(UniproxyShadowsocksObfsPlugin, protocol.plugin)
-                plugin_opts = ShadowsocksPluginObfsOpts(mode=plug.mode, host=plug.host)
+                plugin_opts = ShadowsocksPluginObfsOpts(
+                    mode=plug.obfs, host=plug.obfs_host
+                )
             case "v2ray-plugin":
                 plug_ = cast(UniproxyShadowsocksV2RayPlugin, protocol.plugin)
                 if plug_.mode != "websocket":

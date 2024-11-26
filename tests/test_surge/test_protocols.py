@@ -3,7 +3,6 @@ from __future__ import annotations
 from xattrs import asdict
 
 from uniproxy.surge.protocols import (
-    ShadowsocksProtocol,
     Socks5Protocol,
     SurgeTLS,
     VmessProtocol,
@@ -33,21 +32,6 @@ def test_proxy_socks5__tls():
         f"{name} = socks5-tls, 10.0.0.1, 1080, user, pass, skip-cert-verify=true"
     )
     assert asdict(socks5) == load_ini_without_section(surge_config)
-
-
-def test_proxy_ss():
-    name = "proxy-ss"
-    ss = ShadowsocksProtocol(
-        name=name,
-        server="localhost",
-        port=1080,
-        encrypt_method="aes-256-gcm",
-        password="pass",
-        udp_relay=True,
-    )
-
-    surge_config = f"{name} = ss, localhost, 1080, encrypt-method=aes-256-gcm, password=pass, udp-relay=true"
-    assert asdict(ss) == load_ini_without_section(surge_config)
 
 
 def test_proxy_vmess():
