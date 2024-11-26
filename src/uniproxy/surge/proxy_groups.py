@@ -79,7 +79,7 @@ class UrlTestGroup(SurgeProxyGroup):
             # FIXME: convert from UniproxyProtocol into SurgeProtocol
             proxies=tuple(str(i) for i in proxies),
             interval=proxy_group.interval,
-            timeout=proxy_group.timeout,
+            timeout=int(proxy_group.timeout / 1000),
             tolerance=proxy_group.tolerance,
         )
 
@@ -105,7 +105,7 @@ class FallBackGroup(SurgeProxyGroup):
             # FIXME: convert from UniproxyProtocol into SurgeProtocol
             proxies=tuple(str(i) for i in proxies),
             interval=proxy_group.interval,
-            timeout=proxy_group.timeout,
+            timeout=int(proxy_group.timeout / 1000),
         )
 
 

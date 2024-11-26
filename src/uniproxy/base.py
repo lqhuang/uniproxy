@@ -38,7 +38,10 @@ class BaseProxyGroup(AbstractUniproxy):
 
     url: str = "https://www.gstatic.com/generate_204"
     interval: float = 300
-    timeout: float = 3
+    timeout: float = 3000
+    """
+    timeout. unit (ms)
+    """
 
     # TODO: update to `HealthCheck` class
     health_check: bool | None = None
