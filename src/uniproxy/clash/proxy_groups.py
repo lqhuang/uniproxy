@@ -17,7 +17,6 @@ from .base import BaseProxyGroup
 
 @define
 class ClashProxyGroup(BaseProxyGroup):
-
     @classmethod
     def from_uniproxy(cls, protocol, **kwargs) -> ClashProxyGroup:
         raise NotImplementedError
@@ -49,7 +48,6 @@ class UrlTestGroup(ClashProxyGroup):
 
     @classmethod
     def from_uniproxy(cls, protocol: UniproxyUrlTestGroup, **kwargs) -> UrlTestGroup:
-
         return cls(
             name=protocol.name,
             proxies=maybe_map_to_str(protocol.proxies),
@@ -90,7 +88,6 @@ class LoadBalanceGroup(ClashProxyGroup):
     def from_uniproxy(
         cls, protocol: UniproxyLoadBalanceGroup, **kwargs
     ) -> LoadBalanceGroup:
-
         return cls(
             name=protocol.name,
             proxies=maybe_map_to_str(protocol.proxies),

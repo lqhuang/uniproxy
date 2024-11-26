@@ -89,17 +89,20 @@ class Rule(AbstractSingBox):
             raise ValueError(f"Expected UniproxyBasicRule, got {type(rule)}")
 
         match rule:
-            case DomainRule(matcher=matcher, policy=policy) | DomainGroupRule(
-                matcher=matcher, policy=policy
+            case (
+                DomainRule(matcher=matcher, policy=policy)
+                | DomainGroupRule(matcher=matcher, policy=policy)
             ):
                 return cls(outbound=str(policy), domain=matcher)  # type: ignore[reportArgumentType, arg-type]
-            case DomainSuffixRule(
-                matcher=matcher, policy=policy
-            ) | DomainSuffixGroupRule(matcher=matcher, policy=policy):
+            case (
+                DomainSuffixRule(matcher=matcher, policy=policy)
+                | DomainSuffixGroupRule(matcher=matcher, policy=policy)
+            ):
                 return cls(outbound=str(policy), domain_suffix=matcher)  # type: ignore[reportArgumentType, arg-type]
-            case DomainKeywordRule(
-                matcher=matcher, policy=policy
-            ) | DomainKeywordGroupRule(matcher=matcher, policy=policy):
+            case (
+                DomainKeywordRule(matcher=matcher, policy=policy)
+                | DomainKeywordGroupRule(matcher=matcher, policy=policy)
+            ):
                 return cls(outbound=str(policy), domain_keyword=matcher)  # type: ignore[reportArgumentType, arg-type]
             case (
                 IPCidrRule(matcher=matcher, policy=policy)
@@ -110,22 +113,17 @@ class Rule(AbstractSingBox):
                 return cls(outbound=str(policy), ip_cidr=matcher)  # type: ignore[reportArgumentType, arg-type]
             case GeoIPRule(matcher=matcher, policy=policy):
                 # TODO: add extra opts to give a prefix or suffix
-                return cls(
-                    outbound=str(policy),
-                    rule_set=f"rs-geoip-{matcher}".lower(),
-                )
-            case RuleSetRule(matcher, policy) | DomainSetRule(
-                matcher=matcher, policy=policy
+                return cls(outbound=str(policy), rule_set=f"rs-geoip-{matcher}".lower())
+            case (
+                RuleSetRule(matcher, policy)
+                | DomainSetRule(matcher=matcher, policy=policy)
             ):
                 matcher = str(matcher)
                 if matcher.startswith("http") and "://" in matcher:
                     raise ValueError(
                         f"Direct URL ({matcher}) is not supported currently while transforming from uniproxy external rule to sing-box rule"
                     )
-                return cls(
-                    outbound=str(policy),
-                    rule_set=matcher,
-                )
+                return cls(outbound=str(policy), rule_set=matcher)
             case _:
                 raise ValueError(f"Unsupported rule type yet: {type(rule)}")
 

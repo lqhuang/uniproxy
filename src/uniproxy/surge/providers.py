@@ -59,7 +59,6 @@ class ExternalPoliciesProvider(BaseProxyProvider):
     def from_uniproxy(
         cls, uniproxy: UniproxyProxyProvider, **kwargs
     ) -> ExternalPoliciesProvider:
-
         if "external_policy_modifier" in kwargs:
             external_policy_modifier = kwargs["external_policy_modifier"]
         else:

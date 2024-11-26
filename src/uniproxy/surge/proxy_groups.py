@@ -26,7 +26,6 @@ __all__ = [
 
 @define
 class SurgeProxyGroup(BaseProxyGroup):
-
     @classmethod
     def from_uniproxy(cls, proxy_group, **kwargs) -> SurgeProxyGroup:
         raise NotImplementedError

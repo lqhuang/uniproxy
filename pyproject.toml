@@ -12,30 +12,28 @@ authors = [{ name = "Lanqing Huang", email = "lqhuang@outlook.com" }]
 requires-python = ">=3.11"
 dependencies = ["attrs", "tomlkit", "ruamel.yaml", 'xattrs']
 
-[project.optional-dependencies]
-dev = [
-    "mypy>=1.11.2",
-    "black>=24.10.0",
-    "isort>=5.13.2",
-    "ruff>=0.6.9",
-    "typing-extensions>=4.12.2",
-]
+[dependency-groups]
+dev = ["mypy>=1.11.2", "ruff>=0.8.0", "typing-extensions>=4.12.2"]
 test = ["pytest>=8.3.3"]
 
-[tool.isort]
-profile = "black"
-known_typing = [
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 79
+preview = true
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+unfixable = ["F401"]
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+section-order = [
+    "future",
     "typing",
-    "typing_extensions",
-    "collections.abc",
-    'uniproxy.typing',
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
 ]
-known_first_party = ["uniproxy"]
-sections = [
-    "FUTURE",
-    "TYPING",
-    "STDLIB",
-    "THIRDPARTY",
-    "FIRSTPARTY",
-    "LOCALFOLDER",
-]
+[tool.ruff.lint.isort.sections]
+typing = ["typing", "typing_extensions", "collections.abc", "uniproxy.typing"]

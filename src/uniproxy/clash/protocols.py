@@ -28,7 +28,6 @@ from .base import BaseProtocol
 
 @define
 class ClashProtocol(BaseProtocol):
-
     @classmethod
     def from_uniproxy(cls, protocol, **kwargs) -> ClashProtocol:
         raise NotImplementedError
@@ -120,17 +119,13 @@ class ShadowsocksProtocol(ClashProtocol):
     def from_uniproxy(
         cls, protocol: UniproxyShadowsocksProtocol, **kwargs
     ) -> ShadowsocksProtocol:
-
         plugin = protocol.plugin.command if protocol.plugin else None
 
         plugin_opts: ShadowsocksPluginObfsOpts | ShadowsocksPluginV2RayOpts | None
         match plugin:
             case "obfs-local":
                 plug = cast(UniproxyShadowsocksObfsPlugin, protocol.plugin)
-                plugin_opts = ShadowsocksPluginObfsOpts(
-                    mode=plug.mode,
-                    host=plug.host,
-                )
+                plugin_opts = ShadowsocksPluginObfsOpts(mode=plug.mode, host=plug.host)
             case "v2ray-plugin":
                 plug_ = cast(UniproxyShadowsocksV2RayPlugin, protocol.plugin)
                 if plug_.mode != "websocket":
@@ -323,8 +318,7 @@ class VmessProtocol(ClashProtocol):
                     h2_transport = cast(UniproxyVmessH2Transport, transport)
                     ws_opts = None  # type: ignore[assignment]
                     h2_opts = VmessH2Transport(
-                        path=h2_transport.path,
-                        headers=h2_transport.headers,
+                        path=h2_transport.path, headers=h2_transport.headers
                     )
                 case _:
                     raise NotImplementedError(

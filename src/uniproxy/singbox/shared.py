@@ -191,7 +191,6 @@ class BaseTLS(AbstractSingBox):
 
 @define
 class InboundTLS(BaseTLS):
-
     key: Sequence[str] | None = None
     """The server private key line array, in PEM format."""
 
@@ -312,16 +311,14 @@ class DialFieldsMixin:
       "fallback_delay": "300ms"
     }
     ```
-
-    - bind_interface
-    - bind_address
-    - routing_mark
-    - reuse_addr
-    - tcp_fast_open
-    - tcp_multi_path
-    - udp_fragment
-    - connect_timeout
-    """
+    -bind_interface
+    -bind_address
+    -routing_mark
+    -reuse_addr
+    -tcp_fast_open
+    -tcp_multi_path
+    -udp_fragment
+    -connect_timeout"""
 
     detour: BaseOutbound | str | None = None
     """The tag of the upstream outbound."""

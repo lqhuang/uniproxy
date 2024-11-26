@@ -243,11 +243,7 @@ def make_rules_from_uniproxy(
                     "`ip-asn` rule type not implemented yet for Clash"
                 )
             return (
-                _CLASH_MAPPER[typ](
-                    matcher=to_name(matcher),
-                    policy=policy,
-                    type=typ,
-                ),
+                _CLASH_MAPPER[typ](matcher=to_name(matcher), policy=policy, type=typ),
             )
         case DomainGroupRule(matcher=matcher):
             return tuple(

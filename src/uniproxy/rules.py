@@ -42,7 +42,6 @@ class DomainKeywordGroupRule(UniproxyGroupRule):
 
 @define
 class IPCidrRule(UniproxyBasicRule):
-
     no_resolve: bool | None = None
     type: Literal["ip-cidr"] = "ip-cidr"
 

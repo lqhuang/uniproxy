@@ -308,8 +308,7 @@ class VmessProtocol(SurgeProtocol):
                 None
                 if protocol.transport is None
                 else VmessTransport(
-                    path=protocol.transport.path,
-                    headers=protocol.transport.headers,
+                    path=protocol.transport.path, headers=protocol.transport.headers
                 )
             ),
             **kwargs,

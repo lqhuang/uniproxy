@@ -15,11 +15,7 @@ ProtocolType = Literal[
 GroupType = Literal["select", "url-test", "fallback", "load-balance", "external"]
 
 RuleProviderType = Literal["http", "file"]
-RuleProviderBehaviorType = Literal[
-    "domain",
-    "ipcidr",
-    "classical",
-]
+RuleProviderBehaviorType = Literal["domain", "ipcidr", "classical"]
 RuleProviderFormatType = Literal["text", "yaml", "mrs"]
 
 RuleType = Literal[
