@@ -21,7 +21,7 @@ class UrlTestGroup(UniproxyProxyGroup):
 
 @define
 class FallBackGroup(UniproxyProxyGroup):
-    timeout: float = 1
+    timeout: float = 5
 
     type: Literal["fallback"] = "fallback"
 
