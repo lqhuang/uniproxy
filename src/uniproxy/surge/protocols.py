@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence, cast
+from typing import Any, Literal, Mapping, Sequence, cast
 from uniproxy.typing import ALPN, IPAddress, ShadowsocksCipher, VmessCipher
 from uniproxy.typing import ProtocolType as UniproxyProtocolType
 
@@ -15,7 +15,7 @@ from uniproxy.protocols import TrojanProtocol as UniproxyTrojanProtocol
 from uniproxy.protocols import TuicProtocol as UniproxyTuicProtocol
 from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 
-from .base import AbstractSurge, BaseProtocol
+from .base import AbstractSurge, BaseProtocol, ProtocolLike
 from .shared import SurgeTLS
 from .typing import _ProtocolOptions
 
@@ -166,6 +166,15 @@ class ShadowsocksProtocol(SurgeProtocol):
     obfs_uri: str | None = None
     """deprecated"""
 
+    # https://manual.nssurge.com/policy/proxy.html
+    underlying_proxy: ProtocolLike | None = None
+    """
+    Proxy chain
+
+    Use a proxy to connect another proxy, aka proxy chain.
+    It can be another proxy policy's or policy group's name.
+    """
+
     @classmethod
     def from_uniproxy(
         cls, protocol: UniproxyShadowsocksProtocol, **kwargs
@@ -211,6 +220,9 @@ class ShadowsocksProtocol(SurgeProtocol):
             "udp-relay": str(self.udp_relay).lower(),
             # FIXME: incorrect position
             "ecn": str(self.ecn).lower() if self.ecn is not None else None,
+            "underlying-proxy": str(self.underlying_proxy)
+            if self.underlying_proxy
+            else None,
         }
         ss_opts = ", ".join(f"{k}={v}" for k, v in ss_conf.items() if v is not None)
 
@@ -507,10 +519,17 @@ _SURGE_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
 }
 
 
-def make_protocol_from_uniproxy(protocol: UniproxyProtocol, **kwargs) -> SurgeProtocol:
-    try:
-        return _SURGE_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
-    except KeyError:
-        raise ValueError(
-            f"Unknown protocol type '{protocol.type}' when transforming uniproxy protocol to surge protocol"
-        )
+def make_protocol_from_uniproxy(
+    protocol: UniproxyProtocol | SurgeProtocol | Any, **kwargs
+) -> SurgeProtocol:
+    if isinstance(protocol, SurgeProtocol):
+        return protocol
+    elif isinstance(protocol, UniproxyProtocol):
+        try:
+            return _SURGE_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
+        except KeyError:
+            raise ValueError(
+                f"Unknown protocol type '{protocol.type}' when transforming uniproxy protocol to surge protocol"
+            )
+    else:
+        raise TypeError(f"Invalid protocol type: {type(protocol)}")

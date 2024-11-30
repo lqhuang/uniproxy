@@ -13,6 +13,7 @@ from uniproxy.typing import (
 from attrs import define, field
 
 from uniproxy.protocols import (
+    ShadowsocksObfsPlugin,
     ShadowsocksProtocol,
     TrojanProtocol,
     UniproxyProtocol,
@@ -177,9 +178,19 @@ class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, BaseOutbound):  # t
         cls, protocol: ShadowsocksProtocol, **kwargs
     ) -> ShadowsocksOutbound:
         if protocol.plugin is not None:
-            raise NotImplementedError(
-                "Plugin for SingBox Shadowsocks protocol is not supported yet for now"
-            )
+            if protocol.plugin.command in {"obfs-local", "obfs"}:
+                p = cast(ShadowsocksObfsPlugin, protocol.plugin)
+                plugin = "obfs-local"
+                plugin_opts = f"obfs={p.obfs};obfs-host={p.obfs_host}"
+            elif protocol.plugin.command == "v2ray-plugin":
+                raise NotImplementedError("v2ray-plugin plugin is not implemented yet")
+            else:
+                raise NotImplementedError(
+                    f"Plugin {protocol.plugin.command} for SingBox Shadowsocks protocol is not supported yet for now"
+                )
+        else:
+            plugin = None
+            plugin_opts = None
 
         return cls(
             tag=protocol.name,
@@ -188,8 +199,8 @@ class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, BaseOutbound):  # t
             method=protocol.method,
             password=protocol.password,
             network=None if protocol.network == "tcp_and_udp" else protocol.network,
-            plugin=None,
-            plugin_opts=None,
+            plugin=plugin,
+            plugin_opts=plugin_opts,
             **kwargs,
         )
 

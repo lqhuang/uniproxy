@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence, cast
+from typing import Any, Literal, Mapping, Sequence, cast
 from uniproxy.typing import (
     ALPN,
     ProtocolType,
@@ -359,10 +359,17 @@ _CLASH_MAPPER: Mapping[ProtocolType, type[ClashProtocol]] = {
 }
 
 
-def make_protocol_from_uniproxy(protocol: UniproxyProtocol, **kwargs) -> ClashProtocol:
-    try:
-        return _CLASH_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
-    except KeyError:
-        raise ValueError(
-            f"Unknown protocol type '{protocol.type}' while transforming uniproxy protocol to clash protocol"
-        )
+def make_protocol_from_uniproxy(
+    protocol: UniproxyProtocol | ClashProtocol | Any, **kwargs
+) -> ClashProtocol:
+    if isinstance(protocol, ClashProtocol):
+        return protocol
+    elif isinstance(protocol, UniproxyProtocol):
+        try:
+            return _CLASH_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
+        except KeyError:
+            raise ValueError(
+                f"Unknown protocol type '{protocol.type}' while transforming uniproxy protocol to clash protocol"
+            )
+    else:
+        raise ValueError(f"Unknown protocol type: {type(protocol)}")

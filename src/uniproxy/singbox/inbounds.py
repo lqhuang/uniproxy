@@ -77,6 +77,7 @@ class HTTPInbound(SingBoxInbound):
 @define
 class Socks5Inbound(SingBoxInbound):
     users: Sequence[User] | None = None
+    type: Literal["socks"] = "socks"
 
 
 @define(slots=False)
@@ -340,7 +341,6 @@ class TunMixin:
         "fdfe:dcba:9876::1/126"
       ],
       "mtu": 9000,
-      "gso": false,
       "auto_route": true,
       "iproute2_table_index": 2022,
       "iproute2_rule_index": 9000,
@@ -404,8 +404,31 @@ class TunMixin:
           "match_domain": []
         }
       },
-      ...
-      // Listen Fields
+
+      // Deprecated
+      "gso": false,
+      "inet4_address": [
+        "172.19.0.1/30"
+      ],
+      "inet6_address": [
+        "fdfe:dcba:9876::1/126"
+      ],
+      "inet4_route_address": [
+        "0.0.0.0/1",
+        "128.0.0.0/1"
+      ],
+      "inet6_route_address": [
+        "::/1",
+        "8000::/1"
+      ],
+      "inet4_route_exclude_address": [
+        "192.168.0.0/16"
+      ],
+      "inet6_route_exclude_address": [
+        "fc00::/7"
+      ],
+
+      ... // Listen Fields
     }
     ```
     """
