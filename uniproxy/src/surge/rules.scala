@@ -1,27 +1,33 @@
 // scalafmt: { maxColumn = 150, align.preset = more }
 package uniproxy
-package clash
+package surge
 package rules
 
-import uniproxy.clash.abc.{ProtocolLike, RuleProviderLike}
-import uniproxy.clash.typing.RuleType
+import uniproxy.surge.abc.{ProtocolLike, RuleProviderLike}
 
-sealed trait MatchableRule:
+import uniproxy.surge.typing.RuleType
+
+sealed trait MatchableRule {
   val matcher: Matcher
   val policy: Policy
+}
 trait BasicRule extends MatchableRule
-trait NoResolveBasicRule extends MatchableRule:
+trait NoResolveBasicRule extends MatchableRule {
   val noResolve: Boolean
+}
 
 type Matcher = RuleProviderLike
 type Policy  = ProtocolLike
 
 enum Rule(`type`: RuleType) {
+
   override def toString(): String = this match
     case r: FinalRule =>
       s"${`type`.toUpperCase},${r.policy},${r.dnsFailed}"
     case r: NoResolveBasicRule if r.noResolve =>
       s"${`type`.toUpperCase},${r.matcher},${r.policy},no-resolve"
+    case r: NoResolveBasicRule if !r.noResolve =>
+      s"${`type`.toUpperCase},${r.matcher},${r.policy}"
     case r: MatchableRule =>
       s"${`type`.toUpperCase},${r.matcher},${r.policy}"
 

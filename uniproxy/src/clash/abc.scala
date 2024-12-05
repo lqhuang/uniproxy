@@ -1,4 +1,5 @@
 package uniproxy
+package clash
 package abc
 
 import com.comcast.ip4s.{Host, Port}
@@ -6,19 +7,19 @@ import com.comcast.ip4s.{Host, Port}
 import uniproxy.typing.{GroupType, Network, ProtocolType}
 
 /**
- * Abstract classes for uniproxy
+ * Abstract classes for clash
  *
- * All uniproxy classes should inherit from this class.
+ * All clash classes should inherit from this class.
  */
-abstract trait AbstractUniproxy {}
+abstract class AbstractClash
 
-abstract class AbstractProtocol extends AbstractUniproxy:
+abstract class AbstractProtocol extends AbstractClash:
   val name: String
-  val `type`: ProtocolType
   val server: Host
   val port: Port
+  val `type`: ProtocolType
 
-abstract class AbstractProxyGroup extends AbstractUniproxy:
+abstract class AbstractProxyGroup extends AbstractClash:
   val name: String
   val `type`: GroupType
   val proxies: Option[Seq[ProtocolLike]] = None
@@ -32,15 +33,15 @@ abstract class AbstractProxyGroup extends AbstractUniproxy:
   // TODO: update to `HealthCheck` class
   val health_check: Option[Boolean] = None
 
-abstract class AbstractProxyProvider extends AbstractUniproxy:
+abstract class AbstractProxyProvider extends AbstractClash:
   val name: String
   val `type`: GroupType
   val url: String
   val path: Option[String]
 
-abstract class AbstractRule extends AbstractUniproxy
+abstract class AbstractRule extends AbstractClash
 
-abstract class AbstractRuleProvider extends AbstractUniproxy:
+abstract class AbstractRuleProvider extends AbstractClash:
   val name: String
   val url: String
   val path: Option[String]
@@ -48,4 +49,6 @@ abstract class AbstractRuleProvider extends AbstractUniproxy:
 
 type ProtocolLike = AbstractProtocol | AbstractProxyGroup | String
 type ProxyProviderLike = AbstractProxyProvider | String
+type ProxyGroupLike = AbstractProxyGroup | String
+
 type RuleProviderLike = AbstractRuleProvider | String

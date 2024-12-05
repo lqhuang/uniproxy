@@ -2,36 +2,37 @@ import scala.collection.immutable.Map
 
 import uniproxy.typing.{ALPN, ShadowsocksCipher, VmessCipher}
 
-import uniproxy.surge.base.BaseProtocol
+import uniproxy.surge.abc.AbstractProtocol
+import uniproxy.surge.typing.ProtocolType
 
 import com.comcast.ip4s.Host
 
 case class WireguardPeer(
-    endpoint: String,
-    publicKey: String,
-    allowedIps: Seq[String],
-    clientId: Option[(Int, Int, Int)] = None
+  endpoint: String,
+  publicKey: String,
+  allowedIps: Seq[String],
+  clientId: Option[(Int, Int, Int)] = None,
 ) {
   def toMap: Map[String, Any] = {
     Map(
       "public-key" -> publicKey,
       "allowed-ips" -> allowedIps,
       "endpoint" -> endpoint,
-      "client-id" -> clientId
+      "client-id" -> clientId,
     ).collect { case (k, v) if v != null => k -> v }
   }
 }
 
 case class WireguardSection(
-    name: String,
-    privateKey: String,
-    peer: WireguardPeer,
-    selfIp: Option[Host] = None,
-    selfIpV6: Option[Host] = None,
-    dnsServer: Option[Seq[Host]] = None,
-    preferIpv6: Option[Boolean] = None,
-    mtu: Option[Int] = None,
-    `type`: String = "wireguard"
+  name: String,
+  privateKey: String,
+  peer: WireguardPeer,
+  selfIp: Option[Host] = None,
+  selfIpV6: Option[Host] = None,
+  dnsServer: Option[Seq[Host]] = None,
+  preferIpv6: Option[Boolean] = None,
+  mtu: Option[Int] = None,
+  `type`: String = "wireguard",
 ) {
   // def toMap: Map[String, Any] = {
   //   Map(
@@ -54,11 +55,11 @@ sealed class SurgeProtocol(val `type`: String) {
   // def toUniproxy(kwargs: Map[String, Any] = Map()): UniproxyProtocol
 
   case class HttpProtocol(
-      username: Option[String] = None,
-      password: Option[String] = None,
-      // tls: Option[SurgeTLS] = None,
-      tfo: Boolean = false,
-      alwaysUseConnect: Option[Boolean] = None
+    username: Option[String] = None,
+    password: Option[String] = None,
+    // tls: Option[SurgeTLS] = None,
+    tfo: Boolean = false,
+    alwaysUseConnect: Option[Boolean] = None,
   ) extends SurgeProtocol("http") {
 
     // def fromUniproxy(
@@ -87,10 +88,10 @@ sealed class SurgeProtocol(val `type`: String) {
   }
 
   case class Socks5Protocol(
-      username: Option[String] = None,
-      password: Option[String] = None,
-      // tls: Option[SurgeTLS] = None,
-      udpRelay: Option[Boolean] = None
+    username: Option[String] = None,
+    password: Option[String] = None,
+    // tls: Option[SurgeTLS] = None,
+    udpRelay: Option[Boolean] = None,
   ) extends SurgeProtocol("socks5") {
 
     // def fromUniproxy(
@@ -120,13 +121,13 @@ sealed class SurgeProtocol(val `type`: String) {
   }
 
   case class ShadowsocksProtocol(
-      password: String,
-      encryptMethod: ShadowsocksCipher,
-      udpRelay: Option[Boolean] = None,
-      obfs: Option[String] = None,
-      obfsHost: Option[String] = None,
-      obfsUri: Option[String] = None,
-      ecn: Option[Boolean] = None
+    password: String,
+    encryptMethod: ShadowsocksCipher,
+    udpRelay: Option[Boolean] = None,
+    obfs: Option[String] = None,
+    obfsHost: Option[String] = None,
+    obfsUri: Option[String] = None,
+    ecn: Option[Boolean] = None,
   ) extends SurgeProtocol("ss") {
 
     // def fromUniproxy(
@@ -163,10 +164,10 @@ sealed class SurgeProtocol(val `type`: String) {
   }
 
   case class VmessTransport(
-      path: Option[String] = None,
-      headers: Option[Map[String, String]] = None,
-      vmessAead: Option[Boolean] = None,
-      `type`: String = "ws"
+    path: Option[String] = None,
+    headers: Option[Map[String, String]] = None,
+    vmessAead: Option[Boolean] = None,
+    `type`: String = "ws",
   ) {
     // override def toString: String = {
     //   val wsHeaders =
@@ -182,10 +183,10 @@ sealed class SurgeProtocol(val `type`: String) {
   }
 
   case class VmessProtocol(
-      username: String,
-      encryptMethod: Option[VmessCipher] = None,
-      // tls: Option[SurgeTLS] = None,
-      transport: Option[VmessTransport] = None
+    username: String,
+    encryptMethod: Option[VmessCipher] = None,
+    // tls: Option[SurgeTLS] = None,
+    transport: Option[VmessTransport] = None,
   ) extends SurgeProtocol("vmess") {
     // def fromUniproxy(
     //     protocol: UniproxyVmessProtocol,
@@ -221,9 +222,9 @@ sealed class SurgeProtocol(val `type`: String) {
   }
 
   case class TrojanProtocol(
-      password: String,
-      // tls: Option[SurgeTLS] = None,
-      udpRelay: Option[Boolean] = None
+    password: String,
+    // tls: Option[SurgeTLS] = None,
+    udpRelay: Option[Boolean] = None,
   ) extends SurgeProtocol("trojan") {
     // def fromUniproxy(
     //     protocol: UniproxyTrojanProtocol,
@@ -249,10 +250,10 @@ sealed class SurgeProtocol(val `type`: String) {
   }
 
   case class TuicProtocol(
-      token: String,
-      alpn: Option[ALPN] = None,
-      // tls: Option[SurgeTLS] = None,
-      udpRelay: Option[Boolean] = Some(true)
+    token: String,
+    alpn: Option[ALPN] = None,
+    // tls: Option[SurgeTLS] = None,
+    udpRelay: Option[Boolean] = Some(true),
   ) extends SurgeProtocol("tuic") {
     // def fromUniproxy(
     //     protocol: UniproxyTuicProtocol,
@@ -278,7 +279,7 @@ sealed class SurgeProtocol(val `type`: String) {
   }
 
   case class WireguardProtocol(
-      sectionName: Either[String, WireguardSection]
+    sectionName: Either[String, WireguardSection],
   ) extends SurgeProtocol("wireguard") {
     // def fromUniproxy(
     //     protocol: UniproxyWireguardProtocol,
@@ -301,7 +302,9 @@ sealed class SurgeProtocol(val `type`: String) {
 
 }
 
-object SurgeProtocol {
+enum Protocol(`type`: ProtocolType) {
+
+  case HttpProtocol extends Protocol("http")
 
   // private val mapper: Map[String, SurgeProtocol] = Map(
   //   "http" -> HttpProtocol(),

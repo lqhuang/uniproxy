@@ -1,72 +1,95 @@
+// scalafmt: { maxColumn = 180, align.preset = more }
 package uniproxy
 package rules
 
 import uniproxy.typing.{BasicRuleType, GroupRuleType, RuleType}
+import uniproxy.abc.{AbstractRule, ProtocolLike, RuleProviderLike}
 
-import uniproxy.abc.{ProtocolLike, RuleProviderLike}
+type Matcher = RuleProviderLike
+type Policy  = ProtocolLike
 
-enum GroupRule(val `type`: GroupRuleType) {
+sealed trait Matchable
 
-  val matcher: Seq[RuleProviderLike]
-  val policy: ProtocolLike
+trait BasicMatchable extends Matchable:
+  val matcher: Matcher
+  val policy: Policy
+trait NoResolveBasicMatchable extends Matchable:
+  val matcher: Matcher
+  val policy: Policy
+  val noResolve: Boolean
+trait GroupMatchable extends Matchable:
+  val matchers: Seq[Matcher]
+  val policy: Policy
+trait NoResolveGroupMatchable extends Matchable:
+  val matchers: Seq[Matcher]
+  val policy: Policy
+  val noResolve: Boolean
 
-  case DomainGroupRule                              extends GroupRule("domain-group")
-  case DomainSuffixGroupRule                        extends GroupRule("domain-suffix-group")
-  case DomainKeywordGroupRule                       extends GroupRule("domain-keyword-group")
-  case IPCidrGroupRule(noResolve: Option[Boolean])  extends GroupRule("ip-cidr-group")
-  case IPCidr6GroupRule(noResolve: Option[Boolean]) extends GroupRule("ip-cidr6-group")
-}
-
-trait NoResolveable {
-  val noResolve: Option[Boolean]
-}
-
-enum BasicRule(val `type`: RuleType) {
-  val matcher: RuleProviderLike
-  val policy: ProtocolLike
-
-  case DomainRule        extends BasicRule("domain")
-  case DomainSuffixRule  extends BasicRule("domain-suffix")
-  case DomainKeywordRule extends BasicRule("domain-keyword")
-
-  case IPCidrRule(val noResolve: Option[Boolean])  extends BasicRule("ip-cidr") with NoResolveable
-  case IPCidr6Rule(val noResolve: Option[Boolean]) extends BasicRule("ip-cidr6") with NoResolveable
-  case IPAsnRule(val noResolve: Option[Boolean])   extends BasicRule("ip-asn") with NoResolveable
-  case GeoIPRule(val noResolve: Option[Boolean])   extends BasicRule("geoip") with NoResolveable
-
-  case UserAgentRule   extends BasicRule("user-agent")
-  case UrlRegexRule    extends BasicRule("url-regex")
-  case ProcessNameRule extends BasicRule("process-name")
-
-  case AndRule extends BasicRule("and")
-  case OrRule  extends BasicRule("or")
-  case NotRule extends BasicRule("not")
-
-  case SubnetRule        extends BasicRule("subnet")
-  case DestPortRule      extends BasicRule("dest-port")
-  case SrcPortRule       extends BasicRule("src-port")
-  case InPortRule        extends BasicRule("in-port")
-  case SrcIPRule         extends BasicRule("src-ip")
-  case ProtocolRule      extends BasicRule("protocol")
-  case ScriptRule        extends BasicRule("script")
-  case CellularRadioRule extends BasicRule("cellular-radio")
-  case DeviceNameRule    extends BasicRule("device-name")
-
-  case DomainSetRule extends BasicRule("domain-set")
-  case RuleSetRule   extends BasicRule("rule-set")
+enum BasicRule(`type`: BasicRuleType) extends AbstractRule {
 
   override def toString(): String = this match
-      case r: NoResolveable =>
-        r.noResolve match
-            case Some(true) => s"${`type`.toUpperCase},${matcher},${policy},no-resolve"
-            case _          => s"${`type`.toUpperCase},${matcher},${policy}"
-      case _ =>
-        s"${`type`.toUpperCase},${matcher},${policy}"
+    case r: BasicMatchable                          => s"${`type`.toUpperCase},${r.matcher},${r.policy}"
+    case r: NoResolveBasicMatchable if r.noResolve  => s"${`type`.toUpperCase},${r.matcher},${r.policy},no-resolve"
+    case r: NoResolveBasicMatchable if !r.noResolve => s"${`type`.toUpperCase},${r.matcher},${r.policy}"
+    case r: FinalRule if r.dnsFailed                => s"${`type`.toUpperCase},${r.policy},dns-failed"
+    case r: FinalRule if !r.dnsFailed               => s"${`type`.toUpperCase},${r.policy}"
+
+  case DomainRule(matcher: Matcher, policy: Policy)        extends BasicRule("domain") with BasicMatchable
+  case DomainSuffixRule(matcher: Matcher, policy: Policy)  extends BasicRule("domain-suffix") with BasicMatchable
+  case DomainKeywordRule(matcher: Matcher, policy: Policy) extends BasicRule("domain-keyword") with BasicMatchable
+
+  case IPCidrRule(matcher: Matcher, policy: Policy, noResolve: Boolean = true)  extends BasicRule("ip-cidr") with NoResolveBasicMatchable
+  case IPCidr6Rule(matcher: Matcher, policy: Policy, noResolve: Boolean = true) extends BasicRule("ip-cidr6") with NoResolveBasicMatchable
+  case IPAsnRule(matcher: Matcher, policy: Policy, noResolve: Boolean = true)   extends BasicRule("ip-asn") with NoResolveBasicMatchable
+  case GeoIPRule(matcher: Matcher, policy: Policy, noResolve: Boolean = true)   extends BasicRule("geoip") with NoResolveBasicMatchable
+
+  case UserAgentRule(matcher: Matcher, policy: Policy)   extends BasicRule("user-agent") with BasicMatchable
+  case UrlRegexRule(matcher: Matcher, policy: Policy)    extends BasicRule("url-regex") with BasicMatchable
+  case ProcessNameRule(matcher: Matcher, policy: Policy) extends BasicRule("process-name") with BasicMatchable
+
+  case AndRule(matcher: Matcher, policy: Policy) extends BasicRule("and") with BasicMatchable
+  case OrRule(matcher: Matcher, policy: Policy)  extends BasicRule("or") with BasicMatchable
+  case NotRule(matcher: Matcher, policy: Policy) extends BasicRule("not") with BasicMatchable
+
+  case SubnetRule(matcher: Matcher, policy: Policy)        extends BasicRule("subnet") with BasicMatchable
+  case DestPortRule(matcher: Matcher, policy: Policy)      extends BasicRule("dest-port") with BasicMatchable
+  case SrcPortRule(matcher: Matcher, policy: Policy)       extends BasicRule("src-port") with BasicMatchable
+  case InPortRule(matcher: Matcher, policy: Policy)        extends BasicRule("in-port") with BasicMatchable
+  case SrcIPRule(matcher: Matcher, policy: Policy)         extends BasicRule("src-ip") with BasicMatchable
+  case ProtocolRule(matcher: Matcher, policy: Policy)      extends BasicRule("protocol") with BasicMatchable
+  case ScriptRule(matcher: Matcher, policy: Policy)        extends BasicRule("script") with BasicMatchable
+  case CellularRadioRule(matcher: Matcher, policy: Policy) extends BasicRule("cellular-radio") with BasicMatchable
+  case DeviceNameRule(matcher: Matcher, policy: Policy)    extends BasicRule("device-name") with BasicMatchable
+
+  case DomainSetRule(matcher: Matcher, policy: Policy) extends BasicRule("domain-set") with BasicMatchable
+  case RuleSetRule(matcher: Matcher, policy: Policy)   extends BasicRule("rule-set") with BasicMatchable
+
+  case FinalRule(policy: Policy, dnsFailed: Boolean = true) extends BasicRule("final")
 }
 
-enum Rule(val `type`: RuleType) {
-  import BasicRule.*
-  import GroupRule.*
+enum GroupRule(`type`: GroupRuleType) extends AbstractRule {
 
-  case FinalRule(dnsFailed: Option[Boolean] = None) extends Rule("final")
+  def toBasicRules(): Seq[BasicRule] = this match
+    case DomainGroupRule(matchers, policy)             => matchers.map(DomainRule(_, policy))
+    case DomainSuffixGroupRule(matchers, policy)       => matchers.map(DomainSuffixRule(_, policy))
+    case DomainKeywordGroupRule(matchers, policy)      => matchers.map(DomainKeywordRule(_, policy))
+    case IPCidrGroupRule(matchers, policy, noResolve)  => matchers.map(IPCidrRule(_, policy, noResolve))
+    case IPCidr6GroupRule(matchers, policy, noResolve) => matchers.map(IPCidr6Rule(_, policy, noResolve))
+
+  case DomainGroupRule(matchers: Seq[Matcher], policy: Policy)        extends GroupRule("domain-group") with GroupMatchable
+  case DomainSuffixGroupRule(matchers: Seq[Matcher], policy: Policy)  extends GroupRule("domain-suffix-group") with GroupMatchable
+  case DomainKeywordGroupRule(matchers: Seq[Matcher], policy: Policy) extends GroupRule("domain-keyword-group") with GroupMatchable
+
+  case IPCidrGroupRule(matchers: Seq[Matcher], policy: Policy, noResolve: Boolean = true)  extends GroupRule("ip-cidr-group") with NoResolveGroupMatchable
+  case IPCidr6GroupRule(matchers: Seq[Matcher], policy: Policy, noResolve: Boolean = true) extends GroupRule("ip-cidr6-group") with NoResolveGroupMatchable
 }
+
+type Rule = BasicRule | GroupRule
+
+extension (rule: Rule)
+  def `type`: RuleType = rule match
+    case r: BasicRule => r.`type`
+    case r: GroupRule => r.`type`
+
+export BasicRule.*
+export GroupRule.*
