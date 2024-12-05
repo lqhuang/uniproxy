@@ -93,7 +93,6 @@ class BlockOutbound(BaseOutbound):
     }
     ```
     """
-
     type: Literal["block"] = "block"
 
 
@@ -135,8 +134,6 @@ class ShadowsocksMixin:
     """UDP over TCP configuration. Conflict with `multiplex`."""
     multiplex: OutboundMultiplex | None = None
     """See Multiplex for details."""
-    # dial: DialFields | None = None
-    # """See Dial Fields for details."""
 
     def __attrs_post_init__(self):
         if self.udp_over_tcp and self.multiplex:
@@ -271,8 +268,6 @@ class TrojanMixin:
     """See [[Multiplex]] for details."""
     transport: BaseTransport | None = None
     """V2Ray Transport configuration, see V2Ray Transport."""
-    # dial: DialFields | None = None
-    """See Dial Fields for details."""
 
 
 @define
@@ -368,8 +363,7 @@ class WireguardMixin:
     server_port: int | None = None
     """The server port. Required if multi-peer disabled."""
     peer_public_key: str | None = None
-    """
-    Required if multi-peer disabled. WireGuard peer public key."""
+    """Required if multi-peer disabled. WireGuard peer public key."""
 
     pre_shared_key: str | None = None
     """WireGuard pre-shared key."""
