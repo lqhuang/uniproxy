@@ -33,12 +33,12 @@ import uniproxy.singbox.typing.{DnsReturnCode, DomainStrategy, SniffProtocol}
  * application before making a request, it can be problematic in environments
  * such as macOS, where DNS is proxied and cached by the system.
  * @param fakeip FakeIP settings.
- * @param client_subnet Append a `edns0-subnet`` OPT extra record with the
+ * @param client_subnet Append a `edns0-subnet` OPT extra record with the
  *   specified IP address to every query by default. Can be overrides by
- *   `servers.[].client_subnet`` or `rules.[].client_subnet`. @since v1.9.0
+ *   `servers.[].client_subnet` or `rules.[].client_subnet`. @since v1.9.0
  */
 case class DNS(
-  servers: Option[Seq[DnsServer]],
+  servers: Option[Seq[DnsServer]] = None,
   rules: Option[Seq[DnsRule]] = None,
   `final`: Option[String | DnsServer] = None,
   strategy: Option[DomainStrategy] = None,
@@ -47,15 +47,6 @@ case class DNS(
   independent_cache: Option[Boolean] = None,
   reverse_mapping: Option[Boolean] = None,
   fakeip: Option[FakeIP] = None,
-  /**
-   * > Since `sing-box` 1.9.0
-   *
-   * Append a `edns0-subnet`` OPT extra record with the specified IP address to
-   * every query by default.
-   *
-   * Can be overrides by `servers.[].client_subnet`` or
-   * `rules.[].client_subnet`.
-   */
   client_subnet: Option[String] = None,
 ) extends AbstractSingBox
 

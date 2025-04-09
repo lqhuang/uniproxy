@@ -16,26 +16,29 @@ object uniproxy extends ScalaModule with PublishModule {
     licenses = Seq(License.`Apache-2.0`),
     versionControl = VersionControl.github("lqhuang", "uniproxy"),
     developers = Seq(
-      Developer("lqhuang", "Lanqing Huang", "https://github.com/lqhuang")
-    )
+      Developer("lqhuang", "Lanqing Huang", "https://github.com/lqhuang"),
+    ),
   )
 
   def ivyDeps = Agg(
     // ivy"com.lihaoyi::scalatags:0.12.0",
     ivy"com.comcast::ip4s-core:3.6.0",
-    ivy"com.lihaoyi::mainargs:0.6.2"
-  )
+    ivy"com.lihaoyi::mainargs:0.6.2",
+    ivy"io.circe::circe-core:0.14.12",
+    ivy"io.circe::circe-generic:0.14.12",
+    ivy"io.circe::circe-parser:0.14.12",
+    ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core:2.34.0",
+)
 
   object test extends ScalaTests with TestModule.Munit {
     def ivyDeps = Agg(
-      ivy"org.scalameta::munit::1.0.2"
+      ivy"org.scalameta::munit::1.0.4",
     )
     // def testFramework = "utest.runner.Framework"
   }
   // testrunner
 
-  def compileIvyDeps      = Agg(ivy"com.lihaoyi:::acyclic:0.3.18")
+  def compileIvyDeps = Agg(ivy"com.lihaoyi:::acyclic:0.3.18")
   def scalacPluginIvyDeps = Agg(ivy"com.lihaoyi:::acyclic:0.3.18")
-  def scalacOptions       = Seq("-P:acyclic:force")
-
+  def scalacOptions = Seq("-P:acyclic:force")
 }
