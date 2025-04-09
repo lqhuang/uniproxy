@@ -93,6 +93,7 @@ class BlockOutbound(BaseOutbound):
     }
     ```
     """
+
     type: Literal["block"] = "block"
 
 
@@ -584,7 +585,7 @@ SingBoxGroupOutbound = SelectorOutbound | UrlTestOutbound
 SingBoxOutbound = SingBoxProtocolOutbound | SingBoxGroupOutbound
 
 
-_SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, SingBoxProtocolOutbound] = {
+_SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, SingBoxProtocolOutbound] = {  # type: ignore[reportAssignmentType]
     # "direct": DirectOutbound,
     # "block": BlockOutbound,
     # "dns": DnsOutbound,
@@ -593,7 +594,7 @@ _SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, SingBoxProtocolOutbound] = 
     "trojan": TrojanOutbound,
     "wireguard": WireguardOutbound,
 }
-_SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, SingBoxGroupOutbound] = {
+_SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, SingBoxGroupOutbound] = {  # type: ignore[reportAssignmentType]
     "select": SelectorOutbound,
     "url-test": UrlTestOutbound,
     "load-balance": PseudoLoadBalanceOutbound,
