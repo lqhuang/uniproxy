@@ -6,7 +6,15 @@ import com.comcast.ip4s.{Host, Port}
 
 import uniproxy.typing.ALPN
 
-import uniproxy.singbox.shared.Fallback
+type User = {
+  type name = String
+  type password = String
+}
+
+type Fallback = {
+  type server = Host
+  type server_port = Port
+}
 
 /** Configuration */
 type SingBoxNetwork = Option["tcp" | "udp"]

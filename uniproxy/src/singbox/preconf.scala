@@ -33,9 +33,6 @@ object prefconf {
 
   /** ------------- Snippets for Route rules ------------- */
   val rule_dns = Rule(outbound = TAG_DNS_OUTBOUND, protocol = Some("dns"))
-  val rule_dns_bypass =
-    Rule(
-      outbound = TAG_DIRECT_OUTBOUND,
-      protocol = Some("dns"),
-    ) // bypass dns query
+  // bypass dns query
+  val rule_dns_bypass = Rule(outbound = TAG_DIRECT_OUTBOUND, protocol = Some("dns"))
 }

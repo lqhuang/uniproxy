@@ -17,24 +17,24 @@ import uniproxy.singbox.typing.{DnsReturnCode, DomainStrategy, SniffProtocol}
  * Ref: https://sing-box.sagernet.org/configuration/dns/
  */
 case class DNS(
-  val servers: Option[Seq[DnsServer]],
-  val rules: Option[Seq[DnsRule]] = None,
-  val `final`: Option[String | DnsServer] = None,
+  servers: Option[Seq[DnsServer]],
+  rules: Option[Seq[DnsRule]] = None,
+  `final`: Option[String | DnsServer] = None,
   /**
    * Default domain strategy for resolving the domain names. One of `prefer_ipv4`,
    * `prefer_ipv6`, `ipv4_only`, `ipv6_only`. Take no effect if `server.strategy` is
    * set.
    */
-  val strategy: Option[DomainStrategy] = None,
+  strategy: Option[DomainStrategy] = None,
   /** Disable dns cache. */
-  val disable_cache: Option[Boolean] = None,
+  disable_cache: Option[Boolean] = None,
   /** Disable dns cache expire. */
-  val disable_expire: Option[Boolean] = None,
+  disable_expire: Option[Boolean] = None,
   /**
    * Make each DNS server's cache independent for special purposes. If enabled, will
    * slightly degrade performance.
    */
-  val independent_cache: Option[Boolean] = None,
+  independent_cache: Option[Boolean] = None,
   /**
    * Stores a reverse mapping of IP addresses after responding to a DNS query in order
    * to provide domain names when routing.
@@ -43,9 +43,9 @@ case class DNS(
    * before making a request, it can be problematic in environments such as macOS, where
    * DNS is proxied and cached by the system.
    */
-  val reverse_mapping: Option[Boolean] = None,
+  reverse_mapping: Option[Boolean] = None,
   /** FakeIP settings. */
-  val fakeip: Option[FakeIP] = None,
+  fakeip: Option[FakeIP] = None,
   /**
    * > Since `sing-box` 1.9.0
    *
@@ -54,7 +54,7 @@ case class DNS(
    *
    * Can be overrides by `servers.[].client_subnet`` or `rules.[].client_subnet`.
    */
-  val client_subnet: Option[String] = None,
+  client_subnet: Option[String] = None,
 ) extends AbstractSingBox
 
 case class DnsServer(

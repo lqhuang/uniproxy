@@ -7,8 +7,15 @@ import com.comcast.ip4s.{Host, Hostname, Port}
 import uniproxy.typing.{NetworkCIDR, ShadowsocksCipher}
 
 import uniproxy.singbox.route.RuleSet
-import uniproxy.singbox.shared.{Fallback, InboundMultiplex, ListenFieldsMixin, User}
-import uniproxy.singbox.typing.{FallbackAlpn, InboundType, SingBoxNetwork, TunStack}
+import uniproxy.singbox.shared.{InboundMultiplex, ListenFieldsMixin}
+import uniproxy.singbox.typing.{
+  Fallback,
+  FallbackAlpn,
+  InboundType,
+  SingBoxNetwork,
+  TunStack,
+  User,
+}
 import uniproxy.singbox.abc.{AbstractInbound, InboundLike, OutboundLike, RuleSetLike}
 import uniproxy.singbox.transports.Transport
 import uniproxy.singbox.tls.InboundTLS

@@ -5,15 +5,8 @@ import com.comcast.ip4s.{Host, Port}
 import com.comcast.ip4s.{Hostname, Ipv4Address, Ipv6Address}
 
 import uniproxy.typing.ALPN
-
 import uniproxy.singbox.abc.{AbstractSingBox, InboundLike, OutboundLike}
 import uniproxy.singbox.typing.{DomainStrategy, TLSVersion, TransportType}
-
-case class User(name: String, password: String)
-case class Fallback(
-  server: Host,
-  server_port: Port,
-)
 
 /**
  * ```json

@@ -196,21 +196,19 @@ abstract class BaseTLS extends AbstractSingBox
  * ```
  *
  * @param key
+ *   Enable TLS
+ * @param server_name
+ *   Used to verify the hostname on the returned certificates unless insecure is given.
+ *   It is also included in the client's handshake to support virtual hosting unless it
+ *   is an IP address.
  * @param key_path
+ *
  * @param acme
  * @param ech
  */
 case class InboundTLS(
-  /** Enable TLS. */
   enabled: Boolean,
-  /**
-   * Used to verify the hostname on the returned certificates unless insecure is given.
-   *
-   * It is also included in the client's handshake to support virtual hosting unless it
-   * is an IP address.
-   */
   server_name: Option[String] = None,
-
   /**
    * List of supported application level protocols, in order of preference.
    *

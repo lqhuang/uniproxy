@@ -44,12 +44,12 @@ case class Log(
  *
  * Ref: https://sing-box.sagernet.org/configuration/ntp/
  */
-class NTP extends AbstractSingBox
+case class NTP() extends AbstractSingBox
 
 /**
  * Ref: https://sing-box.sagernet.org/configuration/experimental/
  */
-class Experimental(
+case class Experimental(
   cache_file: Option[CacheFile] = None,
   clash_api: Option[Map[String, String]] = None,
   v2ray_api: Option[Map[String, String]] = None,

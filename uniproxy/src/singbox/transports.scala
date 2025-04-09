@@ -1,10 +1,12 @@
 package uniproxy.singbox.transports
 
 import uniproxy.singbox.abc.AbstractSingBox
-import uniproxy.singbox.typing.{DomainStrategy, TLSVersion, TransportType}
-import uniproxy.singbox.shared.Fallback
+import uniproxy.singbox.typing.{DomainStrategy, Fallback, TLSVersion, TransportType}
 
-enum Transport extends AbstractSingBox {
-  case HTTP
-  case HTTPS
+enum Transport(`type`: String) extends AbstractSingBox {
+  case HTTP() extends Transport("http")
+  case WebSocket() extends Transport("ws")
+  case QUIC() extends Transport("quic")
+  case GRPC() extends Transport("grpc")
+  case HTTPUpgrade() extends Transport("httpupgrade")
 }

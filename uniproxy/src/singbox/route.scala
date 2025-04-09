@@ -14,7 +14,7 @@ import uniproxy.singbox.typing.{
   SniffProtocol,
 }
 
-enum RuleSet(val `type`: RuleSetType) extends AbstractRuleSet {
+enum RuleSet(`type`: RuleSetType) extends AbstractRuleSet {
 
   case LocalRuleSet(tag: String, format: RuleSetFormat, path: String)
       extends RuleSet("local")

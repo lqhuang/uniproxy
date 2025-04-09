@@ -11,7 +11,7 @@ import uniproxy.singbox.typing.{InboundType, OutboundType, RuleSetFormat, RuleSe
  *
  * All sing-box classes should inherit from this class.
  */
-abstract trait AbstractSingBox
+abstract class AbstractSingBox
 
 abstract class AbstractOutbound extends AbstractSingBox:
   val tag: String
