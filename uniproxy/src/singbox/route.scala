@@ -104,8 +104,8 @@ case class Route(
   /**
    * > [!WARN] Only supported on Linux, Windows and macOS.
    *
-   * Bind outbound connections to the default NIC by default to prevent routing loops
-   * under tun.
+   * Bind outbound connections to the default NIC by default to prevent routing
+   * loops under tun.
    *
    * Takes no effect if `outbound.bind_interface` is set.
    */
@@ -119,8 +119,8 @@ case class Route(
   /**
    * > [!WARN] Only supported on Linux, Windows and macOS.
    *
-   * Bind outbound connections to the specified NIC by default to prevent routing loops
-   * under tun.
+   * Bind outbound connections to the specified NIC by default to prevent
+   * routing loops under tun.
    *
    * Takes no effect if `auto_detect_interface` is set.
    */

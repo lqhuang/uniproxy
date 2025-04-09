@@ -92,11 +92,11 @@ trait ListenFieldsMixin:
   val domain_strategy: Option[DomainStrategy] = None
 
   /**
-   * If enabled, for UDP proxy requests addressed to a domain, the original packet
-   * address will be sent in the response instead of the mapped domain.
+   * If enabled, for UDP proxy requests addressed to a domain, the original
+   * packet address will be sent in the response instead of the mapped domain.
    *
-   * This option is used for compatibility with clients that do not support receiving
-   * UDP packets with domain addresses, such as Surge.
+   * This option is used for compatibility with clients that do not support
+   * receiving UDP packets with domain addresses, such as Surge.
    */
   @deprecated
   val udp_disable_domain_unmapping: Option[Boolean] = None
@@ -163,9 +163,9 @@ trait DialFieldsMixin:
   /**
    * Connect timeout, in golang's Duration format.
    *
-   * A duration string is a possibly signed Seq of decimal numbers, each with optional
-   * fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m". Valid time units
-   * are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+   * A duration string is a possibly signed Seq of decimal numbers, each with
+   * optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m".
+   * Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
    */
   val connect_timeout: Option[String]
 
@@ -182,10 +182,10 @@ trait DialFieldsMixin:
   val domain_strategy: Option[DomainStrategy]
 
   /**
-   * The length of time to wait before spawning a RFC 6555 Fast Fallback connection.
-   * That is, is the amount of time to wait for connection to succeed before assuming
-   * that IPv4/IPv6 is misconfigured and falling back to other type of addresses. If
-   * zero, a default delay of `300ms` is used.
+   * The length of time to wait before spawning a RFC 6555 Fast Fallback
+   * connection. That is, is the amount of time to wait for connection to
+   * succeed before assuming that IPv4/IPv6 is misconfigured and falling back to
+   * other type of addresses. If zero, a default delay of `300ms` is used.
    *
    * Only take effect when [[domain_strategy]] is set.
    */
@@ -232,13 +232,9 @@ case class TCPBrutal(
  * ```
  */
 case class InboundMultiplex(
-  /**
-   * Enable multiplex support.
-   */
+  /** Enable multiplex support. */
   enabled: Option[Boolean] = None,
-  /**
-   * If enabled, non-padded connections will be rejected.
-   */
+  /** If enabled, non-padded connections will be rejected. */
   padding: Option[Boolean] = None,
   brutal: Option[TCPBrutal] = None,
 )
@@ -276,13 +272,15 @@ case class OutboundMultiplex(
   /** Max connections. Conflict with `max_streams`. */
   val max_connections: Option[Int] = None,
   /**
-   * Minimum multiplexed streams in a connection before opening a new connection.
+   * Minimum multiplexed streams in a connection before opening a new
+   * connection.
    *
    * Conflict with [[max_streams]].
    */
   val min_streams: Option[Int] = None,
   /**
-   * Maximum multiplexed streams in a connection before opening a new connection.
+   * Maximum multiplexed streams in a connection before opening a new
+   * connection.
    *
    * Conflict with [[max_connections]] and [[min_streams]].
    */

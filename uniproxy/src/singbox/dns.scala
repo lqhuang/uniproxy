@@ -15,44 +15,46 @@ import uniproxy.singbox.typing.{DnsReturnCode, DomainStrategy, SniffProtocol}
 
 /**
  * Ref: https://sing-box.sagernet.org/configuration/dns/
+ *
+ * @param servers List of [[DNS Servers]].
+ * @param rules List of [[DNS Rules]].
+ * @param final Default dns server tag. The first server will be used if empty.
+ * @param strategy Default domain strategy for resolving the domain names. One
+ *   of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`. Take no effect
+ *   if `server.strategy` is set.
+ * @param disable_cache Disable dns cache.
+ * @param disable_expire Disable dns cache expire.
+ * @param independent_cache Make each DNS server's cache independent for special
+ *   purposes. If enabled, will slightly degrade performance.
+ * @param reverse_mapping Stores a reverse mapping of IP addresses after
+ *   responding to a DNS query in order to provide domain names when routing.
+ *
+ * Since this process relies on the act of resolving domain names by an
+ * application before making a request, it can be problematic in environments
+ * such as macOS, where DNS is proxied and cached by the system.
+ * @param fakeip FakeIP settings.
+ * @param client_subnet Append a `edns0-subnet`` OPT extra record with the
+ *   specified IP address to every query by default. Can be overrides by
+ *   `servers.[].client_subnet`` or `rules.[].client_subnet`. @since v1.9.0
  */
 case class DNS(
   servers: Option[Seq[DnsServer]],
   rules: Option[Seq[DnsRule]] = None,
   `final`: Option[String | DnsServer] = None,
-  /**
-   * Default domain strategy for resolving the domain names. One of `prefer_ipv4`,
-   * `prefer_ipv6`, `ipv4_only`, `ipv6_only`. Take no effect if `server.strategy` is
-   * set.
-   */
   strategy: Option[DomainStrategy] = None,
-  /** Disable dns cache. */
   disable_cache: Option[Boolean] = None,
-  /** Disable dns cache expire. */
   disable_expire: Option[Boolean] = None,
-  /**
-   * Make each DNS server's cache independent for special purposes. If enabled, will
-   * slightly degrade performance.
-   */
   independent_cache: Option[Boolean] = None,
-  /**
-   * Stores a reverse mapping of IP addresses after responding to a DNS query in order
-   * to provide domain names when routing.
-   *
-   * Since this process relies on the act of resolving domain names by an application
-   * before making a request, it can be problematic in environments such as macOS, where
-   * DNS is proxied and cached by the system.
-   */
   reverse_mapping: Option[Boolean] = None,
-  /** FakeIP settings. */
   fakeip: Option[FakeIP] = None,
   /**
    * > Since `sing-box` 1.9.0
    *
-   * Append a `edns0-subnet`` OPT extra record with the specified IP address to every
-   * query by default.
+   * Append a `edns0-subnet`` OPT extra record with the specified IP address to
+   * every query by default.
    *
-   * Can be overrides by `servers.[].client_subnet`` or `rules.[].client_subnet`.
+   * Can be overrides by `servers.[].client_subnet`` or
+   * `rules.[].client_subnet`.
    */
   client_subnet: Option[String] = None,
 ) extends AbstractSingBox
@@ -68,14 +70,14 @@ case class DnsServer(
   address_resolver: Option[String | DnsServer] = None,
   /**
    * The domain strategy for resolving the domain name in the address. One of
-   * `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`. `dns.strategy` will be used
-   * if empty.
+   * `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`. `dns.strategy` will
+   * be used if empty.
    */
   address_strategy: Option[DomainStrategy] = None,
   /**
-   * Default domain strategy for resolving the domain names. One of `prefer_ipv4`,
-   * `prefer_ipv6`, `ipv4_only`, `ipv6_only`. Takes no effect if overridden by other
-   * settings.
+   * Default domain strategy for resolving the domain names. One of
+   * `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`. Takes no effect if
+   * overridden by other settings.
    */
   strategy: Option[DomainStrategy] = None,
   /**

@@ -62,18 +62,14 @@ enum ProtocolOutbound(`type`: ProtocolOutboundType) extends AbstractOutbound {
    */
   case DirectOutbound(
     tag: String,
-    /**
-     * Override the connection destination address.
-     */
+    /** Override the connection destination address. */
     override_address: Option[Host] = None,
-    /**
-     * Override the connection destination port.
-     */
+    /** Override the connection destination port. */
     override_port: Option[Port] = None,
     /**
      * Write [Proxy
-     * Protocol](https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt) in the
-     * connection header. Protocol value can be `1` or `2`.
+     * Protocol](https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt) in
+     * the connection header. Protocol value can be `1` or `2`.
      */
     proxy_protocol: Option[1 | 2] = None,
     /** Dial Fields [[DialFieldsMixin]] */
@@ -305,8 +301,8 @@ enum ProtocolOutbound(`type`: ProtocolOutboundType) extends AbstractOutbound {
     /**
      * Required**
      *
-     * WireGuard requires base64-encoded public and private keys. These can be generated
-     * using the wg(8) utility:
+     * WireGuard requires base64-encoded public and private keys. These can be
+     * generated using the wg(8) utility:
      *
      * ```
      * wg genkey
@@ -325,8 +321,8 @@ enum ProtocolOutbound(`type`: ProtocolOutboundType) extends AbstractOutbound {
     /**
      * Multi-peer support.
      *
-     * If enabled, `server`, `server_port`, `peer_public_key`, `pre_shared_key` will be
-     * ignored.
+     * If enabled, `server`, `server_port`, `peer_public_key`, `pre_shared_key`
+     * will be ignored.
      */
     peers: Option[Seq[WireGuardPeer]] = None,
     /** WireGuard reserved field bytes. */
@@ -422,7 +418,8 @@ enum GroupOutbound(`type`: GroupOutboundType) {
     /** List of outbound tags to test. */
     outbounds: Seq[OutboundLike],
     /**
-     * The URL to test. `https://www.gstatic.com/generate_204` will be used if empty.
+     * The URL to test. `https://www.gstatic.com/generate_204` will be used if
+     * empty.
      */
     url: Option[String] = None,
     /** The test interval. `3m` will be used if empty. */
@@ -435,8 +432,8 @@ enum GroupOutbound(`type`: GroupOutboundType) {
     /**
      * Interrupt existing connections when the selected outbound has changed.
      *
-     * Only outbound connections are affected by this setting, internal connections will
-     * always be interrupted.
+     * Only outbound connections are affected by this setting, internal
+     * connections will always be interrupted.
      */
     interrupt_exist_connections: Option[Boolean] = None,
   ) extends GroupOutbound("urltest")

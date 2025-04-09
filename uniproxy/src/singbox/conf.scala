@@ -24,31 +24,30 @@ case class SingBoxConfig(
 
 /**
  * Ref: https://sing-box.sagernet.org/configuration/log/
+ *
+ * @param disabled Disable logging, no output after start.
+ * @param level Log level.
+ * @param output Output file path. Will not write log to console after enable.
+ * @param timestamp Add time to each line.
  */
 case class Log(
-  /** Disable logging, no output after start. */
   disabled: Option[Boolean] = None,
-  /** Log level. */
   level: Option[LogLevel] = None,
-  /** Output file path. Will not write log to console after enable. */
   output: Option[String] = None,
-  /** Add time to each line. */
   timestamp: Option[Boolean] = None,
 ) extends AbstractSingBox
 
 /**
  * Built-in NTP client service.
  *
- * If enabled, it will provide time for protocols like TLS/Shadowsocks/VMess, which is
- * useful for environments where time synchronization is not possible.
+ * If enabled, it will provide time for protocols like TLS/Shadowsocks/VMess,
+ * which is useful for environments where time synchronization is not possible.
  *
  * Ref: https://sing-box.sagernet.org/configuration/ntp/
  */
 case class NTP() extends AbstractSingBox
 
-/**
- * Ref: https://sing-box.sagernet.org/configuration/experimental/
- */
+/** Ref: https://sing-box.sagernet.org/configuration/experimental/ */
 case class Experimental(
   cache_file: Option[CacheFile] = None,
   clash_api: Option[Map[String, String]] = None,
