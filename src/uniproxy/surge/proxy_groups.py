@@ -54,7 +54,7 @@ class UrlTestGroup(SurgeProxyGroup):
     interval: float = 60  # seconds
     tolerance: float = 300  # milliseconds
     timeout: float = 5  # seconds
-    evaluate_before_use: bool = False
+    evaluate_before_use: bool = True
     """
     By default, when the Automatic Testing policy group is used for the first
     time, in order not to affect the request, it will first access using the
