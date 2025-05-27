@@ -54,7 +54,8 @@ class DomainSetRule(ClashRule):
 class IPCidrRule(ClashRule):
     matcher: str
     policy: ProtocolLike
-    no_resolve: bool | None = None
+    # temporarily set to True
+    no_resolve: bool | None = True
     type: Literal["ip-cidr"] = "ip-cidr"
 
     def __str__(self) -> str:
@@ -68,7 +69,8 @@ class IPCidrRule(ClashRule):
 class IPCidr6Rule(ClashRule):
     matcher: str
     policy: ProtocolLike
-    no_resolve: bool | None = None
+    # temporarily set to True
+    no_resolve: bool | None = True
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
     def __str__(self) -> str:
@@ -82,7 +84,8 @@ class IPCidr6Rule(ClashRule):
 class GeoIPRule(ClashRule):
     matcher: str
     policy: ProtocolLike
-    no_resolve: bool | None = None
+    # temporarily set to True
+    no_resolve: bool | None = True
     type: Literal["geoip"] = "geoip"
 
     def __str__(self) -> str:

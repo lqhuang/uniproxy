@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Sequence
 from uniproxy.typing import (
     Network,
+    NetworkCIDR,
     ProtocolType,
     ShadowsocksCipher,
     VmessCipher,
     VmessTransport,
 )
+
+from ipaddress import IPv4Address
 
 from attrs import define
 
@@ -191,3 +194,20 @@ class VmessProtocol(UniproxyProtocol):
     transport: VmessWsTransport | VmessH2Transport | None = None
 
     type: Literal["vmess"] = "vmess"
+
+
+@define
+class WireGuardProtocol(UniproxyProtocol):
+    private_key: str
+    peer: WireGuardPeer
+    address: IPv4Address | IPv4Address | str | None = None
+    persistent_keepalive: int | None = None
+    type: Literal["wireguard"] = "wireguard"
+
+
+@define
+class WireGuardPeer:
+    public_key: str
+    pre_shared_key: str | None = None
+    allowed_ips: Sequence[NetworkCIDR] = ["0.0.0.0/0", "::/0"]
+    persistent_keepalive: int | None = None

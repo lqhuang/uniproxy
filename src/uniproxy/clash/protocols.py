@@ -3,6 +3,10 @@ from __future__ import annotations
 from typing import Any, Literal, Mapping, Sequence, cast
 from uniproxy.typing import (
     ALPN,
+    IPAddress,
+    IPv4Address,
+    IPv6Address,
+    NetworkCIDR,
     ProtocolType,
     ShadowsocksCipher,
     VmessCipher,
@@ -20,6 +24,8 @@ from uniproxy.protocols import UniproxyProtocol
 from uniproxy.protocols import VmessH2Transport as UniproxyVmessH2Transport
 from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 from uniproxy.protocols import VmessWsTransport as UniproxyVmessWsTransport
+from uniproxy.protocols import WireGuardPeer as UniproxyWireguardPeer
+from uniproxy.protocols import WireGuardProtocol as UniproxyWireguardProtocol
 
 from .base import BaseProtocol
 
@@ -346,6 +352,89 @@ class VmessProtocol(ClashProtocol):
         )
 
 
+@define
+class WireguardProtocol(ClashProtocol):
+    """
+    YAML example:
+
+    ```yaml
+    name: wireguard
+    type: wireguard
+    server: server # domain is supported
+    port: 51820
+    ip: 10.8.4.8
+    # ipv6: fe80::e6bf:faff:fea0:9fae # optional
+    private-key: 0G6TTWwvgv8Gy5013/jv2GttkCLYYaNTArHV0NdNkGI= # client private key
+    public-key: 0ag+C+rINHBnvLJLUyJeYkMWvIAkBjQPPObicuBUn1U= # peer public key
+    # preshared-key: # optional
+    dns: [1.0.0.1, 223.6.6.6] # optional
+    # mtu: 1420 # optional
+    # reserved: [0, 0, 0] # optional
+    # keepalive: 45 # optional
+    # underlying-proxy: # optional
+    #   type: trojan
+    #   server: your-underlying-proxy
+    #   port: 443
+    #   password: your-password
+    ```
+    """
+
+    private_key: str
+    public_key: str
+
+    ip: str | IPv4Address | None = None
+    ipv6: str | IPv6Address | None = None
+
+    dns: Sequence[IPAddress] | None = None
+
+    # stash style now ..... in mihomo, it is called `pre-shared-key`
+    preshared_key: str | None = None
+
+    ## field not existed for stash
+    # allowed_ips: Sequence[NetworkCIDR | str] = ["0.0.0.0/0", "::/0"]
+    ## field not existed for mihomo
+    # keepalive: int | None = None
+
+    type: Literal["wireguard"] = "wireguard"
+
+    def __attrs_post_init__(self):
+        if self.ip is None and self.ipv6 is None:
+            raise ValueError("Either 'ip' or 'ipv6' must be set")
+        if self.ip is not None and self.ipv6 is not None:
+            raise ValueError("Only one of 'ip' and 'ipv6' can be set")
+
+    @classmethod
+    def from_uniproxy(
+        cls, protocol: UniproxyWireguardProtocol, **kwargs
+    ) -> WireguardProtocol:
+        if isinstance(protocol.address, IPv4Address):
+            is_ipv6 = False
+        elif isinstance(protocol.address, IPv6Address):
+            is_ipv6 = True
+        elif isinstance(protocol.address, str):
+            # If address is a string, it could be an IPv4 or IPv6 address
+            if ":" in protocol.address:
+                is_ipv6 = True
+            else:
+                is_ipv6 = False
+        else:
+            raise ValueError(
+                f"Unknown address type: {type(protocol.address)} for WireGuard protocol"
+            )
+
+        return cls(
+            protocol.name,
+            protocol.server,
+            protocol.port,
+            private_key=protocol.private_key,
+            public_key=protocol.peer.public_key,
+            ip=protocol.address if not is_ipv6 else None,
+            ipv6=protocol.address if is_ipv6 else None,
+            preshared_key=protocol.peer.pre_shared_key,
+            type="wireguard",
+        )
+
+
 _CLASH_MAPPER: Mapping[ProtocolType, type[ClashProtocol]] = {
     "http": HttpProtocol,
     "https": HttpProtocol,
@@ -355,7 +444,7 @@ _CLASH_MAPPER: Mapping[ProtocolType, type[ClashProtocol]] = {
     "vmess": VmessProtocol,
     "trojan": TrojanProtocol,
     # "tuic": TuicProtocol,
-    # "wireguard": WireguardProtocol,
+    "wireguard": WireguardProtocol,
 }
 
 

@@ -54,8 +54,6 @@ class IPCidrGroupRule(UniproxyGroupRule):
 
 @define
 class IPCidr6Rule(UniproxyBasicRule):
-    matcher: str
-
     no_resolve: bool | None = None
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
@@ -68,6 +66,7 @@ class IPCidr6GroupRule(UniproxyGroupRule):
 
 @define
 class GeoIPRule(UniproxyBasicRule):
+    no_resolve: bool | None = None
     type: Literal["geoip"] = "geoip"
 
 
