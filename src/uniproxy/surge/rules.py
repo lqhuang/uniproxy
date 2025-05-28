@@ -17,9 +17,8 @@ from uniproxy.rules import (
 from uniproxy.utils import to_name
 
 from .base import BaseBasicRule as SurgeRule
-from .base import BaseRuleProvider
+from .base import BaseRuleProvider, ProtocolLike
 from .base import FinalRule as FinalRule
-from .base import ProtocolLike
 
 
 @define
@@ -49,7 +48,7 @@ class DomainSetRule(SurgeRule):
 
 @define
 class IPCidrRule(SurgeRule):
-    no_resolve: bool | None = None
+    no_resolve: bool | None = True
     type: Literal["ip-cidr"] = "ip-cidr"
 
     def __str__(self) -> str:
@@ -61,7 +60,7 @@ class IPCidrRule(SurgeRule):
 
 @define
 class IPCidr6Rule(SurgeRule):
-    no_resolve: bool | None = None
+    no_resolve: bool | None = True
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
     def __str__(self) -> str:
@@ -73,7 +72,7 @@ class IPCidr6Rule(SurgeRule):
 
 @define
 class GeoIPRule(SurgeRule):
-    no_resolve: bool | None = None
+    no_resolve: bool | None = True
     type: Literal["geoip"] = "geoip"
 
     def __str__(self) -> str:
@@ -85,7 +84,7 @@ class GeoIPRule(SurgeRule):
 
 @define
 class IPAsn(SurgeRule):
-    no_resolve: bool | None = None
+    no_resolve: bool | None = True
     type: Literal["ip-asn"] = "ip-asn"
 
     def __str__(self) -> str:

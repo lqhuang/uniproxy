@@ -42,31 +42,31 @@ class DomainKeywordGroupRule(UniproxyGroupRule):
 
 @define
 class IPCidrRule(UniproxyBasicRule):
-    no_resolve: bool | None = None
+    no_resolve: bool | None = True
     type: Literal["ip-cidr"] = "ip-cidr"
 
 
 @define
 class IPCidrGroupRule(UniproxyGroupRule):
-    no_resolve: bool | None = None
+    no_resolve: bool | None = True
     type: Literal["ip-cidr-group"] = "ip-cidr-group"
 
 
 @define
 class IPCidr6Rule(UniproxyBasicRule):
-    no_resolve: bool | None = None
+    no_resolve: bool | None = True
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
 
 @define
 class IPCidr6GroupRule(UniproxyGroupRule):
-    no_resolve: bool | None = None
+    no_resolve: bool | None = True
     type: Literal["ip-cidr6-group"] = "ip-cidr6-group"
 
 
 @define
 class GeoIPRule(UniproxyBasicRule):
-    no_resolve: bool | None = None
+    no_resolve: bool | None = True
     type: Literal["geoip"] = "geoip"
 
 
