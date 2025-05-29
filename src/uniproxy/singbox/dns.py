@@ -7,7 +7,7 @@ from attrs import define, field
 
 from uniproxy.abc import AbstractSingBox
 
-from .base import BaseInbound, BaseOutbound
+from .base import BaseDnsServer, BaseInbound, BaseOutbound
 from .route import BaseRuleSet
 from .typing import DnsReturnCode, DnsStrategy, SniffProtocol
 
@@ -18,11 +18,11 @@ class DNS(AbstractSingBox):
     Ref: https://sing-box.sagernet.org/configuration/dns/
     """
 
-    servers: Sequence[DnsServer] | None
+    servers: Sequence[BaseDnsServer] | None
     rules: Sequence[DnsRule] | None = None
 
     # Default dns server tag. The first server will be used if empty.
-    final: str | DnsServer | None = field(
+    final: str | BaseDnsServer | None = field(
         default=None, converter=lambda x: str(x) if x is not None else None
     )
 
@@ -60,16 +60,17 @@ class DNS(AbstractSingBox):
     # Can be overrides by `servers.[].client_subnet`` or `rules.[].client_subnet`.
     client_subnet: str | None = None
 
+    cache_capacity: int = 4096
 
 @define
-class DnsServer(AbstractSingBox):
-    tag: str
+class LegacyDnsServer(BaseDnsServer):
+    # Deprecate since 1.11.0, remove in 1.13.0
     address: str | DnsReturnCode | Literal["local", "dhcp://auto", "fakeip"]
 
     # Required if address contains domain
     #
     # Tag of a another server to resolve the domain name in the address.
-    address_resolver: str | DnsServer | None = field(
+    address_resolver: str | BaseDnsServer | None = field(
         default=None, converter=lambda x: str(x) if x is not None else None
     )
 
@@ -92,24 +93,146 @@ class DnsServer(AbstractSingBox):
 
     client_subnet: str | None = None
 
-    def __str__(self) -> str:
-        return str(self.tag)
+
+@define
+class LocalDnsServer(BaseDnsServer):
+    """
+    Ref: https://sing-box.sagernet.org/configuration/dns/server/local/
+
+    ```json
+    {
+      "type": "local",
+      "tag": "",
+      // Dial Fields
+    }
+    ```
+    """
+
+    detour: BaseOutbound | str | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
+    type: Literal["local"] = "local"
+
+
+@define
+class UdpDnsServer(BaseDnsServer):
+    """
+    Ref: https://sing-box.sagernet.org/configuration/dns/server/udp/
+
+    ```json
+    {
+        "type": "udp",
+        "tag": "",
+
+        "server": "",
+        "server_port": 53,
+
+        // Dial Fields
+    }
+    ```
+    """
+
+    server: str
+    server_port: int | None = None
+    detour: BaseOutbound | str | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
+    type: Literal["udp"] = "udp"
+
+
+@define
+class HttpsDnsServer(BaseDnsServer):
+    """
+    Ref: https://sing-box.sagernet.org/configuration/dns/server/https/
+
+    ```json
+    {
+        "type": "https",
+        "tag": "",
+
+        "server": "",
+        "server_port": 443,
+
+        "path": "",
+        "headers": {},
+
+        "tls": {},
+
+        // Dial Fields
+    }
+    ```
+    """
+
+    server: str
+    server_port: int | None = None
+    path: str | None = None
+    headers: dict[str, str] | None = None
+    tls: dict[str, str] | None = None
+    detour: BaseOutbound | str | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
+    type: Literal["https"] = "https"
+
+
+@define
+class H3DnsServer(BaseDnsServer):
+    """
+    Ref: https://sing-box.sagernet.org/configuration/dns/server/http3/
+
+    ```json
+    {
+        "type": "h3",
+        "tag": "",
+
+        "server": "",
+        "server_port": 443,
+
+        "path": "",
+        "headers": {},
+
+        "tls": {},
+
+        // Dial Fields
+    }
+    ```
+    """
+
+    server: str
+    server_port: int | None = None
+    path: str | None = None
+    headers: dict[str, str] | None = None
+    tls: dict[str, str] | None = None
+    detour: BaseOutbound | str | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
+    domain_resolver: str | BaseDnsServer | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
+    type: Literal["h3"] = "h3"
+
+
+DnsRuleAction = Literal["route", "route-options", "reject", "predefined", "fakeip"]
 
 
 @define
 class DnsRule(AbstractSingBox):
-    server: str | DnsServer = field(converter=str)
-    outbound: Sequence[BaseOutbound] | Sequence[str] | Literal["any"] | None = None
-    inbound: Sequence[BaseInbound] | Sequence[str] | None = None
+    server: str | BaseDnsServer = field(converter=str)
+    action: DnsRuleAction | None = None
+    strategy: DnsStrategy | None = None
+    client_subnet: str | None = None
+
+    # outbound: Sequence[BaseOutbound] | Sequence[str] | Literal["any"] | None = None
+
+    inbound: Sequence[BaseInbound | str] | None = None
     ip_version: Literal["4", "6", None] = None
     auth_user: str | None = None
     protocol: SniffProtocol | None = None
     network: str | None = None
     domain: str | None = None
-    domain_suffix: str | None = None
-    domain_keyword: str | None = None
-    domain_regex: str | None = None
-    ip_cidr: Sequence[NetworkCIDR] | None = None
+    domain_suffix: str | Sequence[str] | None = None
+    domain_keyword: str | Sequence[str] | None = None
+    domain_regex: str | Sequence[str] | None = None
+    ip_cidr: str | NetworkCIDR | Sequence[NetworkCIDR | str] | None = None
     ip_is_private: bool | None = None
     source_ip_cidr: Sequence[NetworkCIDR] | None = None
     source_ip_is_private: bool | None = None

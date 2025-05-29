@@ -6,12 +6,12 @@ from uniproxy.typing import ALPN, ServerAddress
 from ipaddress import IPv4Address, IPv6Address
 from os import PathLike
 
-from attrs import define
+from attrs import define, field
 
 from uniproxy.abc import AbstractSingBox
 from uniproxy.protocols import TLS as UniproxyTLS
 
-from .base import BaseInbound, BaseOutbound
+from .base import BaseDnsServer, BaseInbound, BaseOutbound
 from .typing import DnsStrategy, TLSVersion, TransportType
 
 
@@ -361,17 +361,20 @@ class DialFieldsMixin:
     Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
     """
 
-    domain_strategy: DnsStrategy | None = None
-    """
-    One of prefer_ipv4 prefer_ipv6 ipv4_only ipv6_only.
+    # domain_strategy: DnsStrategy | None = None
+    # """
+    # One of prefer_ipv4 prefer_ipv6 ipv4_only ipv6_only.
 
-    If set, the requested domain name will be resolved to IP before connect.
+    # If set, the requested domain name will be resolved to IP before connect.
 
-    | Outbound | Effected domains         | Fallback Value                          |
-    | -------- | ------------------------ | --------------------------------------- |
-    | direct   | Domain in request        | Take inbound.domain_strategy if not set |
-    | others   | Domain in server address | /                                       |
-    """
+    # | Outbound | Effected domains         | Fallback Value                          |
+    # | -------- | ------------------------ | --------------------------------------- |
+    # | direct   | Domain in request        | Take inbound.domain_strategy if not set |
+    # | others   | Domain in server address | /                                       |
+    # """
+    domain_resolver: BaseDnsServer | str | None = field(
+        default=None, converter=lambda x: None if x is None else str(x)
+    )
 
     fallback_delay: str | None = None
     """

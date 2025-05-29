@@ -24,18 +24,8 @@ from uniproxy.rules import (
 )
 from uniproxy.utils import maybe_flatmap_to_tag
 
-from .base import BaseInbound, BaseOutbound
-from .typing import RuleSetType, SniffProtocol
-
-
-@define
-class BaseRuleSet(AbstractSingBox):
-    tag: str
-    type: RuleSetType
-    format: Literal["binary", "source"]
-
-    def __str__(self) -> str:
-        return str(self.tag)
+from .base import BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
+from .typing import SniffProtocol
 
 
 @define
@@ -56,7 +46,8 @@ class RemoteRuleSet(BaseRuleSet):
 
 @define
 class Rule(AbstractSingBox):
-    outbound: BaseOutbound | str
+    outbound: BaseOutbound | str | None = None
+    action: Literal["route", "reject", "hijack-dns", "sniff", "resolve"] | None = None
 
     inbound: Sequence[BaseInbound] | Sequence[str] | None = None
     ip_version: Literal["4", "6", None] = None
@@ -82,6 +73,12 @@ class Rule(AbstractSingBox):
     )
     rule_set_ip_cidr_match_source: bool | None = None
     invert: bool | None = None
+
+    def __attrs_post_init__(self) -> None:
+        if self.action == "route" and self.outbound is None:
+            raise ValueError(
+                "Outbound must be set when action is 'route'. Use 'reject' or 'hijack-dns' if you don't want to route."
+            )
 
     @classmethod
     def from_uniproxy(cls, rule: UniproxyBasicRule | UniproxyGroupRule) -> Rule:
@@ -167,4 +164,12 @@ class Route(AbstractSingBox):
     Set routing mark by default.
 
     Takes no effect if `outbound.routing_mark` is set.
+    """
+    default_domain_resolver: str | BaseDnsServer | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
+    """
+    > [!NEW] Since sing-box 1.12.0
+
+    Tag of target DNS server.
     """

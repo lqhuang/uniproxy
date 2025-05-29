@@ -33,8 +33,6 @@ from .typing import SingBoxNetwork
 
 __all__ = (
     "DirectOutbound",
-    "BlockOutbound",
-    "DnsOutbound",
     "ShadowsocksOutbound",
     "VmessOutbound",
     "TrojanOutbound",
@@ -78,41 +76,6 @@ class DirectOutbound(DialFieldsMixin, DirectMixin, BaseOutbound):  # type: ignor
     """
 
     type: Literal["direct"] = "direct"
-
-
-@define
-class BlockOutbound(BaseOutbound):
-    """
-
-    Examples:
-
-    ```json
-    {
-      "type": "block",
-      "tag": "block"
-    }
-    ```
-    """
-
-    type: Literal["block"] = "block"
-
-
-@define
-class DnsOutbound(BaseOutbound):
-    """
-
-    Examples:
-
-    ```json
-    {
-        "type": "dns",
-        "tag": "dns-out"
-        ...
-    ```
-    """
-
-    tag: str
-    type: Literal["dns"] = "dns"
 
 
 @define(slots=False)
@@ -574,8 +537,6 @@ class PseudoFallbackOutbound(BaseOutbound):
 
 SingBoxProtocolOutbound = (
     DirectOutbound
-    | BlockOutbound
-    | DnsOutbound
     | ShadowsocksOutbound
     | VmessOutbound
     | TrojanOutbound

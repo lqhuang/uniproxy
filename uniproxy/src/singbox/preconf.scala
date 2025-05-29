@@ -11,13 +11,11 @@ object prefconf {
   val TAG_DIRECT_OUTBOUND = "DIRECT"
   val TAG_BLOCK_OUTBOUND = "REJECT"
 
-  val TAG_DNSSERVER_SYSTEM = "dns-system"
-  val TAG_DNSSERVER_REJECT = "dns-reject"
-  val TAG_DNSSERVER_FAKEIP = "dns-fakeip"
+  val TAG_DNS_SERVER_SYSTEM = "dns-system"
 
   /** ------------- Snippets for DNS Servers ------------- */
   val dns_server_system = DnsServer(
-    tag = TAG_DNSSERVER_SYSTEM,
+    tag = TAG_DNS_SERVER_SYSTEM,
     address = "localhost",
     detour = Some(TAG_DIRECT_OUTBOUND),
   )
