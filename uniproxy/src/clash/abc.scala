@@ -24,7 +24,7 @@ abstract class AbstractProxyGroup extends AbstractClash:
   val `type`: GroupType
   val proxies: Option[Seq[ProtocolLike]] = None
   val providers: Option[Seq[ProxyProviderLike]] = None
-  val network: Option[Network] = Some("tcp_and_udp")
+  val network: Option[Network] = Some(Network.tcp_and_udp)
 
   val url: String = "https://www.gstatic.com/generate_204"
   val interval: Float = 300

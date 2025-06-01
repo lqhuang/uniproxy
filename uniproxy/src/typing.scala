@@ -2,46 +2,83 @@ package uniproxy
 package typing
 
 import com.comcast.ip4s.{Cidr, Ipv4Address, Ipv6Address}
+import upickle.default.ReadWriter
+import upickle.default.ReadWriter.merge
 
-type Backend = "surge" | "clash" | "singbox"
+enum Backend:
+  case surge, clash, singbox
 
-type Network = "tcp" | "udp" | "tcp_and_udp"
+enum Network:
+  case tcp, udp, tcp_and_udp
 
-type NetworkCIDR = String | Cidr[Ipv4Address] | Cidr[Ipv6Address]
+type NetworkCIDR = Cidr[Ipv4Address] | Cidr[Ipv6Address]
+given networkCidrReadWriter: ReadWriter[NetworkCIDR] = merge(
+  implicitly[ReadWriter[Cidr[Ipv4Address]]],
+  implicitly[ReadWriter[Cidr[Ipv6Address]]],
+)
 
-type ShadowsocksCipher = "aes-128-gcm" | "aes-256-gcm" | "chacha20-ietf-poly1305" |
-  "blake3-aes-128-gcm" | "blake3-aes-256-gcm" | "blake3-chacha20-poly1305" |
-  "blake3-chacha8-poly1305"
+enum ShadowsocksCipher:
+  case `aes-128-gcm`, `aes-256-gcm`, `chacha20-ietf-poly1305`,
+    `blake3-aes-128-gcm`, `blake3-aes-256-gcm`, `blake3-chacha20-poly1305`,
+    `blake3-chacha8-poly1305`
 
-type VmessCipher = "none" | "auto" | "zero" | "AES-128-GCM" | "CHACHA20-POLY1305"
-type VmessTransportType = "http" | "ws" | "grpc" | "h2"
+enum VmessCipher:
+  case none, auto, zero, `aes-128-gcm`, `chacha20-poly1305`
 
-type ALPN = "http/1.1" | "h2" | "h3"
+enum VmessTransportType:
+  case http, ws, grpc, h2
 
-type ProtocolType = "http" | "https" | "http2" | "quic" | "socks4" | "socks5" |
-  "socks5-tls" | "shadowsocks" | "vmess" | "trojan" | "snell" | "naive" | "tuic" |
-  "wireguard"
-type GroupType =
-  "select" | "urltest" | "fallback" | "loadbalance" | "external" | "subnet"
+enum ALPN:
+  case `http/1.1`, h2, h3
 
-type BasicRuleType = "domain" | "domain-suffix" | "domain-keyword" | // Domain Rules
+enum ProtocolType:
+  case http, https, http2, quic, socks4, socks5, `socks5-tls`,
+    shadowsocks, vmess, trojan, snell, naive, tuic, wireguard
+
+enum GroupType:
+  case select, urltest, fallback, loadbalance, external, subnet
+
+enum BasicRuleType:
+  // Domain Rules
+  case domain
+  case `domain-suffix`
+  case `domain-keyword`
   // IP Rules
-  "ip-cidr" | "ip-cidr6" | "ip-asn" | "geoip" |
+  case `ip-cidr`
+  case `ip-cidr6`
+  case `ip-asn`
+  case geoip
   // HTTP Rule
-  "user-agent" | "url-regex" |
+  case `user-agent`
+  case `url-regex`
   // Process Rule
-  "process-name" |
+  case `process-name`
   // Logical Rule
-  "and" | "or" | "not" |
+  case and
+  case or
+  case not
   // Subnet Rule
-  "subnet" |
+  case subnet
   // Miscellaneous Rule
-  "dest-port" | "src-port" | "in-port" | "src-ip" | "protocol" | "script" |
-  "cellular-radio" | "device-name" |
+  case `dest-port`
+  case `src-port`
+  case `in-port`
+  case `src-ip`
+  case protocol
+  case script
+  case `cellular-radio`
+  case `device-name`
   // External rule
-  "rule-set" | "domain-set" |
+  case `rule-set`
+  case `domain-set`
   // Final Rule
-  "final"
-type GroupRuleType = "domain-group" | "domain-suffix-group" | "domain-keyword-group" |
-  "ip-cidr-group" | "ip-cidr6-group"
+  case `final`
+
+enum GroupRuleType:
+  case `domain-group`
+  case `domain-suffix-group`
+  case `domain-keyword-group`
+  case `ip-cidr-group`
+  case `ip-cidr6-group`
+
 type RuleType = BasicRuleType | GroupRuleType
