@@ -3,6 +3,7 @@ package singbox
 package abc
 
 import com.comcast.ip4s.{Host, Port}
+import upickle.default.ReadWriter
 
 import uniproxy.singbox.typing.{InboundType, OutboundType, RuleSetFormat, RuleSetType}
 
@@ -13,16 +14,36 @@ import uniproxy.singbox.typing.{InboundType, OutboundType, RuleSetFormat, RuleSe
  */
 abstract class AbstractSingBox
 
-abstract class AbstractOutbound extends AbstractSingBox:
+trait Inbound extends AbstractSingBox {
   val tag: String
+  val `type`: InboundType
+  override def toString: String = tag
+}
 
-abstract class AbstractInbound extends AbstractSingBox:
+trait Outbound extends AbstractSingBox {
   val tag: String
+  val `type`: OutboundType
+  override def toString: String = tag
+}
+
+trait Endpoint extends AbstractSingBox {
+  val tag: String
+  // val `type`: EndpointType
+  override def toString: String = tag
+}
 
 abstract class AbstractRuleSet extends AbstractSingBox:
   val tag: String
   val format: RuleSetFormat
 
-type InboundLike = AbstractInbound | String
-type OutboundLike = AbstractOutbound | String
+type InboundLike = Inbound | String
+type OutboundLike = Outbound | String
+type EndpointLike = Endpoint | String
 type RuleSetLike = AbstractRuleSet | String
+
+// object AbstractSingBox {
+
+//   /** A common ReadWriter for Inbound and Outbound types. */
+//   implicit val inboundOutboundRW: ReadWriter[InboundLike | OutboundLike] =
+//     join(Inbound, OutboundLike.outboundRW)
+// }

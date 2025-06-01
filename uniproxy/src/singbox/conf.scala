@@ -1,11 +1,15 @@
 package uniproxy
 package singbox
 
-import uniproxy.singbox.abc.{AbstractSingBox, InboundLike, OutboundLike}
+import upickle.default.ReadWriter
 
+import uniproxy.singbox.abc.AbstractSingBox
 import uniproxy.singbox.dns.DNS
 import uniproxy.singbox.route.Route
 import uniproxy.singbox.typing.LogLevel
+import uniproxy.singbox.Inbound
+import uniproxy.singbox.Outbound
+import uniproxy.singbox.Outbound.outboundRW
 
 /**
  * `sing-box` uses JSON for configuration files.
@@ -14,13 +18,13 @@ import uniproxy.singbox.typing.LogLevel
  */
 case class SingBoxConfig(
   dns: DNS,
-  inbounds: Seq[InboundLike],
-  outbounds: Seq[OutboundLike],
+  inbounds: Seq[Inbound],
+  outbounds: Seq[Outbound],
   route: Route,
   log: Option[Log] = None,
   ntp: Option[NTP] = None,
   experimental: Option[Map[String, String]] = None,
-) extends AbstractSingBox
+) extends AbstractSingBox derives ReadWriter
 
 /**
  * Ref: https://sing-box.sagernet.org/configuration/log/
@@ -35,7 +39,7 @@ case class Log(
   level: Option[LogLevel] = None,
   output: Option[String] = None,
   timestamp: Option[Boolean] = None,
-) extends AbstractSingBox
+) extends AbstractSingBox derives ReadWriter
 
 /**
  * Built-in NTP client service.
@@ -45,14 +49,14 @@ case class Log(
  *
  * Ref: https://sing-box.sagernet.org/configuration/ntp/
  */
-case class NTP() extends AbstractSingBox
+case class NTP() extends AbstractSingBox derives ReadWriter
 
 /** Ref: https://sing-box.sagernet.org/configuration/experimental/ */
 case class Experimental(
   cache_file: Option[CacheFile] = None,
   clash_api: Option[Map[String, String]] = None,
   v2ray_api: Option[Map[String, String]] = None,
-) extends AbstractSingBox
+) extends AbstractSingBox derives ReadWriter
 
 /**
  * Ref: https://sing-box.sagernet.org/configuration/experimental/cache-file/
@@ -68,11 +72,11 @@ case class Experimental(
  * }
  * ```
  */
-class CacheFile(
+case class CacheFile(
   path: Option[String] = None,
   cache_id: Option[String] = None,
   store_fakeip: Option[Boolean] = None,
   store_rdrc: Option[Boolean] = None,
   rdrc_timeout: Option[String] = None,
   enabled: Option[Boolean] = Some(true),
-) extends AbstractSingBox
+) extends AbstractSingBox derives ReadWriter

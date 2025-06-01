@@ -1,24 +1,18 @@
 package uniproxy
 package singbox
-package inbounds
 
 import com.comcast.ip4s.{Host, Hostname, Port}
+import upickle.default.ReadWriter
 
 import uniproxy.typing.{NetworkCIDR, ShadowsocksCipher}
 
 import uniproxy.singbox.route.RuleSet
 import uniproxy.singbox.shared.{InboundMultiplex, ListenFieldsMixin}
-import uniproxy.singbox.typing.{
-  Fallback,
-  FallbackAlpn,
-  InboundType,
-  SingBoxNetwork,
-  TunStack,
-  User,
-}
-import uniproxy.singbox.abc.{AbstractInbound, InboundLike, OutboundLike, RuleSetLike}
+import uniproxy.singbox.typing.{Fallback, FallbackAlpn, InboundType, SingBoxNetwork, TunStack, User}
+import uniproxy.singbox.abc.AbstractSingBox
 import uniproxy.singbox.transports.Transport
 import uniproxy.singbox.tls.InboundTLS
+import uniproxy.singbox.outbounds.Outbound
 
 case class TuicUser(
   uuid: String,
@@ -27,7 +21,7 @@ case class TuicUser(
   /** TUIC user name */
   password: Option[String] = None,
   /** TUIC user password */
-)
+) derives ReadWriter
 
 case class PlatformHttpProxy(
   /** HTTP proxy server address. */
@@ -54,14 +48,14 @@ case class PlatformHttpProxy(
    * Hostnames that use the HTTP proxy.
    */
   match_domain: Option[Seq[Hostname]] = None,
-)
+) derives ReadWriter
 
 case class Platform(
   /** System HTTP proxy settings. */
   http_proxy: PlatformHttpProxy,
-)
+) derives ReadWriter
 
-enum Inbound(`type`: InboundType) extends AbstractInbound {
+enum Inbound(`type`: InboundType) extends AbstractSingBox derives ReadWriter {
 
   case DirectInbound(
     tag: String,
@@ -78,8 +72,8 @@ enum Inbound(`type`: InboundType) extends AbstractInbound {
     tcp_multi_path: Option[Boolean] = None,
     udp_fragment: Option[Boolean] = None,
     udp_timeout: Option[String] = None,
-    detour: Option[OutboundLike] = None,
-  ) extends Inbound("direct") with ListenFieldsMixin
+    detour: Option[Outbound] = None,
+  ) extends Inbound(InboundType.direct) with ListenFieldsMixin
 
   case HTTPInbound(
     tag: String,
@@ -93,8 +87,8 @@ enum Inbound(`type`: InboundType) extends AbstractInbound {
     tcp_multi_path: Option[Boolean] = None,
     udp_fragment: Option[Boolean] = None,
     udp_timeout: Option[String] = None,
-    detour: Option[OutboundLike] = None,
-  ) extends Inbound("http") with ListenFieldsMixin
+    detour: Option[Outbound] = None,
+  ) extends Inbound(InboundType.http) with ListenFieldsMixin
 
   /**
    * SOCKS
@@ -127,8 +121,8 @@ enum Inbound(`type`: InboundType) extends AbstractInbound {
     tcp_multi_path: Option[Boolean] = None,
     udp_fragment: Option[Boolean] = None,
     udp_timeout: Option[String] = None,
-    detour: Option[OutboundLike] = None,
-  ) extends Inbound("socks") with ListenFieldsMixin
+    detour: Option[Outbound] = None,
+  ) extends Inbound(InboundType.socks) with ListenFieldsMixin
 
   case ShadowsocksInbound(
     tag: String,
@@ -152,8 +146,8 @@ enum Inbound(`type`: InboundType) extends AbstractInbound {
     tcp_multi_path: Option[Boolean] = None,
     udp_fragment: Option[Boolean] = None,
     udp_timeout: Option[String] = None,
-    detour: Option[OutboundLike] = None,
-  ) extends Inbound("shadowsocks") with ListenFieldsMixin
+    detour: Option[Outbound] = None,
+  ) extends Inbound(InboundType.shadowsocks) with ListenFieldsMixin
 
   case TrojanInbound(
     tag: String,
@@ -189,8 +183,8 @@ enum Inbound(`type`: InboundType) extends AbstractInbound {
     tcp_multi_path: Option[Boolean] = None,
     udp_fragment: Option[Boolean] = None,
     udp_timeout: Option[String] = None,
-    detour: Option[OutboundLike] = None,
-  ) extends Inbound("trojan") with ListenFieldsMixin
+    detour: Option[Outbound] = None,
+  ) extends Inbound(InboundType.trojan) with ListenFieldsMixin
 
   case TuicInbound(
     tag: String,
@@ -225,8 +219,8 @@ enum Inbound(`type`: InboundType) extends AbstractInbound {
     tcp_multi_path: Option[Boolean] = None,
     udp_fragment: Option[Boolean] = None,
     udp_timeout: Option[String] = None,
-    detour: Option[OutboundLike] = None,
-  ) extends Inbound("tuic") with ListenFieldsMixin
+    detour: Option[Outbound] = None,
+  ) extends Inbound(InboundType.tuic) with ListenFieldsMixin
 
   case class TunMixin(
   )
@@ -320,7 +314,7 @@ enum Inbound(`type`: InboundType) extends AbstractInbound {
      *
      * Conflict with `route.default_mark` and `[dialOptions].routing_mark`.
      */
-    route_address_set: Option[Seq[RuleSetLike]] = None,
+    route_address_set: Option[Seq[RuleSet]] = None,
     /**
      * * > Only supported on Linux with nftables and requires `auto_route` and
      * `auto_redirect` enabled.
@@ -330,7 +324,7 @@ enum Inbound(`type`: InboundType) extends AbstractInbound {
      *
      * * Conflict with `route.default_mark` and `[dialOptions].routing_mark`.
      */
-    route_exclude_address_set: Option[Seq[RuleSetLike]] = None,
+    route_exclude_address_set: Option[Seq[RuleSet]] = None,
     /**
      * > This item is only available on the gvisor stack, other stacks are
      * endpoint-independent NAT by default.
@@ -406,8 +400,8 @@ enum Inbound(`type`: InboundType) extends AbstractInbound {
     sniff: Option[Boolean] = None,
 
     /** supported Listen Fields */
-    detour: Option[OutboundLike] = None,
-  ) extends Inbound("tun")
+    detour: Option[Outbound] = None,
+  ) extends Inbound(InboundType.tun)
 
   // def __attrs_post_init__(): Unit = {
   //   if include_interface.isDefined && exclude_interface.isDefined then {

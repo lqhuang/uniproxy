@@ -1,30 +1,21 @@
 package uniproxy.singbox.route
 
-import uniproxy.singbox.abc.{
-  AbstractRuleSet,
-  AbstractSingBox,
-  InboundLike,
-  OutboundLike,
-  RuleSetLike,
-}
-import uniproxy.singbox.typing.{
-  RuleSetFormat,
-  RuleSetType,
-  SingBoxNetwork,
-  SniffProtocol,
-}
+import upickle.default.ReadWriter
 
-enum RuleSet(`type`: RuleSetType) extends AbstractRuleSet {
+import uniproxy.singbox.abc.{AbstractRuleSet, AbstractSingBox, InboundLike, OutboundLike}
+import uniproxy.singbox.typing.{RuleSetFormat, RuleSetType, SingBoxNetwork, SniffProtocol}
 
+enum RuleSet(tag: String, format: RuleSetFormat, `type`: RuleSetType) extends ReadWriter {
   case LocalRuleSet(tag: String, format: RuleSetFormat, path: String)
-      extends RuleSet("local")
+      extends RuleSet(tag, format, RuleSetType.local)
+
   case RemoteRuleSet(
     tag: String,
     format: RuleSetFormat,
     url: String,
     download_detour: Option[InboundLike] = None,
     update_interval: Option[Float] = None,
-  ) extends RuleSet("remote")
+  ) extends RuleSet(tag, format, RuleSetType.remote)
 }
 
 case class Rule(
@@ -46,10 +37,10 @@ case class Rule(
   source_port_range: Option[String | Seq[String]] = None,
   port: Option[Int | Seq[Int]] = None,
   port_range: Option[String | Seq[String]] = None,
-  rule_set: Option[RuleSetLike | Seq[RuleSetLike]] = None,
+  rule_set: Option[RuleSet | Seq[RuleSet]] = None,
   rule_set_ip_cidr_match_source: Option[Boolean] = None,
   invert: Option[Boolean] = None,
-) extends AbstractSingBox
+) extends ReadWriter
 
 // def from_uniproxy(cls, rule: UniproxyBasicRule | UniproxyGroupRule) -> Rule:
 //     if not isinstance(rule, (UniproxyBasicRule, UniproxyGroupRule)):
@@ -98,7 +89,7 @@ case class Route(
   /** List of route [[Rule]] */
   val rules: Seq[Rule],
   /** List of [[RuleSet]] */
-  val rule_set: Option[Seq[RuleSetLike]] = None,
+  val rule_set: Option[Seq[RuleSet]] = None,
   /** Default outbound tag. the first outbound will be used if empty. */
   val `final`: Option[OutboundLike] = None,
   /**
@@ -133,4 +124,4 @@ case class Route(
    * Takes no effect if `outbound.routing_mark` is set.
    */
   val default_mark: Option[Int] = None,
-) extends AbstractSingBox
+) extends AbstractSingBox derives ReadWriter
