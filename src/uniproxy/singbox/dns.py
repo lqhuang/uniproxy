@@ -62,6 +62,7 @@ class DNS(AbstractSingBox):
 
     cache_capacity: int = 4096
 
+
 @define
 class LegacyDnsServer(BaseDnsServer):
     # Deprecate since 1.11.0, remove in 1.13.0

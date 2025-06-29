@@ -8,6 +8,7 @@ from uniproxy.singbox.route import Rule
 # TAG_DNS_OUTBOUND = "DNS"  # hijack dns query into sing box dns system
 TAG_DIRECT_OUTBOUND = "DIRECT"
 TAG_BLOCK_OUTBOUND = "REJECT"
+TAG_DROP_OUTBOUND = "REJECT-DROP"
 
 TAG_DNS_SERVER_SYSTEM = "dns-system"
 TAG_DNS_SERVER_ROUTER = "dns-router"

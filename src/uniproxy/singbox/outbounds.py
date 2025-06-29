@@ -28,6 +28,7 @@ from uniproxy.proxy_groups import (
 from uniproxy.utils import map_to_str
 
 from .base import BaseOutbound
+from .dns import BaseDnsServer
 from .shared import BaseTransport, DialFieldsMixin, OutboundMultiplex, OutboundTLS
 from .typing import SingBoxNetwork
 
@@ -484,6 +485,10 @@ class UrlTestOutbound(BaseOutbound):
 
     Only outbound connections are affected by this setting, internal connections will always be interrupted.
     """
+
+    domain_resolver: str | BaseDnsServer | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
 
     type: Literal["urltest"] = "urltest"
 

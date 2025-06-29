@@ -49,6 +49,10 @@ class Rule(AbstractSingBox):
     outbound: BaseOutbound | str | None = None
     action: Literal["route", "reject", "hijack-dns", "sniff", "resolve"] | None = None
 
+    # only for action=reject
+    method: Literal["default", "drop"] | None = None
+    no_drop: bool | None = None
+
     inbound: Sequence[BaseInbound] | Sequence[str] | None = None
     ip_version: Literal["4", "6", None] = None
     auth_user: str | Sequence[str] | None = None
