@@ -155,7 +155,7 @@ class ShadowsocksMixin:
     password: str
     """Password for the Shadowsocks server."""
 
-    network: SingBoxNetwork = None
+    network: SingBoxNetwork | None = None
     """
     Listen network, one of `tcp` `udp`.
 
@@ -650,8 +650,6 @@ class TunMixin:
 
     platform: Platform | None = None
     """Platform-specific settings, provided by client applications."""
-
-    sniff: bool | None = None
 
 
 @define

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uniproxy.singbox.dns import LocalDnsServer
 from uniproxy.singbox.outbounds import DirectOutbound
-from uniproxy.singbox.route import Rule
+from uniproxy.singbox.route import HijackDnsRule, SniffRule
 
 #### ------------- Snippets for flag as tag ------------- ####
 # TAG_DNS_OUTBOUND = "DNS"  # hijack dns query into sing box dns system
@@ -25,3 +25,5 @@ out_direct = DirectOutbound(tag=TAG_DIRECT_OUTBOUND)
 #### ------------- Snippets for Route rules ------------- ####
 # rule_dns = Rule(outbound=TAG_DNS_OUTBOUND, protocol="dns")
 # rule_dns_bypass = Rule(outbound=TAG_DIRECT_OUTBOUND, protocol="dns")  # bypass dns query
+rule_sniff = SniffRule(action="sniff")
+rule_hijack_dns = HijackDnsRule()

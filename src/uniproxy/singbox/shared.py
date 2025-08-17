@@ -256,40 +256,40 @@ class ListenFieldsMixin:
     Requires target inbound support, see Injectable.
     """
 
-    sniff: bool | None = None
-    """Enable sniffing."""
+    # sniff: bool | None = None
+    # """Enable sniffing."""
 
-    sniff_override_destination: bool | None = None
-    """
-    Override the connection destination address with the sniffed domain.
+    # sniff_override_destination: bool | None = None
+    # """
+    # Override the connection destination address with the sniffed domain.
 
-    If the domain name is invalid (like tor), this will not work.
-    """
+    # If the domain name is invalid (like tor), this will not work.
+    # """
 
-    sniff_timeout: str | None = None
-    """
-    Timeout for sniffing.
+    # sniff_timeout: str | None = None
+    # """
+    # Timeout for sniffing.
 
-    300ms is used by default.
-    """
+    # 300ms is used by default.
+    # """
 
-    domain_strategy: DnsStrategy | None = None
-    """
-    One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
+    # domain_strategy: DnsStrategy | None = None
+    # """
+    # One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
 
-    If set, the requested domain name will be resolved to IP before routing.
+    # If set, the requested domain name will be resolved to IP before routing.
 
-    If `sniff_override_destination` is in effect, its value will be taken as a fallback.
-    """
+    # If `sniff_override_destination` is in effect, its value will be taken as a fallback.
+    # """
 
-    udp_disable_domain_unmapping: bool | None = None
-    """
-    If enabled, for UDP proxy requests addressed to a domain, the original
-    packet address will be sent in the response instead of the mapped domain.
+    # udp_disable_domain_unmapping: bool | None = None
+    # """
+    # If enabled, for UDP proxy requests addressed to a domain, the original
+    # packet address will be sent in the response instead of the mapped domain.
 
-    This option is used for compatibility with clients that do not support
-    receiving UDP packets with domain addresses, such as Surge.
-    """
+    # This option is used for compatibility with clients that do not support
+    # receiving UDP packets with domain addresses, such as Surge.
+    # """
 
 
 @define(slots=False)
@@ -372,9 +372,22 @@ class DialFieldsMixin:
     # | direct   | Domain in request        | Take inbound.domain_strategy if not set |
     # | others   | Domain in server address | /                                       |
     # """
+
     domain_resolver: BaseDnsServer | str | None = field(
         default=None, converter=lambda x: None if x is None else str(x)
     )
+    """
+    Set domain resolver to use for resolving domain names.
+
+    This option uses the same format as the [route DNS rule action](https://sing-box.sagernet.org/configuration/dns/rule_action/#route) without the `action` field.
+
+    Setting this option directly to a string is equivalent to setting `server` of this options.
+
+    | Outbound/Endpoints | Effected domains
+    | :----------------- | ---------------------------------------
+    | `direct`           | Domain in request
+    | others             | Domain in server address
+    """
 
     fallback_delay: str | None = None
     """

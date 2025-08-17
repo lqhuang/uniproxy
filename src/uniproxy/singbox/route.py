@@ -44,10 +44,30 @@ class RemoteRuleSet(BaseRuleSet):
     type: Literal["remote"] = "remote"
 
 
+#
+# Route Rule
+#
+
+type FinalActionType = Literal["route", "reject", "hijack-dns"]
+type NonFinalActionType = Literal["route-options", "sniff", "resolve"]
+type RuleActionType = FinalActionType | NonFinalActionType
+
+
+class BaseRule(AbstractSingBox): ...
+
+
+class BaseFinalActionRule(BaseRule): ...
+
+
+class BaseNonFinalActionRule(BaseRule): ...
+
+
+class RouteOptionFields: ...
+
+
 @define
-class Rule(AbstractSingBox):
-    outbound: BaseOutbound | str | None = None
-    action: Literal["route", "reject", "hijack-dns", "sniff", "resolve"] | None = None
+class RouteRule(BaseFinalActionRule):
+    outbound: BaseOutbound | str
 
     # only for action=reject
     method: Literal["default", "drop"] | None = None
@@ -78,14 +98,10 @@ class Rule(AbstractSingBox):
     rule_set_ip_cidr_match_source: bool | None = None
     invert: bool | None = None
 
-    def __attrs_post_init__(self) -> None:
-        if self.action == "route" and self.outbound is None:
-            raise ValueError(
-                "Outbound must be set when action is 'route'. Use 'reject' or 'hijack-dns' if you don't want to route."
-            )
+    action: Literal["route"] = "route"
 
     @classmethod
-    def from_uniproxy(cls, rule: BaseBasicRule | BaseGroupRule) -> Rule:
+    def from_uniproxy(cls, rule: BaseBasicRule | BaseGroupRule) -> RouteRule:
         if not isinstance(rule, (BaseBasicRule, BaseGroupRule)):
             raise ValueError(f"Expected UniproxyBasicRule, got {type(rule)}")
 
@@ -130,15 +146,118 @@ class Rule(AbstractSingBox):
 
 
 @define
+class RejectRule(BaseFinalActionRule):
+    """
+    https://sing-box.sagernet.org/configuration/route/rule_action/#reject
+
+    ```json
+    {
+        "action": "reject",
+        "method": "default", // default
+        "no_drop": false
+    }
+    ```
+
+    Action `reject` rejects connections
+
+    The specified method is used for reject tun connections if `sniff` action has not been performed yet.
+
+    For non-tun connections and already established connections, will just be closed.
+    """
+
+    method: Literal["default", "drop"] | None = None
+    """
+    - `default`: Reply with TCP RST for TCP connections, and ICMP port unreachable for UDP packets.
+    - `drop`: Drop packets.
+
+    `default` by default
+    """
+
+    no_drop: bool | None = None
+    """
+    If not enabled, `method` will be temporarily overwritten to `drop` after 50 triggers in 30s.
+
+    Not available when `method` is set to drop.
+    """
+
+    action: Literal["reject"] = "reject"
+
+
+@define
+class HijackDnsRule(BaseFinalActionRule):
+    """
+    https://sing-box.sagernet.org/configuration/route/rule_action/#hijack-dns
+
+    ```json
+    {
+      "action": "hijack-dns"
+    }
+    ```
+    """
+
+    protocol: Literal["dns"] = "dns"
+    action: Literal["hijack-dns"] = "hijack-dns"
+
+
+@define
+class SniffRule(BaseNonFinalActionRule):
+    """
+    Example
+    =======
+
+    ```json
+    {
+        "action": "sniff",
+        "sniffer": [],
+        "timeout": ""
+    }
+    ```
+
+    `sniff` performs protocol sniffing on connections.
+
+    For deprecated `inbound.sniff` options, it is considered to `sniff()` performed before routing.
+
+    Ref
+    ===
+
+    - https://sing-box.sagernet.org/configuration/route/rule_action/#sniff
+    """
+
+    sniffer: Sequence[SniffProtocol] | None = None
+    """
+    Enabled sniffers.
+
+    All sniffers enabled by default.
+
+    Available protocol values an be found on in [[Protocol Sniff]]
+    """
+
+    timeout: str | None = None
+    """
+    Timeout for sniffing.
+
+    `300ms` is used by default.
+    """
+
+    action: Literal["sniff"] = "sniff"
+
+
+type Rule = RouteRule | RejectRule | HijackDnsRule | SniffRule
+
+
+@define
 class Route(AbstractSingBox):
     rules: Sequence[Rule]
-    """List of [[Route Rule]]"""
+    """List of [[Rule]]"""
+
     rule_set: Sequence[BaseRuleSet] | None = None
     """List of [[rule-set]]"""
+
     final: str | BaseOutbound | None = field(
         default=None, converter=lambda x: str(x) if x is not None else None
     )
     """Default outbound tag. the first outbound will be used if empty."""
+
     auto_detect_interface: bool | None = None
     """
     > [!WARN] Only supported on Linux, Windows and macOS.
@@ -147,12 +266,14 @@ class Route(AbstractSingBox):
 
     Takes no effect if `outbound.bind_interface` is set.
     """
+
     override_android_vpn: bool | None = None
     """
     > [!WARN] Only supported on Android.
 
     Accept Android VPN as upstream NIC when `auto_detect_interface` enabled.
     """
+
     default_interface: str | None = None
     """
     > [!WARN] Only supported on Linux, Windows and macOS.
@@ -161,6 +282,7 @@ class Route(AbstractSingBox):
 
     Takes no effect if `auto_detect_interface` is set.
     """
+
     default_mark: int | None = None
     """
     > [!WARN] Only supported on Linux.
@@ -169,6 +291,7 @@ class Route(AbstractSingBox):
 
     Takes no effect if `outbound.routing_mark` is set.
     """
+
     default_domain_resolver: str | BaseDnsServer | None = field(
         default=None, converter=lambda x: str(x) if x is not None else None
     )

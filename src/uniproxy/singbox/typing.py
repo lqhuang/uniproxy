@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Literal, Mapping, Protocol
 from uniproxy.typing import AlpnType, ServerAddress
 
-SingBoxNetwork = Literal["tcp", "udp", None]
-LogLevel = Literal["trace", "debug", "info", "warn", "error", "fatal", "panic"]
+type SingBoxNetwork = Literal["tcp", "udp"]
+type LogLevel = Literal["trace", "debug", "info", "warn", "error", "fatal", "panic"]
 
-TunStack = Literal["system", "gvisor", "mixed"]
-InboundType = Literal[
+type TunStack = Literal["system", "gvisor", "mixed"]
+type InboundType = Literal[
     "direct",
     "mixed",
     "socks",
@@ -25,7 +25,7 @@ InboundType = Literal[
     "redirect",
     "tproxy",
 ]
-ProtocolOutboundType = Literal[
+type ProtocolOutboundType = Literal[
     "direct",
     "block",
     "socks",
@@ -43,13 +43,13 @@ ProtocolOutboundType = Literal[
     "ssh",
     "dns",
 ]
-GroupOutboundType = Literal["selector", "urltest"]
-OutboundType = ProtocolOutboundType | GroupOutboundType
+type GroupOutboundType = Literal["selector", "urltest"]
+type OutboundType = ProtocolOutboundType | GroupOutboundType
 
-TLSVersion = Literal["1.0", "1.1", "1.2", "1.3"]
+type TLSVersion = Literal["1.0", "1.1", "1.2", "1.3"]
 
 # DNS
-DnsReturnCode = Literal[
+type DnsReturnCode = Literal[
     "rcode://success",
     "rcode://format_error",
     "rcode://server_failure",
@@ -57,14 +57,28 @@ DnsReturnCode = Literal[
     "rcode://not_implemented",
     "rcode://refused",
 ]
-DnsStrategy = Literal["prefer_ipv4", "prefer_ipv6", "ipv4_only", "ipv6_only"]
+type DnsStrategy = Literal["prefer_ipv4", "prefer_ipv6", "ipv4_only", "ipv6_only"]
 
 # Shared
-SniffProtocol = Literal["http", "tls", "quic", "stun", "dns", "bittorrent", "dtls"]
-TransportType = Literal["http", "ws", "quic", "grpc", "httpupgrade"]
+SNIFF_PROTOCOLS = {
+    "http",
+    "tls",
+    "quic",
+    "stun",
+    "dns",
+    "bittorrent",
+    "dtls",
+    "ssh",
+    "rdp",
+    "ntp",
+}
+type SniffProtocol = Literal[
+    "http", "tls", "quic", "stun", "dns", "bittorrent", "dtls", "ssh", "rdp", "ntp"
+]
+type TransportType = Literal["http", "ws", "quic", "grpc", "httpupgrade"]
 
 # Route
-RuleSetType = Literal["local", "remote"]
+type RuleSetType = Literal["local", "remote"]
 
 
 class Fallback(Protocol):
@@ -72,4 +86,4 @@ class Fallback(Protocol):
     server_port: int
 
 
-FallbackAlpn = Mapping[AlpnType, Fallback]
+type FallbackAlpn = Mapping[AlpnType, Fallback]

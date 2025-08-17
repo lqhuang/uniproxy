@@ -85,6 +85,6 @@ class BaseRuleProvider(AbstractSurge):
         return str(self.name)
 
 
-ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str
-RuleProviderLike = BaseRuleProvider | str
-RuleLike = BaseRule | str
+type ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str
+type RuleProviderLike = BaseRuleProvider | str
+type RuleLike = BaseRule | str
