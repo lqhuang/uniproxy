@@ -2,15 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Literal, Mapping, Sequence, cast
 from uniproxy.typing import (
-    ALPN,
+    AlpnType,
     IPAddress,
     IPv4Address,
     IPv6Address,
-    NetworkCIDR,
     ProtocolType,
     ShadowsocksCipher,
     VmessCipher,
-    VmessTransport,
+    VmessTransportType,
 )
 
 from attrs import define, field
@@ -182,7 +181,7 @@ class TrojanProtocol(ClashProtocol):
     password: str
     sni: str | None = None
     skip_cert_verify: bool | None = None
-    alpn: Sequence[ALPN] | None = None
+    alpn: Sequence[AlpnType] | None = None
 
     udp: bool | None = None
 
@@ -285,7 +284,7 @@ class VmessProtocol(ClashProtocol):
     overwrite the server name defined in 'ws-opts'/'h2-opts'
     """
 
-    network: VmessTransport | None = None
+    network: VmessTransportType | None = None
     ws_opts: VmessWsTransport | None = None
     h2_opts: VmessH2Transport | None = None
 

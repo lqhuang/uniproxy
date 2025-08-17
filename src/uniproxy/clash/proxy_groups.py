@@ -5,10 +5,10 @@ from uniproxy.typing import GroupType
 
 from attrs import define
 
+from uniproxy.proxy_groups import BaseProxyGroup
 from uniproxy.proxy_groups import FallBackGroup as UniproxyFallBackGroup
 from uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
 from uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
-from uniproxy.proxy_groups import UniproxyProxyGroup
 from uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 from uniproxy.utils import maybe_map_to_str
 
@@ -21,7 +21,7 @@ class ClashProxyGroup(BaseProxyGroup):
     def from_uniproxy(cls, protocol, **kwargs) -> ClashProxyGroup:
         raise NotImplementedError
 
-    def to_uniproxy(self, **kwargs) -> UniproxyProxyGroup:
+    def to_uniproxy(self, **kwargs) -> BaseProxyGroup:
         return self.to_uniproxy()
 
 
@@ -108,7 +108,7 @@ _CLASH_MAPPER: Mapping[GroupType, type[ClashProxyGroup]] = {
 
 
 def make_proxy_group_from_uniproxy(
-    proxy_group: UniproxyProxyGroup, **kwargs
+    proxy_group: BaseProxyGroup, **kwargs
 ) -> ClashProxyGroup:
     try:
         return _CLASH_MAPPER[proxy_group.type].from_uniproxy(proxy_group, **kwargs)

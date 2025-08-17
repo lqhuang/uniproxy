@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal, Sequence
-from uniproxy.typing import ALPN, ServerAddress
+from uniproxy.typing import AlpnType, ServerAddress
 
 from ipaddress import IPv4Address, IPv6Address
 from os import PathLike
@@ -144,7 +144,7 @@ class BaseTLS(AbstractSingBox):
     It is also included in the client's handshake to support virtual hosting unless it is an IP address.
     """
 
-    alpn: Sequence[ALPN] | None = None
+    alpn: Sequence[AlpnType] | None = None
     """
     List of supported application level protocols, in order of preference.
 

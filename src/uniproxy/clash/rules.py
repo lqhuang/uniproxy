@@ -6,13 +6,13 @@ from uniproxy.typing import BasicRuleType
 from attrs import define
 
 from uniproxy.rules import (
+    BaseBasicRule,
+    BaseGroupRule,
     DomainGroupRule,
     DomainKeywordGroupRule,
     DomainSuffixGroupRule,
     IPCidr6GroupRule,
     IPCidrGroupRule,
-    UniproxyBasicRule,
-    UniproxyGroupRule,
 )
 from uniproxy.utils import to_name
 
@@ -235,12 +235,12 @@ _CLASH_MAPPER: Mapping[BasicRuleType, type[ClashRule]] = {
 
 
 def make_rules_from_uniproxy(
-    rule: UniproxyBasicRule | UniproxyGroupRule,
+    rule: BaseBasicRule | BaseGroupRule,
 ) -> tuple[ClashRule, ...]:
     policy = to_name(rule.policy)
 
     match rule:
-        case UniproxyBasicRule(matcher=matcher, type=typ):
+        case BaseBasicRule(matcher=matcher, type=typ):
             if typ == "ip-asn":
                 raise NotImplementedError(
                     "`ip-asn` rule type not implemented yet for Clash"

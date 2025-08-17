@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Literal, Mapping, Sequence, cast
-from uniproxy.typing import ALPN, IPAddress, ShadowsocksCipher, VmessCipher
+from uniproxy.typing import AlpnType, IPAddress, ShadowsocksCipher, VmessCipher
 from uniproxy.typing import ProtocolType as UniproxyProtocolType
 
 from ipaddress import IPv4Address, IPv6Address
@@ -387,7 +387,7 @@ class TuicProtocol(SurgeProtocol):
     """
 
     token: str
-    alpn: ALPN | None = None
+    alpn: AlpnType | None = None
 
     tls: SurgeTLS | None = None
     udp_relay: bool | None = True

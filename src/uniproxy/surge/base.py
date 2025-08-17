@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Sequence
 from uniproxy.typing import ServerAddress
 
 from attrs import define
@@ -69,23 +69,10 @@ class BaseRule(AbstractSurge): ...
 class BaseBasicRule(BaseRule):
     matcher: RuleProviderLike
     policy: ProtocolLike
-    type: str
+    # type: str
 
     def __str__(self) -> str:
-        return f"{self.type.upper()},{self.matcher},{self.policy}"
-
-
-@define
-class FinalRule(BaseRule):
-    policy: ProtocolLike
-    dns_failed: bool | None = None
-    type: Literal["final"] = "final"
-
-    def __str__(self) -> str:
-        if self.dns_failed:
-            return f"{self.type.upper()},{self.policy},dns-failed"
-        else:
-            return f"{self.type.upper()},{self.policy}"
+        return f"{self.type.upper()},{self.matcher},{self.policy}"  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @define
@@ -100,3 +87,4 @@ class BaseRuleProvider(AbstractSurge):
 
 ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str
 RuleProviderLike = BaseRuleProvider | str
+RuleLike = BaseRule | str

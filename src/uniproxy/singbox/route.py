@@ -6,6 +6,8 @@ from attrs import define, field
 
 from uniproxy.abc import AbstractSingBox
 from uniproxy.rules import (
+    BaseBasicRule,
+    BaseGroupRule,
     DomainGroupRule,
     DomainKeywordGroupRule,
     DomainKeywordRule,
@@ -19,8 +21,6 @@ from uniproxy.rules import (
     IPCidrGroupRule,
     IPCidrRule,
     RuleSetRule,
-    UniproxyBasicRule,
-    UniproxyGroupRule,
 )
 from uniproxy.utils import maybe_flatmap_to_tag
 
@@ -85,8 +85,8 @@ class Rule(AbstractSingBox):
             )
 
     @classmethod
-    def from_uniproxy(cls, rule: UniproxyBasicRule | UniproxyGroupRule) -> Rule:
-        if not isinstance(rule, (UniproxyBasicRule, UniproxyGroupRule)):
+    def from_uniproxy(cls, rule: BaseBasicRule | BaseGroupRule) -> Rule:
+        if not isinstance(rule, (BaseBasicRule, BaseGroupRule)):
             raise ValueError(f"Expected UniproxyBasicRule, got {type(rule)}")
 
         match rule:

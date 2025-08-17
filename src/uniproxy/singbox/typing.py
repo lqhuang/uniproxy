@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal, Mapping, Protocol
-from uniproxy.typing import ALPN, ServerAddress
+from uniproxy.typing import AlpnType, ServerAddress
 
 SingBoxNetwork = Literal["tcp", "udp", None]
 LogLevel = Literal["trace", "debug", "info", "warn", "error", "fatal", "panic"]
@@ -72,4 +72,4 @@ class Fallback(Protocol):
     server_port: int
 
 
-FallbackAlpn = Mapping[ALPN, Fallback]
+FallbackAlpn = Mapping[AlpnType, Fallback]

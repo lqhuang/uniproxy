@@ -7,20 +7,19 @@ from uniproxy.typing import (
     ProtocolType,
     ShadowsocksCipher,
     VmessCipher,
-    VmessTransport,
 )
 
 from ipaddress import IPv4Address
 
 from attrs import define
 
-from uniproxy.base import BaseProtocol as UniproxyProtocol
+from uniproxy.base import BaseProtocol
 from uniproxy.shared import TLS
 from uniproxy.uri import parse_ss_uri
 
 
 @define
-class HttpProtocol(UniproxyProtocol):
+class HttpProtocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
     tls: TLS | None = None
@@ -29,7 +28,7 @@ class HttpProtocol(UniproxyProtocol):
 
 
 @define
-class QuicProtocol(UniproxyProtocol):
+class QuicProtocol(BaseProtocol):
     username: str
     password: str
     tls: TLS
@@ -38,7 +37,7 @@ class QuicProtocol(UniproxyProtocol):
 
 
 @define
-class Socks5Protocol(UniproxyProtocol):
+class Socks5Protocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
     tls: TLS | None = None
@@ -81,7 +80,7 @@ class ShadowsocksV2RayPlugin:
 
 
 @define
-class ShadowsocksProtocol(UniproxyProtocol):
+class ShadowsocksProtocol(BaseProtocol):
     password: str
     method: ShadowsocksCipher
     network: Network = "tcp_and_udp"
@@ -112,7 +111,7 @@ class ShadowsocksLocal(ShadowsocksProtocol): ...
 
 
 @define
-class TrojanProtocol(UniproxyProtocol):
+class TrojanProtocol(BaseProtocol):
     password: str
     tls: TLS | None = None
     network: Network = "tcp_and_udp"
@@ -121,7 +120,7 @@ class TrojanProtocol(UniproxyProtocol):
 
 
 @define
-class TuicProtocol(UniproxyProtocol):
+class TuicProtocol(BaseProtocol):
     token: str
     tls: TLS
 
@@ -154,7 +153,7 @@ class TuicProtocol(UniproxyProtocol):
 
 
 @define
-class NaiveProtocol(UniproxyProtocol):
+class NaiveProtocol(BaseProtocol):
     username: str
     password: str
     proto: Literal["http2", "quic"]
@@ -164,12 +163,11 @@ class NaiveProtocol(UniproxyProtocol):
 
 @define
 class BaseVmessTransport:
-    type: VmessTransport
+    path: str | None
 
 
 @define
 class VmessWsTransport:
-    path: str | None
     headers: dict[str, str] | None = None
     max_early_data: int | None = None
     early_data_header_name: str | None = None
@@ -179,13 +177,15 @@ class VmessWsTransport:
 
 @define
 class VmessH2Transport(BaseVmessTransport):
-    path: str | None
     headers: dict[str, str] | None = None
     type: Literal["h2"] = "h2"
 
 
+type VmessTransport = VmessWsTransport | VmessH2Transport
+
+
 @define
-class VmessProtocol(UniproxyProtocol):
+class VmessProtocol(BaseProtocol):
     uuid: str
     alter_id: int = 0
     security: VmessCipher = "auto"
@@ -197,7 +197,7 @@ class VmessProtocol(UniproxyProtocol):
 
 
 @define
-class WireGuardProtocol(UniproxyProtocol):
+class WireGuardProtocol(BaseProtocol):
     private_key: str
     peer: WireGuardPeer
     address: IPv4Address | IPv4Address | str | None = None
@@ -211,3 +211,16 @@ class WireGuardPeer:
     pre_shared_key: str | None = None
     allowed_ips: Sequence[NetworkCIDR] = ["0.0.0.0/0", "::/0"]
     persistent_keepalive: int | None = None
+
+
+type UniproxyProtocol = (
+    HttpProtocol
+    | QuicProtocol
+    | Socks5Protocol
+    | ShadowsocksProtocol
+    | TrojanProtocol
+    | TuicProtocol
+    | NaiveProtocol
+    | VmessProtocol
+    | WireGuardProtocol
+)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Sequence
-from uniproxy.typing import ALPN
+from uniproxy.typing import AlpnType
 
 from os import PathLike
 
@@ -13,7 +13,7 @@ class TLS:
     server_name: str | None = None
     sni: bool | None = None
     # https://github.com/quicwg/base-drafts/wiki/ALPN-IDs-used-with-QUIC
-    alpn: Sequence[ALPN] | None = None
+    alpn: Sequence[AlpnType] | None = None
     verify: bool = True
     cert_ca: Sequence[str] | PathLike | None = None
     cert_private_key: Sequence[str] | PathLike | None = None

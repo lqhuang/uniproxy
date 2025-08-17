@@ -1,14 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal, Sequence
-from uniproxy.typing import (
-    BasicRuleType,
-    GroupRuleType,
-    GroupType,
-    Network,
-    ProtocolType,
-    ServerAddress,
-)
+from uniproxy.typing import GroupType, Network, ServerAddress
 
 from attrs import define
 
@@ -20,9 +13,9 @@ from uniproxy.abc import AbstractUniproxy
 @define
 class BaseProtocol(AbstractUniproxy):
     name: str
-    type: ProtocolType
     server: ServerAddress
     port: int
+    # type: ProtocolType
 
     def __str__(self) -> str:
         return str(self.name)
@@ -31,7 +24,6 @@ class BaseProtocol(AbstractUniproxy):
 @define
 class BaseProxyGroup(AbstractUniproxy):
     name: str
-    type: GroupType
     proxies: Sequence[ProtocolLike] | None = None
     providers: Sequence[ProxyProviderLike] | None = None
     network: Network | None = "tcp_and_udp"
@@ -45,6 +37,8 @@ class BaseProxyGroup(AbstractUniproxy):
 
     # TODO: update to `HealthCheck` class
     health_check: bool | None = None
+
+    # type: GroupType
 
     def __str__(self) -> str:
         return str(self.name)
@@ -69,20 +63,12 @@ class BaseRule(AbstractUniproxy): ...
 class BaseBasicRule(BaseRule):
     matcher: RuleProviderLike
     policy: ProtocolLike
-    type: BasicRuleType
-
-
-@define
-class FinalRule(BaseRule):
-    policy: ProtocolLike
-    type: Literal["final"] = "final"
 
 
 @define
 class BaseGroupRule(BaseRule):
     matcher: Sequence[RuleProviderLike]
     policy: ProtocolLike
-    type: GroupRuleType
 
 
 @define
@@ -95,4 +81,4 @@ class BaseRuleProvider(AbstractUniproxy):
 
 ProtocolLike = BaseProtocol | BaseProxyGroup | str
 ProxyProviderLike = BaseProxyProvider | str
-RuleProviderLike = str | BaseRuleProvider
+RuleProviderLike = BaseRuleProvider | str

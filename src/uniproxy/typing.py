@@ -4,14 +4,14 @@ from typing import Literal
 
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 
-Backend = Literal["surge", "clash", "sing-box"]
+type Backend = Literal["surge", "clash", "sing-box"]
 
-ServerAddress = str | IPv4Address | IPv6Address
-IPAddress = str | IPv4Address | IPv6Address
-NetworkCIDR = str | IPv4Network | IPv6Network
+type ServerAddress = str | IPv4Address | IPv6Address
+type IPAddress = str | IPv4Address | IPv6Address
+type NetworkCIDR = str | IPv4Network | IPv6Network
 
 
-ProtocolType = Literal[
+type ProtocolType = Literal[
     "http",
     "https",
     "http2",
@@ -27,10 +27,10 @@ ProtocolType = Literal[
     "tuic",
     "wireguard",
 ]
-Network = Literal["tcp", "udp", "tcp_and_udp"]
+type Network = Literal["tcp", "udp", "tcp_and_udp"]
 
 
-ShadowsocksCipher = Literal[
+type ShadowsocksCipher = Literal[
     "aes-128-gcm",
     "aes-256-gcm",
     "chacha20-ietf-poly1305",
@@ -39,15 +39,15 @@ ShadowsocksCipher = Literal[
     "2022-blake3-chacha20-poly1305",
     "2022-blake3-chacha8-poly1305",
 ]
-VmessCipher = Literal["none", "auto", "zero", "aes-128-gcm", "chacha20-poly1305"]
-VmessTransport = Literal["http", "ws", "grpc", "h2"]
+type VmessCipher = Literal["none", "auto", "zero", "aes-128-gcm", "chacha20-poly1305"]
+type VmessTransportType = Literal["http", "ws", "grpc", "h2"]
 
 
-GroupType = Literal[
+type GroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet"
 ]
 
-BasicRuleType = Literal[
+type BasicRuleType = Literal[
     # Domain-based Rule
     "domain",
     "domain-suffix",
@@ -81,9 +81,8 @@ BasicRuleType = Literal[
     "rule-set",
     "domain-set",
     # Final Rule
-    # "final",
 ]
-GroupRuleType = Literal[
+type GroupRuleType = Literal[
     # Group Rule
     "domain-group",
     "domain-suffix-group",
@@ -91,6 +90,7 @@ GroupRuleType = Literal[
     "ip-cidr-group",
     "ip-cidr6-group",
 ]
+type FinalRuleType = Literal["final"]
 
 
-ALPN = Literal["http/1.1", "h2", "h3"]
+type AlpnType = Literal["http/1.1", "h2", "h3"]

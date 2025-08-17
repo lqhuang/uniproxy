@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 @define(slots=False)
 class BaseOutbound(AbstractSingBox):
     tag: str
-    type: OutboundType
+    # type: OutboundType
 
     def __str__(self) -> str:
         return str(self.tag)
@@ -33,7 +33,7 @@ class BaseInbound(AbstractSingBox):
     tag: str
     listen: str | None
     listen_port: int | None
-    type: InboundType
+    # type: InboundType
 
     def __str__(self) -> str:
         return str(self.tag)
@@ -42,7 +42,7 @@ class BaseInbound(AbstractSingBox):
 @define
 class BaseDnsServer(AbstractSingBox):
     tag: str
-    type: str
+    # type: str
 
     def __str__(self) -> str:
         return str(self.tag)
@@ -51,8 +51,8 @@ class BaseDnsServer(AbstractSingBox):
 @define
 class BaseRuleSet(AbstractSingBox):
     tag: str
-    type: RuleSetType
     format: Literal["binary", "source"]
+    # type: RuleSetType
 
     def __str__(self) -> str:
         return str(self.tag)

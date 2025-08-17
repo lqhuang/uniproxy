@@ -11,13 +11,10 @@ TAG_BLOCK_OUTBOUND = "REJECT"
 TAG_DROP_OUTBOUND = "REJECT-DROP"
 
 TAG_DNS_SERVER_SYSTEM = "dns-system"
-TAG_DNS_SERVER_ROUTER = "dns-router"
-
+TAG_DNS_SERVER_FAKEIP = "dns-fakeip"
 
 #### ------------- Snippets for DNS Servers ------------- ####
-dns_server_system = LocalDnsServer(
-    tag=TAG_DNS_SERVER_SYSTEM, detour=TAG_DIRECT_OUTBOUND
-)
+dns_server_system = LocalDnsServer(tag=TAG_DNS_SERVER_SYSTEM)
 # dns_server_reject = DnsServer(tag=TAG_DNSSERVER_REJECT, address="rcode://success")
 # dns_server_fakeip = DnsServer(tag=TAG_DNSSERVER_FAKEIP, address="fakeip")
 

@@ -51,7 +51,8 @@ class DNS(AbstractSingBox):
     reverse_mapping: bool | None = None
 
     # FakeIP settings.
-    fakeip: FakeIP | None = None
+    # @deprecated since 1.12.0, use `FakeIPDnsServer` instead.
+    # fakeip: FakeIP | None = None
 
     # > Since `sing-box`  1.9.0
     #
@@ -109,9 +110,6 @@ class LocalDnsServer(BaseDnsServer):
     ```
     """
 
-    detour: BaseOutbound | str | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
     type: Literal["local"] = "local"
 
 
@@ -212,7 +210,44 @@ class H3DnsServer(BaseDnsServer):
     type: Literal["h3"] = "h3"
 
 
-DnsRuleAction = Literal["route", "route-options", "reject", "predefined", "fakeip"]
+@define
+class FakeIPDnsServer(BaseDnsServer):
+    """
+    Ref: https://sing-box.sagernet.org/configuration/dns/server/fakeip/
+
+    ```json
+    {
+      "dns": {
+        "servers": [
+          {
+            "type": "fakeip",
+            "tag": "",
+
+            "inet4_range": "198.18.0.0/15",
+            "inet6_range": "fc00::/18"
+          }
+        ]
+      }
+    }
+    ```
+    """
+
+    inet4_range: str | None = None
+    inet6_range: str | None = None
+    type: Literal["fakeip"] = "fakeip"
+
+
+type DnsServer = (
+    LocalDnsServer
+    | UdpDnsServer
+    | HttpsDnsServer
+    | H3DnsServer
+    | FakeIPDnsServer
+    | LegacyDnsServer
+)
+
+
+type DnsRuleAction = Literal["route", "route-options", "reject", "predefined", "fakeip"]
 
 
 @define
@@ -250,22 +285,3 @@ class DnsRule(AbstractSingBox):
     rule_set_ip_cidr_match_source: bool | None = None
     rule_set_ip_cidr_accept_empty: bool | None = None
     invert: bool | None = None
-
-
-@define
-class FakeIP(AbstractSingBox):
-    """
-    Ref: https://sing-box.sagernet.org/configuration/dns/fakeip/
-
-    ```json
-    {
-      "enabled": true,
-      "inet4_range": "198.18.0.0/15",
-      "inet6_range": "fc00::/18"
-    }
-    ```
-    """
-
-    enabled: bool | None = None
-    inet4_range: str | None = None
-    inet6_range: str | None = None

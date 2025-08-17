@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence, cast
+from typing import Any, Literal, Mapping, Sequence, TypeGuard, cast
 from uniproxy.typing import (
     GroupType,
     IPAddress,
@@ -568,17 +568,60 @@ _SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, SingBoxGroupOutbound] = {  
 }
 
 
+def is_valid_protocol(proxy: Any) -> TypeGuard[UniproxyProtocol]:
+    """
+    Check if the protocol type is valid for SingBox.
+    """
+
+    return hasattr(proxy, "type") or proxy.type in _SINGBOX_REGISTERED_PROTOCOLS.keys()
+
+
+def is_valid_protocol_group(proxy: Any) -> TypeGuard[UniproxyProxyGroup]:
+    """
+    Check if the protocol type is valid for SingBox.
+    """
+
+    return (
+        hasattr(proxy, "type") or proxy.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys()
+    )
+
+
+def make_protocol_outbound_from_uniproxy(
+    protocol: UniproxyProtocol, **kwargs
+) -> SingBoxProtocolOutbound:
+    if is_valid_protocol(protocol):
+        # FIXME: type violation
+        return _SINGBOX_REGISTERED_PROTOCOLS[protocol.type].from_uniproxy(
+            protocol,  # type: ignore
+            **kwargs,
+        )
+    else:
+        raise ValueError(
+            f"Unsupported or not implemented protocol type {protocol.type}"
+        )
+
+
+def make_group_outbound_from_uniproxy(
+    protocol: UniproxyProxyGroup, **kwargs
+) -> SingBoxOutbound:
+    if protocol.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys():
+        return _SINGBOX_REGISTERED_PROXY_GROUPS[protocol.type].from_uniproxy(
+            protocol,  # type: ignore
+            **kwargs,
+        )
+    else:
+        raise ValueError(
+            f"Unsupported or not implemented protocol type {protocol.type}"
+        )
+
+
 def make_outbound_from_uniproxy(
     protocol: UniproxyProtocol | UniproxyProxyGroup, **kwargs
 ) -> SingBoxOutbound:
-    if protocol.type in _SINGBOX_REGISTERED_PROTOCOLS.keys():
-        return _SINGBOX_REGISTERED_PROTOCOLS[
-            cast(UniproxyProtocol, protocol).type
-        ].from_uniproxy(protocol, **kwargs)  # type: ignore
-    elif protocol.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys():
-        return _SINGBOX_REGISTERED_PROXY_GROUPS[
-            cast(UniproxyProxyGroup, protocol).type
-        ].from_uniproxy(protocol, **kwargs)  # type: ignore
+    if is_valid_protocol(protocol):
+        return make_protocol_outbound_from_uniproxy(protocol, **kwargs)
+    elif is_valid_protocol_group(protocol):
+        return make_group_outbound_from_uniproxy(protocol, **kwargs)
     else:
         raise ValueError(
             f"Unsupported or not implemented protocol type {protocol.type}"

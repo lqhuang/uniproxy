@@ -10,7 +10,6 @@ from attrs import define
 from uniproxy.proxy_groups import FallBackGroup as UniproxyFallBackGroup
 from uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
 from uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
-from uniproxy.proxy_groups import UniproxyProxyGroup
 from uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 
 from .base import BaseProxyGroup
@@ -141,7 +140,7 @@ _SURGE_MAPPER: Mapping[UniproxyGroupType, type[SurgeProxyGroup]] = {
 
 
 def make_proxy_group_from_uniproxy(
-    proxy_group: UniproxyProxyGroup, **kwargs
+    proxy_group: BaseProxyGroup, **kwargs
 ) -> SurgeProxyGroup:
     try:
         return _SURGE_MAPPER[proxy_group.type].from_uniproxy(proxy_group, **kwargs)
