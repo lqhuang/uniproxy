@@ -39,16 +39,15 @@ class BaseInbound(AbstractSingBox):
         return str(self.tag)
 
 
-@define
+@define(slots=False)
 class BaseDnsServer(AbstractSingBox):
     tag: str
-    # type: str
 
     def __str__(self) -> str:
         return str(self.tag)
 
 
-@define
+@define(slots=False)
 class BaseRuleSet(AbstractSingBox):
     tag: str
     format: Literal["binary", "source"]

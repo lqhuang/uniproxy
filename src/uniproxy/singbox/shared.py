@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Literal, Sequence, TypedDict
 from uniproxy.typing import AlpnType, ServerAddress
 
 from ipaddress import IPv4Address, IPv6Address
@@ -30,22 +30,20 @@ class ExternalAccount(AbstractSingBox):
 
 
 @define
-class DNS01Challenge(AbstractSingBox):
-    provider: Literal["cloudflare", "alidns"]
-
-
-@define
-class CloudflareDNS01Challenge(DNS01Challenge):
+class CloudflareDNS01Challenge(AbstractSingBox):
     api_token: str
     provider: Literal["cloudflare"] = "cloudflare"
 
 
 @define
-class AliDNS01Challenge(DNS01Challenge):
+class AliDNS01Challenge(AbstractSingBox):
     access_key_id: str
     access_key_secret: str
     region_id: str
     provider: Literal["alidns"] = "alidns"
+
+
+type DNS01Challenge = CloudflareDNS01Challenge | AliDNS01Challenge
 
 
 @define
@@ -132,7 +130,7 @@ class UTLS(AbstractSingBox):
     fingerprint: str | None = None
 
 
-@define
+@define(slots=False)
 class BaseTLS(AbstractSingBox):
     enabled: bool
     """Enable TLS."""
@@ -373,9 +371,7 @@ class DialFieldsMixin:
     # | others   | Domain in server address | /                                       |
     # """
 
-    domain_resolver: BaseDnsServer | str | None = field(
-        default=None, converter=lambda x: None if x is None else str(x)
-    )
+    domain_resolver: DomainResolver | DomainResolverMap | str | None = None
     """
     Set domain resolver to use for resolving domain names.
 
@@ -404,12 +400,14 @@ class DialFieldsMixin:
             raise ValueError("'detour' and 'bind_interface' are mutually exclusive.")
 
 
+@define(slots=False)
 class InboundMultiplex:
     enabled: bool | None = None
     padding: bool | None = None
     # brutal: dict | None = None
 
 
+@define(slots=False)
 class OutboundMultiplex:
     """
     ```json
@@ -465,7 +463,7 @@ class OutboundMultiplex:
     """See TCP Brutal for details."""
 
 
-@define
+@define(slots=False)
 class BaseTransport(AbstractSingBox):
     type: TransportType
 
@@ -503,3 +501,106 @@ class PlatformHttpProxy(AbstractSingBox):
 class Platform(AbstractSingBox):
     http_proxy: PlatformHttpProxy
     """System HTTP proxy settings."""
+
+
+@define
+class DomainResolver(AbstractSingBox):
+    """
+    Set domain resolver to use for resolving domain names.
+
+    This option uses the same format as the [route DNS rule action](https://sing-box.sagernet.org/configuration/dns/rule_action/#route) without the `action` field.
+
+    ```json
+    {
+        "server": "",
+        "strategy": "",
+        "disable_cache": false,
+        "rewrite_ttl": null,
+        "client_subnet": null
+    }
+    ```
+
+    Setting this option directly to a string is equivalent to setting `server` of this options.
+
+
+    | Outbound/Endpoints | Effected domains         |
+    | ------------------ | ------------------------ |
+    | `direct`           | Domain in request        |
+    | others             | Domain in server address |
+    """
+
+    server: BaseDnsServer | str = field(converter=str)
+    """Tag of target server."""
+
+    strategy: DnsStrategy | None = None
+    """
+    Set domain strategy for this query.
+
+    One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
+    """
+
+    disable_cache: bool | None = None
+    """Disable cache and save cache in this query."""
+
+    rewrite_ttl: bool | None = None
+    """Rewrite TTL in DNS responses."""
+
+    client_subnet: str | None = None
+    """
+    Append a `edns0-subnet` OPT extra record with the specified IP prefix to every query by default.
+
+    If value is an IP address instead of prefix, `/32` or `/128` will be appended automatically.
+
+    Will overrides `dns.client_subnet`.
+    """
+
+
+class DomainResolverMap(TypedDict):
+    """
+    Set domain resolver to use for resolving domain names.
+
+    This option uses the same format as the [route DNS rule action](https://sing-box.sagernet.org/configuration/dns/rule_action/#route) without the `action` field.
+
+    ```json
+    {
+        "server": "",
+        "strategy": "",
+        "disable_cache": false,
+        "rewrite_ttl": null,
+        "client_subnet": null
+    }
+    ```
+
+    Setting this option directly to a string is equivalent to setting `server` of this options.
+
+
+    | Outbound/Endpoints | Effected domains         |
+    | ------------------ | ------------------------ |
+    | `direct`           | Domain in request        |
+    | others             | Domain in server address |
+    """
+
+    server: str
+    """Tag of target server."""
+
+    strategy: DnsStrategy | None
+    """
+    Set domain strategy for this query.
+
+    One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
+    """
+
+    disable_cache: bool | None
+    """Disable cache and save cache in this query."""
+
+    rewrite_ttl: bool | None
+    """Rewrite TTL in DNS responses."""
+
+    client_subnet: str | None
+    """
+    Append a `edns0-subnet` OPT extra record with the specified IP prefix to every query by default.
+
+    If value is an IP address instead of prefix, `/32` or `/128` will be appended automatically.
+
+    Will overrides `dns.client_subnet`.
+    """

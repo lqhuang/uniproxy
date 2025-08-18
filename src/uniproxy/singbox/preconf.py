@@ -25,5 +25,5 @@ out_direct = DirectOutbound(tag=TAG_DIRECT_OUTBOUND)
 #### ------------- Snippets for Route rules ------------- ####
 # rule_dns = Rule(outbound=TAG_DNS_OUTBOUND, protocol="dns")
 # rule_dns_bypass = Rule(outbound=TAG_DIRECT_OUTBOUND, protocol="dns")  # bypass dns query
-rule_sniff = SniffRule(action="sniff")
+rule_sniff = SniffRule()
 rule_hijack_dns = HijackDnsRule()

@@ -9,6 +9,7 @@ from uniproxy.abc import AbstractSingBox
 
 from .base import BaseDnsServer, BaseInbound, BaseOutbound
 from .route import BaseRuleSet
+from .shared import DialFieldsMixin, OutboundTLS
 from .typing import DnsReturnCode, DnsStrategy, SniffProtocol
 
 
@@ -113,8 +114,14 @@ class LocalDnsServer(BaseDnsServer):
     type: Literal["local"] = "local"
 
 
+@define(slots=False)
+class BaseUdp(BaseDnsServer):
+    server: str
+    server_port: int | None = None
+
+
 @define
-class UdpDnsServer(BaseDnsServer):
+class UdpDnsServer(DialFieldsMixin, BaseUdp):
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/server/udp/
 
@@ -131,16 +138,80 @@ class UdpDnsServer(BaseDnsServer):
     ```
     """
 
-    server: str
-    server_port: int | None = None
-    detour: BaseOutbound | str | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
     type: Literal["udp"] = "udp"
 
 
+@define(slots=False)
+class BaseTls(BaseDnsServer):
+    server: str
+    server_port: int | None = None
+    tls: OutboundTLS | None = None
+
+
 @define
-class HttpsDnsServer(BaseDnsServer):
+class TlsDnsServer(DialFieldsMixin, BaseTls):
+    """
+    Ref: https://sing-box.sagernet.org/configuration/dns/server/udp/
+
+    ```json
+    {
+        "type": "udp",
+        "tag": "",
+
+        "server": "",
+        "server_port": 853,
+
+        "tls": {},
+
+        // Dial Fields
+    }
+    ```
+    """
+
+    type: Literal["tls"] = "tls"
+
+
+@define(slots=False)
+class BaseQuic(BaseDnsServer):
+    server: str
+    server_port: int | None = None
+    tls: OutboundTLS | None = None
+
+
+@define
+class QuicDnsServer(BaseDnsServer):
+    """
+    Ref: https://sing-box.sagernet.org/configuration/dns/server/quic/
+
+    ```json
+    {
+        "type": "quic",
+        "tag": "",
+
+        "server": "",
+        "server_port": 853,
+
+        "tls": {},
+
+        // Dial Fields
+    }
+    ```
+    """
+
+    type: Literal["quic"] = "quic"
+
+
+@define(slots=False)
+class BaseHttps(BaseDnsServer):
+    server: str
+    server_port: int | None = None
+    path: str | None = None
+    headers: dict[str, str] | None = None
+    tls: OutboundTLS | None = None
+
+
+@define
+class HttpsDnsServer(DialFieldsMixin, BaseHttps):
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/server/https/
 
@@ -162,19 +233,20 @@ class HttpsDnsServer(BaseDnsServer):
     ```
     """
 
+    type: Literal["https"] = "https"
+
+
+@define(slots=False)
+class BaseH3(BaseDnsServer):
     server: str
     server_port: int | None = None
     path: str | None = None
     headers: dict[str, str] | None = None
-    tls: dict[str, str] | None = None
-    detour: BaseOutbound | str | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
-    type: Literal["https"] = "https"
+    tls: OutboundTLS | None = None
 
 
 @define
-class H3DnsServer(BaseDnsServer):
+class H3DnsServer(DialFieldsMixin, BaseH3):
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/server/http3/
 
@@ -196,17 +268,6 @@ class H3DnsServer(BaseDnsServer):
     ```
     """
 
-    server: str
-    server_port: int | None = None
-    path: str | None = None
-    headers: dict[str, str] | None = None
-    tls: dict[str, str] | None = None
-    detour: BaseOutbound | str | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
-    domain_resolver: str | BaseDnsServer | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
     type: Literal["h3"] = "h3"
 
 
@@ -240,6 +301,8 @@ class FakeIPDnsServer(BaseDnsServer):
 type DnsServer = (
     LocalDnsServer
     | UdpDnsServer
+    | TlsDnsServer
+    | QuicDnsServer
     | HttpsDnsServer
     | H3DnsServer
     | FakeIPDnsServer
