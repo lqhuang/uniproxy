@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Sequence
 from uniproxy.typing import GroupType, Network, ServerAddress
 
 from attrs import define

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Union
 
 from attrs import define
 
@@ -158,41 +158,41 @@ class FinalRule(BaseRule):
     type: Literal["final"] = "final"
 
 
-type UniproxyBasicRule = (
-    DomainRule
-    | DomainGroupRule
-    | DomainSuffixRule
-    | DomainSuffixGroupRule
-    | DomainKeywordRule
-    | DomainKeywordGroupRule
-    | IPCidrRule
-    | IPCidrGroupRule
-    | IPCidr6Rule
-    | IPCidr6GroupRule
-    | GeoIPRule
-    | UserAgentRule
-    | UrlRegexRule
-    | ProcessNameRule
-    | AndRule
-    | OrRule
-    | NotRule
-    | SubnetRule
-    | DestPortRule
-    | SrcPortRule
-    | InPortRule
-    | SrcIPRule
-    | ProtocolRule
-    | ScriptRule
-    | CellularRadioRule
-    | DeviceNameRule
-    | DomainSetRule
-    | RuleSetRule
-)
-type UniproxyGroupRule = (
-    DomainGroupRule
-    | DomainSuffixGroupRule
-    | DomainKeywordGroupRule
-    | IPCidrGroupRule
-    | IPCidr6GroupRule
-)
-type UniproxyRule = UniproxyBasicRule | UniproxyGroupRule | FinalRule
+UniproxyBasicRule = Union[
+    DomainRule,
+    DomainGroupRule,
+    DomainSuffixRule,
+    DomainSuffixGroupRule,
+    DomainKeywordRule,
+    DomainKeywordGroupRule,
+    IPCidrRule,
+    IPCidrGroupRule,
+    IPCidr6Rule,
+    IPCidr6GroupRule,
+    GeoIPRule,
+    UserAgentRule,
+    UrlRegexRule,
+    ProcessNameRule,
+    AndRule,
+    OrRule,
+    NotRule,
+    SubnetRule,
+    DestPortRule,
+    SrcPortRule,
+    InPortRule,
+    SrcIPRule,
+    ProtocolRule,
+    ScriptRule,
+    CellularRadioRule,
+    DeviceNameRule,
+    DomainSetRule,
+    RuleSetRule,
+]
+UniproxyGroupRule = Union[
+    DomainGroupRule,
+    DomainSuffixGroupRule,
+    DomainKeywordGroupRule,
+    IPCidrGroupRule,
+    IPCidr6GroupRule,
+]
+UniproxyRule = Union[UniproxyBasicRule, UniproxyGroupRule, FinalRule]

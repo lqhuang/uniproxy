@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence
+from typing import Literal, Mapping, Sequence, Union
 from uniproxy.typing import BasicRuleType
 
 from attrs import define, field
@@ -12,7 +12,6 @@ from uniproxy.rules import (
     DomainSuffixGroupRule,
     IPCidr6GroupRule,
     IPCidrGroupRule,
-    UniproxyBasicRule,
     UniproxyRule,
 )
 from uniproxy.utils import to_name
@@ -190,34 +189,34 @@ class FinalRule(BaseRule):
             return f"{self.type.upper()},{self.policy}"
 
 
-type _SurgeBasicRule = (
-    DomainRule
-    | DomainSuffixRule
-    | DomainKeywordRule
-    | IPCidrRule
-    | IPCidr6Rule
-    | GeoIPRule
-    | IPAsn
-    | UserAgentRule
-    | UrlRegexRule
-    | ProcessNameRule
-    | AndRule
-    | OrRule
-    | NotRule
-    | SubnetRule
-    | DestPortRule
-    | InPortRule
-    | SrcPortRule
-    | SrcIPRule
-    | ProtocolRule
-    | ScriptRule
-    | CellularRadioRule
-    | DeviceNameRule
-    | RuleSetRule
-    | DomainSetRule
-)
+_SurgeBasicRule = Union[
+    DomainRule,
+    DomainSuffixRule,
+    DomainKeywordRule,
+    IPCidrRule,
+    IPCidr6Rule,
+    GeoIPRule,
+    IPAsn,
+    UserAgentRule,
+    UrlRegexRule,
+    ProcessNameRule,
+    AndRule,
+    OrRule,
+    NotRule,
+    SubnetRule,
+    DestPortRule,
+    InPortRule,
+    SrcPortRule,
+    SrcIPRule,
+    ProtocolRule,
+    ScriptRule,
+    CellularRadioRule,
+    DeviceNameRule,
+    RuleSetRule,
+    DomainSetRule,
+]
 
-type SurgeRule = _SurgeBasicRule | FinalRule
+SurgeRule = Union[_SurgeBasicRule, FinalRule]
 
 _SURGE_MAPPER: Mapping[BasicRuleType, type[_SurgeBasicRule]] = {
     "domain": DomainRule,

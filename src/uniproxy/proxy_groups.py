@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Union
 
 from attrs import define
 
@@ -33,4 +33,4 @@ class LoadBalanceGroup(BaseProxyGroup):
     type: Literal["load-balance"] = "load-balance"
 
 
-type UniproxyProxyGroup = SelectGroup | UrlTestGroup | FallBackGroup | LoadBalanceGroup
+UniproxyProxyGroup = Union[SelectGroup, UrlTestGroup, FallBackGroup, LoadBalanceGroup]

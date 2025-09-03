@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Literal, Sequence, Union
 from uniproxy.typing import (
     Network,
     NetworkCIDR,
@@ -213,14 +213,14 @@ class WireGuardPeer:
     persistent_keepalive: int | None = None
 
 
-type UniproxyProtocol = (
-    HttpProtocol
-    | QuicProtocol
-    | Socks5Protocol
-    | ShadowsocksProtocol
-    | TrojanProtocol
-    | TuicProtocol
-    | NaiveProtocol
-    | VmessProtocol
-    | WireGuardProtocol
-)
+UniproxyProtocol = Union[
+    HttpProtocol,
+    QuicProtocol,
+    Socks5Protocol,
+    ShadowsocksProtocol,
+    TrojanProtocol,
+    TuicProtocol,
+    NaiveProtocol,
+    VmessProtocol,
+    WireGuardProtocol,
+]
