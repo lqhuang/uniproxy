@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Literal, Sequence, Union
 
 from attrs import define, field
 
@@ -21,6 +21,8 @@ from uniproxy.rules import (
     IPCidrGroupRule,
     IPCidrRule,
     RuleSetRule,
+    UniproxyBasicRule,
+    UniproxyGroupRule,
 )
 from uniproxy.utils import maybe_flatmap_to_tag
 
@@ -62,17 +64,8 @@ class BaseFinalActionRule(BaseRule): ...
 class BaseNonFinalActionRule(BaseRule): ...
 
 
-class RouteOptionFields: ...
-
-
-@define
-class RouteRule(BaseFinalActionRule):
-    outbound: BaseOutbound | str
-
-    # only for action=reject
-    method: Literal["default", "drop"] | None = None
-    no_drop: bool | None = None
-
+@define(slots=False)
+class RouteOptionFieldsMixin:
     inbound: Sequence[BaseInbound] | Sequence[str] | None = None
     ip_version: Literal["4", "6", None] = None
     auth_user: str | Sequence[str] | None = None
@@ -98,55 +91,37 @@ class RouteRule(BaseFinalActionRule):
     rule_set_ip_cidr_match_source: bool | None = None
     invert: bool | None = None
 
-    action: Literal["route"] = "route"
 
-    @classmethod
-    def from_uniproxy(cls, rule: BaseBasicRule | BaseGroupRule) -> RouteRule:
-        if not isinstance(rule, (BaseBasicRule, BaseGroupRule)):
-            raise ValueError(f"Expected UniproxyBasicRule, got {type(rule)}")
-
-        match rule:
-            case (
-                DomainRule(matcher=matcher, policy=policy)
-                | DomainGroupRule(matcher=matcher, policy=policy)
-            ):
-                return cls(outbound=str(policy), domain=matcher)  # type: ignore[reportArgumentType, arg-type]
-            case (
-                DomainSuffixRule(matcher=matcher, policy=policy)
-                | DomainSuffixGroupRule(matcher=matcher, policy=policy)
-            ):
-                return cls(outbound=str(policy), domain_suffix=matcher)  # type: ignore[reportArgumentType, arg-type]
-            case (
-                DomainKeywordRule(matcher=matcher, policy=policy)
-                | DomainKeywordGroupRule(matcher=matcher, policy=policy)
-            ):
-                return cls(outbound=str(policy), domain_keyword=matcher)  # type: ignore[reportArgumentType, arg-type]
-            case (
-                IPCidrRule(matcher=matcher, policy=policy)
-                | IPCidrGroupRule(matcher=matcher, policy=policy)
-                | IPCidr6Rule(matcher=matcher, policy=policy)
-                | IPCidr6GroupRule(matcher=matcher, policy=policy)
-            ):
-                return cls(outbound=str(policy), ip_cidr=matcher)  # type: ignore[reportArgumentType, arg-type]
-            case GeoIPRule(matcher=matcher, policy=policy):
-                # TODO: add extra opts to give a prefix or suffix
-                return cls(outbound=str(policy), rule_set=f"rs-geoip-{matcher}".lower())
-            case (
-                RuleSetRule(matcher, policy)
-                | DomainSetRule(matcher=matcher, policy=policy)
-            ):
-                matcher = str(matcher)
-                if matcher.startswith("http") and "://" in matcher:
-                    raise ValueError(
-                        f"Direct URL ({matcher}) is not supported currently while transforming from uniproxy external rule to sing-box rule"
-                    )
-                return cls(outbound=str(policy), rule_set=matcher)
-            case _:
-                raise ValueError(f"Unsupported rule type yet: {type(rule)}")
+@define(slots=False)
+class _RouteRule:
+    outbound: BaseOutbound | str | None
 
 
 @define
-class RejectRule(BaseFinalActionRule):
+class RouteRule(RouteOptionFieldsMixin, _RouteRule, BaseFinalActionRule):
+    action: Literal["route"] = "route"
+
+
+@define(slots=False)
+class _RejectRule:
+    method: Literal["default", "drop"] | None = None
+    """
+    - `default`: Reply with TCP RST for TCP connections, and ICMP port unreachable for UDP packets.
+    - `drop`: Drop packets.
+
+    `default` by default
+    """
+
+    no_drop: bool | None = None
+    """
+    If not enabled, `method` will be temporarily overwritten to `drop` after 50 triggers in 30s.
+
+    Not available when `method` is set to drop.
+    """
+
+
+@define
+class RejectRule(RouteOptionFieldsMixin, _RejectRule, BaseFinalActionRule):
     """
     https://sing-box.sagernet.org/configuration/route/rule_action/#reject
 
@@ -163,21 +138,6 @@ class RejectRule(BaseFinalActionRule):
     The specified method is used for reject tun connections if `sniff` action has not been performed yet.
 
     For non-tun connections and already established connections, will just be closed.
-    """
-
-    method: Literal["default", "drop"] | None = None
-    """
-    - `default`: Reply with TCP RST for TCP connections, and ICMP port unreachable for UDP packets.
-    - `drop`: Drop packets.
-
-    `default` by default
-    """
-
-    no_drop: bool | None = None
-    """
-    If not enabled, `method` will be temporarily overwritten to `drop` after 50 triggers in 30s.
-
-    Not available when `method` is set to drop.
     """
 
     action: Literal["reject"] = "reject"
@@ -242,7 +202,7 @@ class SniffRule(BaseNonFinalActionRule):
     action: Literal["sniff"] = "sniff"
 
 
-type Rule = RouteRule | RejectRule | HijackDnsRule | SniffRule
+Rule = Union[RouteRule, RejectRule, HijackDnsRule, SniffRule]
 
 
 @define
@@ -300,3 +260,48 @@ class Route(AbstractSingBox):
 
     Tag of target DNS server.
     """
+
+
+def route_rule_from_uniproxy(rule: UniproxyBasicRule | UniproxyGroupRule) -> RouteRule:
+    if not isinstance(rule, Union[UniproxyBasicRule, UniproxyGroupRule]):
+        raise ValueError(f"Expected type of Uniproxy Rules, got {type(rule)}")
+
+    match rule:
+        case (
+            DomainRule(matcher=matcher, policy=policy)
+            | DomainGroupRule(matcher=matcher, policy=policy)
+        ):
+            return RouteRule(outbound=str(policy), domain=matcher)  # type: ignore[reportArgumentType, arg-type]
+        case (
+            DomainSuffixRule(matcher=matcher, policy=policy)
+            | DomainSuffixGroupRule(matcher=matcher, policy=policy)
+        ):
+            return RouteRule(outbound=str(policy), domain_suffix=matcher)  # type: ignore[reportArgumentType, arg-type]
+        case (
+            DomainKeywordRule(matcher=matcher, policy=policy)
+            | DomainKeywordGroupRule(matcher=matcher, policy=policy)
+        ):
+            return RouteRule(outbound=str(policy), domain_keyword=matcher)  # type: ignore[reportArgumentType, arg-type]
+        case (
+            IPCidrRule(matcher=matcher, policy=policy)
+            | IPCidrGroupRule(matcher=matcher, policy=policy)
+            | IPCidr6Rule(matcher=matcher, policy=policy)
+            | IPCidr6GroupRule(matcher=matcher, policy=policy)
+        ):
+            return RouteRule(outbound=str(policy), ip_cidr=matcher)  # type: ignore[reportArgumentType, arg-type]
+        case GeoIPRule(matcher=matcher, policy=policy):
+            # TODO: add extra opts to give a prefix or suffix
+            return RouteRule(
+                outbound=str(policy), rule_set=f"rs-geoip-{matcher}".lower()
+            )
+        case (
+            RuleSetRule(matcher, policy) | DomainSetRule(matcher=matcher, policy=policy)
+        ):
+            matcher = str(matcher)
+            if matcher.startswith("http") and "://" in matcher:
+                raise ValueError(
+                    f"Direct URL ({matcher}) is not supported currently while transforming from uniproxy external rule to sing-box rule"
+                )
+            return RouteRule(outbound=str(policy), rule_set=matcher)
+        case _:
+            raise ValueError(f"Unsupported rule type yet: {type(rule)}")

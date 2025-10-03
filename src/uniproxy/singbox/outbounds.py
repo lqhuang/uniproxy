@@ -573,7 +573,7 @@ def is_valid_protocol(proxy: Any) -> TypeGuard[UniproxyProtocol]:
     Check if the protocol type is valid for SingBox.
     """
 
-    return hasattr(proxy, "type") or proxy.type in _SINGBOX_REGISTERED_PROTOCOLS.keys()
+    return hasattr(proxy, "type") and proxy.type in _SINGBOX_REGISTERED_PROTOCOLS.keys()
 
 
 def is_valid_protocol_group(proxy: Any) -> TypeGuard[UniproxyProxyGroup]:
@@ -582,18 +582,17 @@ def is_valid_protocol_group(proxy: Any) -> TypeGuard[UniproxyProxyGroup]:
     """
 
     return (
-        hasattr(proxy, "type") or proxy.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys()
+        hasattr(proxy, "type") and proxy.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys()
     )
 
 
-def make_protocol_outbound_from_uniproxy(
+def _make_protocol_outbound_from_uniproxy(
     protocol: UniproxyProtocol, **kwargs
 ) -> SingBoxProtocolOutbound:
     if is_valid_protocol(protocol):
         # FIXME: type violation
         return _SINGBOX_REGISTERED_PROTOCOLS[protocol.type].from_uniproxy(
-            protocol,  # type: ignore
-            **kwargs,
+            protocol, **kwargs
         )
     else:
         raise ValueError(
@@ -601,13 +600,12 @@ def make_protocol_outbound_from_uniproxy(
         )
 
 
-def make_group_outbound_from_uniproxy(
+def _make_group_outbound_from_uniproxy(
     protocol: UniproxyProxyGroup, **kwargs
 ) -> SingBoxOutbound:
     if protocol.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys():
         return _SINGBOX_REGISTERED_PROXY_GROUPS[protocol.type].from_uniproxy(
-            protocol,  # type: ignore
-            **kwargs,
+            protocol, **kwargs
         )
     else:
         raise ValueError(
@@ -619,9 +617,9 @@ def make_outbound_from_uniproxy(
     protocol: UniproxyProtocol | UniproxyProxyGroup, **kwargs
 ) -> SingBoxOutbound:
     if is_valid_protocol(protocol):
-        return make_protocol_outbound_from_uniproxy(protocol, **kwargs)
+        return _make_protocol_outbound_from_uniproxy(protocol, **kwargs)
     elif is_valid_protocol_group(protocol):
-        return make_group_outbound_from_uniproxy(protocol, **kwargs)
+        return _make_group_outbound_from_uniproxy(protocol, **kwargs)
     else:
         raise ValueError(
             f"Unsupported or not implemented protocol type {protocol.type}"
