@@ -371,7 +371,9 @@ class DialFieldsMixin:
     # | others   | Domain in server address | /                                       |
     # """
 
-    domain_resolver: DomainResolver | DomainResolverMap | str | None = None
+    domain_resolver: DomainResolver | DomainResolverMap | str | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
     """
     Set domain resolver to use for resolving domain names.
 

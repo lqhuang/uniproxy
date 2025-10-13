@@ -6,8 +6,6 @@ from attrs import define, field
 
 from uniproxy.abc import AbstractSingBox
 from uniproxy.rules import (
-    BaseBasicRule,
-    BaseGroupRule,
     DomainGroupRule,
     DomainKeywordGroupRule,
     DomainKeywordRule,
@@ -24,7 +22,7 @@ from uniproxy.rules import (
     UniproxyBasicRule,
     UniproxyGroupRule,
 )
-from uniproxy.utils import maybe_flatmap_to_tag
+from uniproxy.utils import maybe_flatmap_to_tag, str_or_map_to_str
 
 from .base import BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
 from .typing import SniffProtocol
@@ -262,9 +260,16 @@ class Route(AbstractSingBox):
     """
 
 
-def route_rule_from_uniproxy(rule: UniproxyBasicRule | UniproxyGroupRule) -> RouteRule:
+def route_rule_from_uniproxy(rule: UniproxyBasicRule | UniproxyGroupRule) -> Rule:
     if not isinstance(rule, Union[UniproxyBasicRule, UniproxyGroupRule]):
         raise ValueError(f"Expected type of Uniproxy Rules, got {type(rule)}")
+
+    if str(rule.policy).upper() == "REJECT":
+        return RejectRule(domain_suffix=str_or_map_to_str(rule.matcher))
+    elif str(rule.policy).upper() == "REJECT-DROP":
+        return RejectRule(domain_suffix=str_or_map_to_str(rule.matcher), method="drop")
+    else:
+        ...  # continue to pattern matching
 
     match rule:
         case (

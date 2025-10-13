@@ -73,3 +73,16 @@ def maybe_map_to_str(xs: Iterable[Any | str] | None) -> list[str] | None:
 
 def map_to_str(xs: Iterable[Any | str]) -> list[str]:
     return [str(each) for each in xs]
+
+
+def str_or_map_to_str(
+    xs: Any | str | Iterable[Any | str] | None,
+) -> str | list[str] | None:
+    if xs is None:
+        return None
+    elif isinstance(xs, str):  # str is also Iterable
+        return xs
+    elif isinstance(xs, Iterable):
+        return [str(each) for each in xs]
+    else:
+        return str(xs)  # fallback to Any

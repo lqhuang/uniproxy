@@ -8,8 +8,6 @@ from attrs import define
 
 from uniproxy.abc import AbstractSingBox
 
-from .typing import InboundType, OutboundType, RuleSetType
-
 if TYPE_CHECKING:
     from .outbounds import SingBoxOutbound
 
@@ -17,7 +15,7 @@ if TYPE_CHECKING:
 @define(slots=False)
 class BaseOutbound(AbstractSingBox):
     tag: str
-    # type: OutboundType
+    # type: str
 
     def __str__(self) -> str:
         return str(self.tag)
@@ -33,7 +31,7 @@ class BaseInbound(AbstractSingBox):
     tag: str
     listen: str | None
     listen_port: int | None
-    # type: InboundType
+    # type: str
 
     def __str__(self) -> str:
         return str(self.tag)
@@ -42,6 +40,7 @@ class BaseInbound(AbstractSingBox):
 @define(slots=False)
 class BaseDnsServer(AbstractSingBox):
     tag: str
+    # type: str
 
     def __str__(self) -> str:
         return str(self.tag)
@@ -51,7 +50,7 @@ class BaseDnsServer(AbstractSingBox):
 class BaseRuleSet(AbstractSingBox):
     tag: str
     format: Literal["binary", "source"]
-    # type: RuleSetType
+    # type: str
 
     def __str__(self) -> str:
         return str(self.tag)
