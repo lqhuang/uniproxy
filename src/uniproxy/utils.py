@@ -65,17 +65,7 @@ def maybe_flatmap_to_name(
         return to_name(xs)
 
 
-def maybe_map_to_str(xs: Iterable[Any | str] | None) -> list[str] | None:
-    if xs is None:
-        return None
-    return [str(each) for each in xs]
-
-
-def map_to_str(xs: Iterable[Any | str]) -> list[str]:
-    return [str(each) for each in xs]
-
-
-def str_or_map_to_str(
+def maybe_flatmap_to_str(
     xs: Any | str | Iterable[Any | str] | None,
 ) -> str | list[str] | None:
     if xs is None:
@@ -86,3 +76,17 @@ def str_or_map_to_str(
         return [str(each) for each in xs]
     else:
         return str(xs)  # fallback to Any
+
+
+def map_to_str(xs: Iterable[Any | str]) -> list[str]:
+    return [str(each) for each in xs]
+
+
+def maybe_map_to_str(xs: Iterable[Any | str] | None) -> list[str] | None:
+    if xs is None:
+        return None
+    return [str(each) for each in xs]
+
+
+def maybe_to_str(x: Any | str | None) -> str | None:
+    return str(x) if x is not None else None

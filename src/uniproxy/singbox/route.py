@@ -22,7 +22,7 @@ from uniproxy.rules import (
     UniproxyBasicRule,
     UniproxyGroupRule,
 )
-from uniproxy.utils import maybe_flatmap_to_tag, str_or_map_to_str
+from uniproxy.utils import maybe_flatmap_to_str, maybe_flatmap_to_tag, maybe_to_str
 
 from .base import BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
 from .typing import SniffProtocol
@@ -38,7 +38,9 @@ class LocalRuleSet(BaseRuleSet):
 @define
 class RemoteRuleSet(BaseRuleSet):
     url: str
-    download_detour: str | BaseOutbound | None = None
+    download_detour: BaseOutbound | str | None = field(
+        default=None, converter=maybe_to_str
+    )
     update_interval: float | None = None
 
     type: Literal["remote"] = "remote"
@@ -92,7 +94,7 @@ class RouteOptionFieldsMixin:
 
 @define(slots=False)
 class _RouteRule:
-    outbound: BaseOutbound | str | None
+    outbound: BaseOutbound | str | None = field(default=None, converter=maybe_to_str)
 
 
 @define
@@ -211,9 +213,7 @@ class Route(AbstractSingBox):
     rule_set: Sequence[BaseRuleSet] | None = None
     """List of [[rule-set]]"""
 
-    final: str | BaseOutbound | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
+    final: BaseOutbound | str | None = field(default=None, converter=maybe_to_str)
     """Default outbound tag. the first outbound will be used if empty."""
 
     auto_detect_interface: bool | None = None
@@ -250,8 +250,8 @@ class Route(AbstractSingBox):
     Takes no effect if `outbound.routing_mark` is set.
     """
 
-    default_domain_resolver: str | BaseDnsServer | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
+    default_domain_resolver: BaseDnsServer | str | None = field(
+        default=None, converter=maybe_to_str
     )
     """
     > [!NEW] Since sing-box 1.12.0
@@ -265,9 +265,11 @@ def route_rule_from_uniproxy(rule: UniproxyBasicRule | UniproxyGroupRule) -> Rul
         raise ValueError(f"Expected type of Uniproxy Rules, got {type(rule)}")
 
     if str(rule.policy).upper() == "REJECT":
-        return RejectRule(domain_suffix=str_or_map_to_str(rule.matcher))
+        return RejectRule(domain_suffix=maybe_flatmap_to_str(rule.matcher))
     elif str(rule.policy).upper() == "REJECT-DROP":
-        return RejectRule(domain_suffix=str_or_map_to_str(rule.matcher), method="drop")
+        return RejectRule(
+            domain_suffix=maybe_flatmap_to_str(rule.matcher), method="drop"
+        )
     else:
         ...  # continue to pattern matching
 

@@ -6,6 +6,7 @@ from uniproxy.typing import NetworkCIDR
 from attrs import define, field
 
 from uniproxy.abc import AbstractSingBox
+from uniproxy.utils import maybe_flatmap_to_str, maybe_to_str
 
 from .base import BaseDnsServer, BaseInbound, BaseOutbound
 from .route import BaseRuleSet
@@ -23,9 +24,7 @@ class DNS(AbstractSingBox):
     rules: Sequence[DnsRule] | None = None
 
     # Default dns server tag. The first server will be used if empty.
-    final: str | BaseDnsServer | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
+    final: str | BaseDnsServer | None = field(default=None, converter=maybe_to_str)
 
     # Default domain strategy for resolving the domain names.
     # One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
@@ -73,8 +72,8 @@ class LegacyDnsServer(BaseDnsServer):
     # Required if address contains domain
     #
     # Tag of a another server to resolve the domain name in the address.
-    address_resolver: str | BaseDnsServer | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
+    address_resolver: BaseDnsServer | str | None = field(
+        default=None, converter=maybe_to_str
     )
 
     # The domain strategy for resolving the domain name in the address.
@@ -90,9 +89,7 @@ class LegacyDnsServer(BaseDnsServer):
     # Tag of an outbound for connecting to the dns server.
     #
     # Default outbound will be used if empty.
-    detour: BaseOutbound | str | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
+    detour: BaseOutbound | str | None = field(default=None, converter=maybe_to_str)
 
     client_subnet: str | None = None
 
@@ -322,7 +319,9 @@ class DnsRule(AbstractSingBox):
 
     # outbound: Sequence[BaseOutbound] | Sequence[str] | Literal["any"] | None = None
 
-    inbound: Sequence[BaseInbound | str] | None = None
+    inbound: Sequence[BaseInbound | str] | None = field(
+        default=None, converter=maybe_flatmap_to_str
+    )
     ip_version: Literal["4", "6", None] = None
     auth_user: str | None = None
     protocol: SniffProtocol | None = None
@@ -340,10 +339,7 @@ class DnsRule(AbstractSingBox):
     port: Sequence[int] | None = None
     port_range: Sequence[str] | None = None
     rule_set: Sequence[str | BaseRuleSet] | str | BaseRuleSet | None = field(
-        # FIXME: `converter` requires reimplementation
-        # non iterable input is acceptable
-        default=None,
-        converter=lambda x: [str(i) for i in x] if x is not None else None,
+        default=None, converter=maybe_flatmap_to_str
     )
     rule_set_ip_cidr_match_source: bool | None = None
     rule_set_ip_cidr_accept_empty: bool | None = None

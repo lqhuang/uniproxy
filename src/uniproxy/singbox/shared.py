@@ -247,7 +247,9 @@ class ListenFieldsMixin:
     `5m` is used by default.
     """
 
-    detour: BaseInbound | str | None = None
+    detour: BaseInbound | str | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
     """
     If set, connections will be forwarded to the specified inbound.
 
@@ -318,7 +320,9 @@ class DialFieldsMixin:
     -udp_fragment
     -connect_timeout"""
 
-    detour: BaseOutbound | str | None = None
+    detour: BaseOutbound | str | None = field(
+        default=None, converter=lambda x: str(x) if x is not None else None
+    )
     """The tag of the upstream outbound."""
 
     bind_interface: str | None = None
