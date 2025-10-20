@@ -40,7 +40,7 @@ class BaseProxyProvider(AbstractSurge):
 class BaseProxyGroup(AbstractSurge):
     name: str
     proxies: Sequence[ProtocolLike | str]
-    type: SurgeGroupType
+    # type: SurgeGroupType
     # url: str = "http://www.gstatic.com/generate_204"
 
     @property

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping
+from typing import Literal, Mapping, Union
 from uniproxy.typing import GroupType as UniproxyGroupType
 
 from itertools import chain
@@ -10,6 +10,7 @@ from attrs import define
 from uniproxy.proxy_groups import FallBackGroup as UniproxyFallBackGroup
 from uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
 from uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
+from uniproxy.proxy_groups import UniproxyProxyGroup
 from uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 
 from .base import BaseProxyGroup
@@ -24,14 +25,7 @@ __all__ = [
 
 
 @define
-class SurgeProxyGroup(BaseProxyGroup):
-    @classmethod
-    def from_uniproxy(cls, proxy_group, **kwargs) -> SurgeProxyGroup:
-        raise NotImplementedError
-
-
-@define
-class SelectGroup(SurgeProxyGroup):
+class SelectGroup(BaseProxyGroup):
     type: Literal["select"] = "select"
 
     @classmethod
@@ -49,7 +43,7 @@ class SelectGroup(SurgeProxyGroup):
 
 
 @define
-class UrlTestGroup(SurgeProxyGroup):
+class UrlTestGroup(BaseProxyGroup):
     interval: float = 60  # seconds
     tolerance: float = 300  # milliseconds
     timeout: float = 5  # seconds
@@ -84,7 +78,7 @@ class UrlTestGroup(SurgeProxyGroup):
 
 
 @define
-class FallBackGroup(SurgeProxyGroup):
+class FallBackGroup(BaseProxyGroup):
     interval: float = 120  # milliseconds
     timeout: float = 5  # seconds
 
@@ -109,7 +103,7 @@ class FallBackGroup(SurgeProxyGroup):
 
 
 @define
-class LoadBalanceGroup(SurgeProxyGroup):
+class LoadBalanceGroup(BaseProxyGroup):
     persistent: bool = False
 
     type: Literal["load-balance"] = "load-balance"
@@ -131,6 +125,8 @@ class LoadBalanceGroup(SurgeProxyGroup):
         )
 
 
+SurgeProxyGroup = Union[SelectGroup, UrlTestGroup, FallBackGroup, LoadBalanceGroup]
+
 _SURGE_MAPPER: Mapping[UniproxyGroupType, type[SurgeProxyGroup]] = {
     "select": SelectGroup,
     "url-test": UrlTestGroup,
@@ -140,7 +136,7 @@ _SURGE_MAPPER: Mapping[UniproxyGroupType, type[SurgeProxyGroup]] = {
 
 
 def make_proxy_group_from_uniproxy(
-    proxy_group: BaseProxyGroup, **kwargs
+    proxy_group: UniproxyProxyGroup, **kwargs
 ) -> SurgeProxyGroup:
     try:
         return _SURGE_MAPPER[proxy_group.type].from_uniproxy(proxy_group, **kwargs)
