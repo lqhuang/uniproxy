@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from uniproxy.singbox.dns import LocalDnsServer
+from uniproxy.singbox.dns import FakeIPDnsServer, H3DnsServer, LocalDnsServer
 from uniproxy.singbox.outbounds import DirectOutbound
 from uniproxy.singbox.route import HijackDnsRule, SniffRule
 
@@ -15,8 +15,11 @@ TAG_DNS_SERVER_FAKEIP = "dns-fakeip"
 
 #### ------------- Snippets for DNS Servers ------------- ####
 dns_server_system = LocalDnsServer(tag=TAG_DNS_SERVER_SYSTEM)
+dns_server_fakeip = FakeIPDnsServer(tag=TAG_DNS_SERVER_FAKEIP)
 # dns_server_reject = DnsServer(tag=TAG_DNSSERVER_REJECT, address="rcode://success")
-# dns_server_fakeip = DnsServer(tag=TAG_DNSSERVER_FAKEIP, address="fakeip")
+
+dns_server_google_h3 = H3DnsServer(tag="dns-google-h3", server="8.8.8.8")
+dns_server_cloudflare_h3 = H3DnsServer(tag="dns-cloudflare-h3", server="1.1.1.1")
 
 #### ------------- Snippets for Outbound ------------- ####
 out_direct = DirectOutbound(tag=TAG_DIRECT_OUTBOUND)

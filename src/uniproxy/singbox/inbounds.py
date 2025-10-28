@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Literal, Sequence
 from uniproxy.typing import NetworkCIDR, ShadowsocksCipher
 
-from attrs import define, frozen
+from attrs import define
 
-from uniproxy.common import User
+from uniproxy.common import ProxyUser, SimpleUser, TuicUser
 
 from .base import BaseInbound as SingBoxInbound
 from .route import BaseRuleSet
@@ -28,7 +28,8 @@ __all__ = (
     "TuicInbound",
     "TunInbound",
     #
-    "User",
+    "ProxyUser",
+    "SimpleUser",
     "TuicUser",
 )
 
@@ -68,7 +69,7 @@ class DirectInbound(ListenFieldsMixin, DirectMixin, SingBoxInbound): ...  # type
 
 @define
 class HTTPInbound(SingBoxInbound):
-    users: Sequence[User] | None = None
+    users: Sequence[ProxyUser] | None = None
     tls: InboundTLS | None = None
     set_system_proxy: bool | None = None
     type: Literal["http"] = "http"
@@ -76,7 +77,7 @@ class HTTPInbound(SingBoxInbound):
 
 @define
 class Socks5Inbound(SingBoxInbound):
-    users: Sequence[User] | None = None
+    users: Sequence[ProxyUser] | None = None
     type: Literal["socks"] = "socks"
 
 
@@ -162,7 +163,7 @@ class ShadowsocksMixin:
     Both if empty.
     """
 
-    users: Sequence[User] | None = None
+    users: Sequence[SimpleUser] | None = None
     """Multi-user configuration."""
 
     # destinations: Sequence[dict] | None = None
@@ -212,7 +213,7 @@ class TrojanMixin:
     ```
     """
 
-    users: Sequence[User]
+    users: Sequence[SimpleUser]
     """Trojan users."""
 
     tls: InboundTLS
@@ -246,16 +247,6 @@ class TrojanMixin:
 @define
 class TrojanInbound(ListenFieldsMixin, TrojanMixin, SingBoxInbound):  # type: ignore[misc]
     type: Literal["trojan"] = "trojan"
-
-
-@frozen
-class TuicUser:
-    uuid: str
-    """TUIC user uuid"""
-    name: str | None = None
-    """TUIC user name"""
-    password: str | None = None
-    """TUIC user password"""
 
 
 @define(slots=False)
