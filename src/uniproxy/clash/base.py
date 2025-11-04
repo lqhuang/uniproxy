@@ -8,7 +8,7 @@ from attrs import define, field
 from uniproxy.abc import AbstractClash
 from uniproxy.utils import maybe_map_to_str
 
-from .typing import GroupType, ProtocolType, RuleType
+from .typing import GroupType, ProtocolType
 
 
 @define
@@ -38,10 +38,13 @@ class BaseRule(AbstractClash): ...
 class BaseBasicRule(BaseRule):
     matcher: RuleProviderLike
     policy: ProtocolLike
-    type: RuleType
+    # type: RuleType
 
     def __str__(self) -> str:
-        return f"{self.type.upper()},{self.matcher},{str(self.policy)}"
+        if hasattr(self, "type"):
+            return f"{self.type.upper()},{str(self.matcher)},{str(self.policy)}"  # type: ignore
+        else:
+            raise NotImplementedError
 
 
 @define
