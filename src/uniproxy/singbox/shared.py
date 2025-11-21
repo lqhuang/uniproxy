@@ -10,6 +10,7 @@ from attrs import define, field
 
 from uniproxy.abc import AbstractSingBox
 from uniproxy.protocols import TLS as UniproxyTLS
+from uniproxy.utils import maybe_to_str
 
 from .base import BaseDnsServer, BaseInbound, BaseOutbound
 from .typing import DnsStrategy, TLSVersion, TransportType
@@ -177,7 +178,10 @@ class BaseTLS(AbstractSingBox):
 
     certificate: Sequence[str] | None = None
     """The server certificate line array, in PEM format."""
-    certificate_path: PathLike | None = None
+
+    certificate_path: PathLike | str | None = field(
+        default=None, converter=maybe_to_str
+    )
     """
     > [!NOTE]
     >
@@ -192,7 +196,7 @@ class InboundTLS(BaseTLS):
     key: Sequence[str] | None = None
     """The server private key line array, in PEM format."""
 
-    key_path: PathLike | None = None
+    key_path: PathLike | str | None = field(default=None, converter=maybe_to_str)
     """
     > [!NOTE]
     >
@@ -247,9 +251,7 @@ class ListenFieldsMixin:
     `5m` is used by default.
     """
 
-    detour: BaseInbound | str | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
+    detour: BaseInbound | str | None = field(default=None, converter=maybe_to_str)
     """
     If set, connections will be forwarded to the specified inbound.
 
@@ -320,9 +322,7 @@ class DialFieldsMixin:
     -udp_fragment
     -connect_timeout"""
 
-    detour: BaseOutbound | str | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
-    )
+    detour: BaseOutbound | str | None = field(default=None, converter=maybe_to_str)
     """The tag of the upstream outbound."""
 
     bind_interface: str | None = None
@@ -376,7 +376,7 @@ class DialFieldsMixin:
     # """
 
     domain_resolver: DomainResolver | DomainResolverMap | str | None = field(
-        default=None, converter=lambda x: str(x) if x is not None else None
+        default=None, converter=maybe_to_str
     )
     """
     Set domain resolver to use for resolving domain names.
