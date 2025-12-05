@@ -13,6 +13,7 @@ from uniproxy.typing import (
 from attrs import define, field
 
 from uniproxy.protocols import (
+    HttpProtocol,
     ShadowsocksObfsPlugin,
     ShadowsocksProtocol,
     TrojanProtocol,
@@ -77,6 +78,70 @@ class DirectOutbound(DialFieldsMixin, DirectMixin, BaseOutbound):  # type: ignor
     """
 
     type: Literal["direct"] = "direct"
+
+
+@define(slots=False)
+class HttpMixin:
+    server: ServerAddress
+    """The server address."""
+    server_port: int
+    """The server port."""
+    username: str | None = None
+    """Basic authorization username."""
+    password: str | None = None
+    """Basic authorization password."""
+    path: str | None = None
+    """Path of HTTP request."""
+    headers: Mapping[str, str] | None = None
+    """Extra headers of HTTP request."""
+    tls: OutboundTLS | None = None
+
+
+@define
+class HttpOutbound(DialFieldsMixin, HttpMixin, BaseOutbound):  # type: ignore[misc]
+    """
+    Examples:
+
+    ```json
+    {
+      "type": "http",
+      "tag": "http-out",
+
+      "server": "127.0.0.1",
+      "server_port": 1080,
+      "username": "sekai",
+      "password": "admin",
+      "path": "",
+      "headers": {},
+      "tls": {},
+
+      ... // Dial Fields
+    }
+    ```
+    """
+
+    type: Literal["http"] = "http"
+
+    @classmethod
+    def from_uniproxy(cls, protocol: HttpProtocol, **kwargs) -> HttpOutbound:
+
+        if protocol.type == "https":
+            if protocol.tls is None:
+                tls = OutboundTLS(enabled=True)
+            else:
+                tls = OutboundTLS.from_uniproxy(protocol.tls)
+        else:
+            tls = None
+
+        return cls(
+            tag=protocol.name,
+            server=protocol.server,
+            server_port=protocol.port,
+            username=protocol.username,
+            password=protocol.password,
+            tls=tls,
+            **kwargs,
+        )
 
 
 @define(slots=False)
@@ -555,6 +620,8 @@ _SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, SingBoxProtocolOutbound] = 
     # "direct": DirectOutbound,
     # "block": BlockOutbound,
     # "dns": DnsOutbound,
+    "http": HttpOutbound,
+    "https": HttpOutbound,
     "shadowsocks": ShadowsocksOutbound,
     "vmess": VmessOutbound,
     "trojan": TrojanOutbound,

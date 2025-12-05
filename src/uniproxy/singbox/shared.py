@@ -224,6 +224,7 @@ class OutboundTLS(BaseTLS):
 
     @classmethod
     def from_uniproxy(cls, tls: UniproxyTLS, **kwargs) -> OutboundTLS:
+        # TODO: cert or cert path are not handled yet
         return cls(
             enabled=tls is not None,
             disable_sni=not tls.sni,
