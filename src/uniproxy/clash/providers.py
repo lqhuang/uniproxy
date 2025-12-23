@@ -59,11 +59,12 @@ class RuleProvider(BaseRuleProvider):
     name: str
     type: RuleProviderType
     format: RuleProviderFormatType
-    behavior: RuleProviderBehaviorType
 
     url: str | None = None
     path: str | None = None
     interval: int | None = None
+
+    # behavior: RuleProviderBehaviorType
 
     def __attrs_post_init__(self) -> None:
         if self.url is None and self.path is None:
@@ -84,38 +85,14 @@ class RuleProvider(BaseRuleProvider):
 
 @define
 class DomainRuleProvider(RuleProvider):
-    name: str
-    type: RuleProviderType
-    format: Literal["yaml", "text"]
-
-    url: str | None = None
-    path: str | None = None
-    interval: int | None = None
-
     behavior: Literal["domain"] = "domain"
 
 
 @define
 class IPCidrRuleProvider(RuleProvider):
-    name: str
-    type: RuleProviderType
-    format: Literal["yaml", "text", "mrs"]
-
-    url: str | None = None
-    path: str | None = None
-    interval: int | None = None
-
     behavior: Literal["ipcidr"] = "ipcidr"
 
 
 @define
 class ClassicalRuleProvider(RuleProvider):
-    name: str
-    type: RuleProviderType
-    format: Literal["yaml", "text", "mrs"]
-
-    url: str | None = None
-    path: str | None = None
-    interval: int | None = None
-
     behavior: Literal["classical"] = "classical"

@@ -15,6 +15,7 @@ from uniproxy.typing import (
 from attrs import define, field
 from xattrs._metadata import _Metadata
 
+from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
 from uniproxy.protocols import ShadowsocksObfsPlugin as UniproxyShadowsocksObfsPlugin
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
 from uniproxy.protocols import ShadowsocksV2RayPlugin as UniproxyShadowsocksV2RayPlugin
@@ -28,19 +29,18 @@ from uniproxy.protocols import WireGuardProtocol as UniproxyWireguardProtocol
 
 from .base import BaseProtocol
 
+# @define
+# class ClashProtocol(BaseProtocol):
+#     @classmethod
+#     def from_uniproxy(cls, protocol, **kwargs) -> ClashProtocol:
+#         raise NotImplementedError
+
+#     def to_uniproxy(self, **kwargs) -> UniproxyProtocol:
+#         return self.to_uniproxy()
+
 
 @define
-class ClashProtocol(BaseProtocol):
-    @classmethod
-    def from_uniproxy(cls, protocol, **kwargs) -> ClashProtocol:
-        raise NotImplementedError
-
-    def to_uniproxy(self, **kwargs) -> UniproxyProtocol:
-        return self.to_uniproxy()
-
-
-@define
-class HttpProtocol(ClashProtocol):
+class HttpProtocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
     tls: bool | None = field(default=None)
@@ -54,9 +54,27 @@ class HttpProtocol(ClashProtocol):
         if self.type == "https" and value is False:
             raise ValueError("'tls' option for https protocol cannot be False")
 
+    @classmethod
+    def from_uniproxy(cls, protocol: UniproxyHttpProtocol, **kwargs) -> HttpProtocol:
+        if protocol.tls is not None:
+            skip_cert_verify = not protocol.tls.verify
+        else:
+            skip_cert_verify = None
+
+        return cls(
+            protocol.name,
+            protocol.server,
+            protocol.port,
+            username=protocol.username,
+            password=protocol.password,
+            tls=True if protocol.tls is not None else protocol.tls,
+            skip_cert_verify=skip_cert_verify,
+            type="https" if protocol.tls is not None else "http",
+        )
+
 
 @define
-class Socks5Protocol(ClashProtocol):
+class Socks5Protocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
     udp: bool = True
@@ -88,7 +106,7 @@ class ShadowsocksPluginV2RayOpts:
 
 
 @define
-class ShadowsocksProtocol(ClashProtocol):
+class ShadowsocksProtocol(BaseProtocol):
     """
     YAML example:
 
@@ -161,7 +179,7 @@ class ShadowsocksProtocol(ClashProtocol):
 
 
 @define
-class TrojanProtocol(ClashProtocol):
+class TrojanProtocol(BaseProtocol):
     """
     ```yaml
     name: trojan
@@ -252,7 +270,7 @@ class VmessH2Transport:
 
 
 @define
-class VmessProtocol(ClashProtocol):
+class VmessProtocol(BaseProtocol):
     """
 
     YAML example:
@@ -352,7 +370,7 @@ class VmessProtocol(ClashProtocol):
 
 
 @define
-class WireguardProtocol(ClashProtocol):
+class WireguardProtocol(BaseProtocol):
     """
     YAML example:
 
@@ -428,13 +446,13 @@ class WireguardProtocol(ClashProtocol):
             private_key=protocol.private_key,
             public_key=protocol.peer.public_key,
             ip=protocol.address if not is_ipv6 else None,
-            ipv6=protocol.address if is_ipv6 else None,
+            ipv6=cast(IPv6Address | str, protocol.address) if is_ipv6 else None,
             preshared_key=protocol.peer.pre_shared_key,
             type="wireguard",
         )
 
 
-_CLASH_MAPPER: Mapping[ProtocolType, type[ClashProtocol]] = {
+_CLASH_MAPPER: Mapping[ProtocolType, type[BaseProtocol]] = {
     "http": HttpProtocol,
     "https": HttpProtocol,
     "socks5": Socks5Protocol,
@@ -446,9 +464,18 @@ _CLASH_MAPPER: Mapping[ProtocolType, type[ClashProtocol]] = {
     "wireguard": WireguardProtocol,
 }
 
+ClashProtocol = (
+    HttpProtocol
+    | Socks5Protocol
+    | ShadowsocksProtocol
+    | VmessProtocol
+    | TrojanProtocol
+    | WireguardProtocol
+)
+
 
 def make_protocol_from_uniproxy(
-    protocol: UniproxyProtocol | ClashProtocol | Any, **kwargs
+    protocol: UniproxyProtocol | ClashProtocol, **kwargs
 ) -> ClashProtocol:
     if isinstance(protocol, ClashProtocol):
         return protocol

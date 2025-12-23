@@ -173,7 +173,7 @@ class BaseVmessTransport:
 
 
 @define
-class VmessWsTransport:
+class VmessWsTransport(BaseVmessTransport):
     headers: dict[str, str] | None = None
     max_early_data: int | None = None
     early_data_header_name: str | None = None
@@ -187,7 +187,7 @@ class VmessH2Transport(BaseVmessTransport):
     type: Literal["h2"] = "h2"
 
 
-type VmessTransport = VmessWsTransport | VmessH2Transport
+VmessTransport = Union[VmessWsTransport, VmessH2Transport]
 
 
 @define

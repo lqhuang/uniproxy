@@ -3,12 +3,62 @@ from __future__ import annotations
 from xattrs import asdict
 
 from uniproxy.surge.protocols import (
+    HttpProtocol,
     Socks5Protocol,
     SurgeTLS,
     VmessProtocol,
     VmessTransport,
 )
 from uniproxy.utils import load_ini_without_section
+
+
+def test_proxy_http():
+    name = "proxy-http"
+    http = HttpProtocol(name=name, server="localhost", port=1080)
+    surge_config = f"{name} = http, localhost, 1080"
+    assert asdict(http) == load_ini_without_section(surge_config)
+
+
+def test_proxy_http_user():
+    name = "proxy-http"
+    http = HttpProtocol(
+        name=name,
+        server="localhost",
+        port=1080,
+        username="user",
+        password="pass",
+        always_use_connect=True,
+    )
+    surge_config = (
+        f"{name} = http, localhost, 1080, user, pass, always-use-connect=true"
+    )
+    assert asdict(http) == load_ini_without_section(surge_config)
+
+
+def test_proxy_https():
+    name = "proxy-https"
+    https = HttpProtocol(
+        name=name,
+        server="localhost",
+        port=1080,
+        username="user",
+        password="pass",
+        tls=SurgeTLS(),
+    )
+    surge_config = f"{name} = https, localhost, 1080, user, pass"
+    assert asdict(https) == load_ini_without_section(surge_config)
+
+
+def test_proxy_https_tls():
+    name = "proxy-https-tls"
+    https = HttpProtocol(
+        name=name,
+        server="localhost",
+        port=1080,
+        tls=SurgeTLS(sni="off", skip_cert_verify=True),
+    )
+    surge_config = f"{name} = https, localhost, 1080, skip-cert-verify=true, sni=off"
+    assert asdict(https) == load_ini_without_section(surge_config)
 
 
 def test_proxy_socks5():

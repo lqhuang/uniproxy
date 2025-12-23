@@ -1,32 +1,31 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping
+from typing import Literal, Mapping, Union
 from uniproxy.typing import GroupType
 
 from attrs import define
 
-from uniproxy.proxy_groups import BaseProxyGroup
 from uniproxy.proxy_groups import FallBackGroup as UniproxyFallBackGroup
 from uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
 from uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
+from uniproxy.proxy_groups import UniproxyProxyGroup
 from uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 from uniproxy.utils import maybe_map_to_str
 
 from .base import BaseProxyGroup
 
+# @define
+# class ClashProxyGroup(BaseProxyGroup):
+#     @classmethod
+#     def from_uniproxy(cls, protocol, **kwargs) -> ClashProxyGroup:
+#         raise NotImplementedError
+
+#     def to_uniproxy(self, **kwargs) -> BaseProxyGroup:
+#         return self.to_uniproxy()
+
 
 @define
-class ClashProxyGroup(BaseProxyGroup):
-    @classmethod
-    def from_uniproxy(cls, protocol, **kwargs) -> ClashProxyGroup:
-        raise NotImplementedError
-
-    def to_uniproxy(self, **kwargs) -> BaseProxyGroup:
-        return self.to_uniproxy()
-
-
-@define
-class SelectGroup(ClashProxyGroup):
+class SelectGroup(BaseProxyGroup):
     type: Literal["select"] = "select"
 
     @classmethod
@@ -42,7 +41,7 @@ class SelectGroup(ClashProxyGroup):
 
 
 @define
-class UrlTestGroup(ClashProxyGroup):
+class UrlTestGroup(BaseProxyGroup):
     tolerance: float = 300  # milliseconds
     type: Literal["url-test"] = "url-test"
 
@@ -60,7 +59,7 @@ class UrlTestGroup(ClashProxyGroup):
 
 
 @define
-class FallBackGroup(ClashProxyGroup):
+class FallBackGroup(BaseProxyGroup):
     timeout: float = 5  # seconds
 
     type: Literal["fallback"] = "fallback"
@@ -79,7 +78,7 @@ class FallBackGroup(ClashProxyGroup):
 
 
 @define
-class LoadBalanceGroup(ClashProxyGroup):
+class LoadBalanceGroup(BaseProxyGroup):
     strategy: Literal["consistent-hashing", "round-robin"] | None = None
 
     type: Literal["load-balance"] = "load-balance"
@@ -99,7 +98,9 @@ class LoadBalanceGroup(ClashProxyGroup):
         )
 
 
-_CLASH_MAPPER: Mapping[GroupType, type[ClashProxyGroup]] = {
+ClashProxyGroup = Union[SelectGroup, UrlTestGroup, LoadBalanceGroup, FallBackGroup]
+
+_CLASH_MAPPER: Mapping[GroupType, type[BaseProxyGroup]] = {
     "select": SelectGroup,
     "url-test": UrlTestGroup,
     "load-balance": LoadBalanceGroup,
@@ -108,7 +109,7 @@ _CLASH_MAPPER: Mapping[GroupType, type[ClashProxyGroup]] = {
 
 
 def make_proxy_group_from_uniproxy(
-    proxy_group: BaseProxyGroup, **kwargs
+    proxy_group: UniproxyProxyGroup, **kwargs
 ) -> ClashProxyGroup:
     try:
         return _CLASH_MAPPER[proxy_group.type].from_uniproxy(proxy_group, **kwargs)

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Any, Sequence, Union
 from uniproxy.typing import ServerAddress
 
 from attrs import define
 
 from uniproxy.abc import AbstractSurge
 
-from .typing import SurgeGroupType, SurgeProtocolType, SurgeRuleProviderType
+from .typing import SurgeRuleProviderType
 
 
 @define
@@ -15,17 +15,21 @@ class BaseProtocol(AbstractSurge):
     name: str
     server: ServerAddress
     port: int
-    type: SurgeProtocolType
+
+    # type: SurgeProtocolType
 
     def __str__(self) -> str:
         return str(self.name)
 
     def __attrs_asdict__(self) -> dict[str, str]:
-        raise NotImplementedError
+        raise NotImplementedError()
 
-    # @classmethod
-    # def from_uniproxy(cls, uniproxy, **kwargs) -> BaseProtocol:
-    #     raise NotImplementedError
+    @classmethod
+    def from_uniproxy(cls, protocol: Any, **kwargs) -> Any:
+        raise NotImplementedError()
+
+    def to_uniproxy(self, **kwargs) -> Any:
+        raise NotImplementedError()
 
 
 @define
@@ -85,6 +89,6 @@ class BaseRuleProvider(AbstractSurge):
         return str(self.name)
 
 
-type ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str
-type RuleProviderLike = BaseRuleProvider | str
-type RuleLike = BaseRule | str
+ProtocolLike = Union[BaseProtocol, BaseProxyProvider, BaseProxyGroup, str]
+RuleProviderLike = Union[BaseRuleProvider, str]
+RuleLike = Union[BaseRule, str]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Any, Literal, Sequence
 from uniproxy.typing import ServerAddress
 
 from attrs import define, field
@@ -16,10 +16,18 @@ class BaseProtocol(AbstractClash):
     name: str
     server: ServerAddress
     port: int
-    type: ProtocolType
+
+    # type: ProtocolType
 
     def __str__(self) -> str:
         return str(self.name)
+
+    @classmethod
+    def from_uniproxy(cls, protocol: Any, **kwargs) -> Any:
+        raise NotImplementedError()
+
+    def to_uniproxy(self, **kwargs) -> Any:
+        raise NotImplementedError()
 
 
 @define
@@ -59,7 +67,6 @@ class FinalRule(BaseRule):
 @define
 class BaseProxyGroup(AbstractClash):
     name: str
-    type: GroupType
     proxies: Sequence[ProtocolLike] | None = field(
         default=None, converter=maybe_map_to_str
     )
@@ -76,12 +83,21 @@ class BaseProxyGroup(AbstractClash):
     filter: str | None = None
     # timeout: float = 5  # seconds
 
+    # type: GroupType
+
     def __str__(self) -> str:
         return str(self.name)
 
     def __attrs_post_init__(self):
         if self.proxies is None and self.use is None:
             raise ValueError("Either proxies or use must be provided")
+
+    @classmethod
+    def from_uniproxy(cls, protocol: Any, **kwargs) -> Any:
+        raise NotImplementedError()
+
+    def to_uniproxy(self, **kwargs) -> Any:
+        raise NotImplementedError()
 
 
 @define

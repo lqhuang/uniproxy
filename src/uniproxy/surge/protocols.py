@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Mapping, Sequence, cast
+from typing import Any, Literal, Mapping, Sequence, Union, cast
 from uniproxy.typing import AlpnType, IPAddress, ShadowsocksCipher, VmessCipher
 from uniproxy.typing import ProtocolType as UniproxyProtocolType
 
@@ -35,25 +35,19 @@ __all__ = [
 
 
 @define
-class SurgeProtocol(BaseProtocol):
-    @classmethod
-    def from_uniproxy(cls, protocol, **kwargs) -> SurgeProtocol:
-        raise NotImplementedError
-
-    def to_uniproxy(self, **kwargs) -> UniproxyProtocol:
-        return self.to_uniproxy()
-
-
-@define
-class HttpProtocol(SurgeProtocol):
+class HttpProtocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
     tls: SurgeTLS | None = None
 
-    tfo: bool = False
+    tfo: bool | None = None
     always_use_connect: bool | None = None
 
     type: Literal["http", "https"] = "http"
+
+    def __attrs_post_init__(self):
+        if self.tls is not None:
+            self.type = "https"
 
     def __attrs_asdict__(self):
         """
@@ -64,11 +58,11 @@ class HttpProtocol(SurgeProtocol):
         ProxyHTTPS = https, 1.2.3.4, 443, username, password, skip-cert-verify=true
         ```
         """
-        if self.type == "https":
-            protocl = "socks5-tls"
+        if self.type == "https" or self.tls is not None:
+            protocl = "https"
             tls_opt = str(self.tls) if self.tls else ""
         else:
-            protocl = "socks5"
+            protocl = "http"
             tls_opt = ""
 
         auth_opt = (
@@ -77,10 +71,20 @@ class HttpProtocol(SurgeProtocol):
             else ""
         )
 
+        extra_opts_dict = {
+            "tfo": None if self.tfo is None else str(self.tfo).lower(),
+            "always-use-connect": None
+            if self.always_use_connect is None
+            else str(self.always_use_connect).lower(),
+        }
+        extra_opts = ", ".join(
+            f"{k}={v}" for k, v in extra_opts_dict.items() if v is not None
+        )
+
         must_opts = f"{protocl}, {self.server}, {self.port}"
         return {
             self.name: ", ".join(
-                filter(lambda x: bool(x), (must_opts, auth_opt, tls_opt))
+                filter(lambda x: bool(x), (must_opts, auth_opt, tls_opt, extra_opts))
             )
         }
 
@@ -100,7 +104,7 @@ class HttpProtocol(SurgeProtocol):
 
 
 @define
-class Socks5Protocol(SurgeProtocol):
+class Socks5Protocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
     tls: SurgeTLS | None = None
@@ -150,7 +154,7 @@ class Socks5Protocol(SurgeProtocol):
 
 
 @define
-class ShadowsocksProtocol(SurgeProtocol):
+class ShadowsocksProtocol(BaseProtocol):
     password: str
     encrypt_method: ShadowsocksCipher
 
@@ -265,7 +269,7 @@ class VmessTransport(AbstractSurge):
 
 
 @define
-class VmessProtocol(SurgeProtocol):
+class VmessProtocol(BaseProtocol):
     username: str
     """uuid"""
 
@@ -338,7 +342,7 @@ class VmessProtocol(SurgeProtocol):
 
 
 @define
-class TrojanProtocol(SurgeProtocol):
+class TrojanProtocol(BaseProtocol):
     password: str
     tls: SurgeTLS | None = None
 
@@ -378,7 +382,7 @@ class TrojanProtocol(SurgeProtocol):
 
 
 @define
-class TuicProtocol(SurgeProtocol):
+class TuicProtocol(BaseProtocol):
     """
     ```ini
     [Proxy]
@@ -423,7 +427,7 @@ class TuicProtocol(SurgeProtocol):
         )
 
 
-class WireguardProtocol(SurgeProtocol):
+class WireguardProtocol(BaseProtocol):
     """
     ```ini
     [Proxy]
@@ -506,7 +510,17 @@ class WireguardSection(AbstractSurge):
         return {f"WireGuard {self.name}": {}}
 
 
-_SURGE_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
+SurgeProtocol = Union[
+    HttpProtocol,
+    Socks5Protocol,
+    ShadowsocksProtocol,
+    VmessProtocol,
+    TrojanProtocol,
+    TuicProtocol,
+    WireguardProtocol,
+]
+
+_SURGE_MAPPER: Mapping[UniproxyProtocolType, type[BaseProtocol]] = {
     "http": HttpProtocol,
     "https": HttpProtocol,
     "socks5": Socks5Protocol,
@@ -520,7 +534,7 @@ _SURGE_MAPPER: Mapping[UniproxyProtocolType, type[SurgeProtocol]] = {
 
 
 def make_protocol_from_uniproxy(
-    protocol: UniproxyProtocol | SurgeProtocol | Any, **kwargs
+    protocol: UniproxyProtocol | SurgeProtocol, **kwargs
 ) -> SurgeProtocol:
     if isinstance(protocol, SurgeProtocol):
         return protocol
