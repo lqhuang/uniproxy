@@ -9,7 +9,6 @@ from uniproxy.typing import (
     VmessCipher,
 )
 
-import warnings
 from ipaddress import IPv4Address
 
 from attrs import define
@@ -29,7 +28,6 @@ class HttpProtocol(BaseProtocol):
 
     def __attrs_post_init__(self) -> None:
         if self.tls is not None and self.type != "https":
-            warnings.warn("Setting 'tls' enables HTTPS protocol.")
             self.type = "https"
 
 
