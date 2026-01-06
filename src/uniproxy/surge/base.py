@@ -71,9 +71,17 @@ class BaseRule(AbstractSurge): ...
 
 @define
 class BaseBasicRule(BaseRule):
+    matcher: str
+    policy: ProtocolLike
+
+    def __str__(self) -> str:
+        return f"{self.type.upper()},{self.matcher},{self.policy}"  # pyright: ignore[reportAttributeAccessIssue]
+
+
+@define
+class BaseProviderRule(BaseRule):
     matcher: RuleProviderLike
     policy: ProtocolLike
-    # type: str
 
     def __str__(self) -> str:
         return f"{self.type.upper()},{self.matcher},{self.policy}"  # pyright: ignore[reportAttributeAccessIssue]

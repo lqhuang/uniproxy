@@ -47,16 +47,12 @@ GroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet"
 ]
 
+
 BasicRuleType = Literal[
     # Domain-based Rule
     "domain",
     "domain-suffix",
     "domain-keyword",
-    # IP-based Rule
-    "ip-cidr",
-    "ip-cidr6",
-    "ip-asn",
-    "geoip",
     # HTTP Rule
     "user-agent",
     "url-regex",
@@ -77,20 +73,67 @@ BasicRuleType = Literal[
     "script",
     "cellular-radio",
     "device-name",
-    # External Rule
-    "rule-set",
-    "domain-set",
     # Final Rule
 ]
-GroupRuleType = Literal[
-    # Group Rule
+BASIC_RULES = frozenset((
+    # Domain-based Rule
+    "domain",
+    "domain-suffix",
+    "domain-keyword",
+    # HTTP Rule
+    "user-agent",
+    "url-regex",
+    # Process Rule
+    "process-name",
+    # Logical Rule
+    "and",
+    "or",
+    "not",
+    # Subnet Rule
+    "subnet",
+    # Miscellaneous Rule
+    "dest-port",
+    "src-port",
+    "in-port",
+    "src-ip",
+    "protocol",
+    "script",
+    "cellular-radio",
+    "device-name",
+    # Final Rule
+))
+
+# # External Rule
+# ExternalRuleType = Literal["rule-set", "domain-set"]
+# EXTERNAL_RULES = set(("rule-set", "domain-set"))
+
+# IP-based Rule
+BasicNoResolableRuleType = Literal["ip-cidr", "ip-cidr6", "ip-asn", "geoip"]
+BASIC_NO_RESOLABLE_RULES = set((
+    # IP-based Rule
+    "ip-cidr",
+    "ip-cidr6",
+    "ip-asn",
+    "geoip",
+))
+
+# Group Rule
+GroupRuleType = Literal["domain-group", "domain-suffix-group", "domain-keyword-group"]
+GROUP_RULES = set((
     "domain-group",
     "domain-suffix-group",
     "domain-keyword-group",
     "ip-cidr-group",
     "ip-cidr6-group",
-]
+))
+GroupNoResolvableRuleType = Literal["ip-cidr-group", "ip-cidr6-group"]
+GROUP_NO_RESOLVABLE_RULES = set(("ip-cidr-group", "ip-cidr6-group"))
+
 FinalRuleType = Literal["final"]
+
+UniproxyRuleType = (
+    BasicRuleType | BasicNoResolableRuleType | GroupRuleType | FinalRuleType
+)
 
 
 AlpnType = Literal["http/1.1", "h2", "h3"]

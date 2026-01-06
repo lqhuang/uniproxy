@@ -1,10 +1,18 @@
 from __future__ import annotations
 
-from typing import Literal, Union
+from typing import Literal, TypeGuard, Union
+from uniproxy.typing import (
+    BASIC_NO_RESOLABLE_RULES,
+    BASIC_RULES,
+    GROUP_NO_RESOLVABLE_RULES,
+    GROUP_RULES,
+    UniproxyRuleType,
+)
 
 from attrs import define
 
 from uniproxy.base import BaseBasicRule, BaseGroupRule, BaseRule, ProtocolLike
+from uniproxy.shared import NoResoleMixin
 
 
 @define
@@ -38,32 +46,27 @@ class DomainKeywordGroupRule(BaseGroupRule):
 
 
 @define
-class IPCidrRule(BaseBasicRule):
-    no_resolve: bool | None = True
+class IPCidrRule(NoResoleMixin, BaseBasicRule):
     type: Literal["ip-cidr"] = "ip-cidr"
 
 
 @define
-class IPCidrGroupRule(BaseGroupRule):
-    no_resolve: bool | None = True
+class IPCidrGroupRule(NoResoleMixin, BaseGroupRule):
     type: Literal["ip-cidr-group"] = "ip-cidr-group"
 
 
 @define
-class IPCidr6Rule(BaseBasicRule):
-    no_resolve: bool | None = True
+class IPCidr6Rule(NoResoleMixin, BaseBasicRule):
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
 
 @define
-class IPCidr6GroupRule(BaseGroupRule):
-    no_resolve: bool | None = True
+class IPCidr6GroupRule(NoResoleMixin, BaseGroupRule):
     type: Literal["ip-cidr6-group"] = "ip-cidr6-group"
 
 
 @define
-class GeoIPRule(BaseBasicRule):
-    no_resolve: bool | None = True
+class GeoIPRule(NoResoleMixin, BaseBasicRule):
     type: Literal["geoip"] = "geoip"
 
 
@@ -142,14 +145,14 @@ class DeviceNameRule(BaseBasicRule):
     type: Literal["device-name"] = "device-name"
 
 
-@define
-class DomainSetRule(BaseBasicRule):
-    type: Literal["domain-set"] = "domain-set"
+# @define
+# class DomainSetRule(BaseBasicRule):
+#     type: Literal["domain-set"] = "domain-set"
 
 
-@define
-class RuleSetRule(BaseBasicRule):
-    type: Literal["rule-set"] = "rule-set"
+# @define
+# class RuleSetRule(BaseBasicRule):
+#     type: Literal["rule-set"] = "rule-set"
 
 
 @define
@@ -165,11 +168,6 @@ UniproxyBasicRule = Union[
     DomainSuffixGroupRule,
     DomainKeywordRule,
     DomainKeywordGroupRule,
-    IPCidrRule,
-    IPCidrGroupRule,
-    IPCidr6Rule,
-    IPCidr6GroupRule,
-    GeoIPRule,
     UserAgentRule,
     UrlRegexRule,
     ProcessNameRule,
@@ -185,14 +183,42 @@ UniproxyBasicRule = Union[
     ScriptRule,
     CellularRadioRule,
     DeviceNameRule,
-    DomainSetRule,
-    RuleSetRule,
+    # DomainSetRule,
+    # RuleSetRule,
 ]
+UniproxyBasicNoResolvableRule = Union[
+    IPCidrRule, IPCidrGroupRule, IPCidr6Rule, IPCidr6GroupRule, GeoIPRule
+]
+
 UniproxyGroupRule = Union[
-    DomainGroupRule,
-    DomainSuffixGroupRule,
-    DomainKeywordGroupRule,
-    IPCidrGroupRule,
-    IPCidr6GroupRule,
+    DomainGroupRule, DomainSuffixGroupRule, DomainKeywordGroupRule
 ]
-UniproxyRule = Union[UniproxyBasicRule, UniproxyGroupRule, FinalRule]
+UniproxyGroupNoResolvableRule = Union[IPCidrGroupRule, IPCidr6GroupRule]
+
+UniproxyRule = Union[
+    UniproxyBasicRule,
+    UniproxyBasicNoResolvableRule,
+    UniproxyGroupRule,
+    UniproxyGroupNoResolvableRule,
+    FinalRule,
+]
+
+
+def is_basic_rule(rule: UniproxyRule) -> TypeGuard[UniproxyBasicRule]:
+    return rule.type in BASIC_RULES
+
+
+def is_basic_no_resolvable_rule(
+    rule: UniproxyRule,
+) -> TypeGuard[UniproxyBasicNoResolvableRule]:
+    return rule.type in BASIC_NO_RESOLABLE_RULES
+
+
+def is_group_rule(rule: UniproxyRule) -> TypeGuard[UniproxyGroupRule]:
+    return rule.type in GROUP_RULES
+
+
+def is_group_no_resolvable_rule(
+    rule: UniproxyRule,
+) -> TypeGuard[UniproxyGroupNoResolvableRule]:
+    return rule.type in GROUP_NO_RESOLVABLE_RULES

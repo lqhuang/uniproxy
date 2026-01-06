@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from typing import Literal, Mapping, Sequence, Union
-from uniproxy.typing import BasicRuleType
+from uniproxy.typing import BasicNoResolableRuleType, BasicRuleType
 
 from attrs import define, field
 
-from uniproxy.rules import BaseBasicRule as UniproxyBaseBasicRule
 from uniproxy.rules import DomainGroupRule as UniproxyDomainGroupRule
 from uniproxy.rules import (
     DomainKeywordGroupRule,
@@ -13,10 +12,19 @@ from uniproxy.rules import (
     IPCidr6GroupRule,
     IPCidrGroupRule,
     UniproxyRule,
+    is_basic_no_resolvable_rule,
+    is_basic_rule,
 )
+from uniproxy.shared import NoResoleMixin
 from uniproxy.utils import to_name
 
-from .base import BaseBasicRule, BaseRule, BaseRuleProvider, ProtocolLike
+from .base import (
+    BaseBasicRule,
+    BaseProviderRule,
+    BaseRule,
+    BaseRuleProvider,
+    ProtocolLike,
+)
 
 
 @define
@@ -35,18 +43,7 @@ class DomainKeywordRule(BaseBasicRule):
 
 
 @define
-class DomainSetRule(BaseBasicRule):
-    matcher: str | BaseRuleProvider = field(
-        converter=lambda x: x if isinstance(x, str) else x.url
-    )
-    policy: ProtocolLike
-    force_remote_dns: bool | None = None
-    type: Literal["domain-set"] = "domain-set"
-
-
-@define
-class IPCidrRule(BaseBasicRule):
-    no_resolve: bool | None = True
+class IPCidrRule(NoResoleMixin, BaseBasicRule):
     type: Literal["ip-cidr"] = "ip-cidr"
 
     def __str__(self) -> str:
@@ -57,8 +54,7 @@ class IPCidrRule(BaseBasicRule):
 
 
 @define
-class IPCidr6Rule(BaseBasicRule):
-    no_resolve: bool | None = True
+class IPCidr6Rule(NoResoleMixin, BaseBasicRule):
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
     def __str__(self) -> str:
@@ -69,8 +65,7 @@ class IPCidr6Rule(BaseBasicRule):
 
 
 @define
-class GeoIPRule(BaseBasicRule):
-    no_resolve: bool | None = True
+class GeoIPRule(NoResoleMixin, BaseBasicRule):
     type: Literal["geoip"] = "geoip"
 
     def __str__(self) -> str:
@@ -81,8 +76,7 @@ class GeoIPRule(BaseBasicRule):
 
 
 @define
-class IPAsn(BaseBasicRule):
-    no_resolve: bool | None = True
+class IPAsn(NoResoleMixin, BaseBasicRule):
     type: Literal["ip-asn"] = "ip-asn"
 
     def __str__(self) -> str:
@@ -168,11 +162,21 @@ class DeviceNameRule(BaseBasicRule):
 
 
 @define
-class RuleSetRule(BaseBasicRule):
-    matcher: Literal["SYSTEM", "LAN"] | str | BaseRuleProvider = field(
-        converter=lambda x: x if isinstance(x, str) else x.url
+class DomainSetRule(BaseProviderRule):
+    matcher: str | BaseRuleProvider = field(
+        converter=lambda x: x.url if isinstance(x, BaseRuleProvider) else x
     )
-    policy: ProtocolLike | str
+    policy: ProtocolLike
+    force_remote_dns: bool | None = None
+    type: Literal["domain-set"] = "domain-set"
+
+
+@define
+class RuleSetRule(BaseProviderRule):
+    matcher: Literal["SYSTEM", "LAN"] | str | BaseRuleProvider = field(
+        converter=lambda x: x.url if isinstance(x, BaseRuleProvider) else x
+    )
+    policy: ProtocolLike
     type: Literal["rule-set"] = "rule-set"
 
 
@@ -193,10 +197,6 @@ _SurgeBasicRule = Union[
     DomainRule,
     DomainSuffixRule,
     DomainKeywordRule,
-    IPCidrRule,
-    IPCidr6Rule,
-    GeoIPRule,
-    IPAsn,
     UserAgentRule,
     UrlRegexRule,
     ProcessNameRule,
@@ -212,20 +212,18 @@ _SurgeBasicRule = Union[
     ScriptRule,
     CellularRadioRule,
     DeviceNameRule,
-    RuleSetRule,
-    DomainSetRule,
 ]
+_SurgeNoResolvableRule = Union[IPCidrRule, IPCidr6Rule, GeoIPRule, IPAsn]
+_SurgeExternalRule = Union[RuleSetRule, DomainSetRule]
 
-SurgeRule = Union[_SurgeBasicRule, FinalRule]
+SurgeRule = Union[
+    _SurgeBasicRule, _SurgeNoResolvableRule, _SurgeExternalRule, FinalRule
+]
 
 _SURGE_MAPPER: Mapping[BasicRuleType, type[_SurgeBasicRule]] = {
     "domain": DomainRule,
     "domain-suffix": DomainSuffixRule,
     "domain-keyword": DomainKeywordRule,
-    "ip-cidr": IPCidrRule,
-    "ip-cidr6": IPCidr6Rule,
-    "geoip": GeoIPRule,
-    "ip-asn": IPAsn,
     "user-agent": UserAgentRule,
     "url-regex": UrlRegexRule,
     "process-name": ProcessNameRule,
@@ -241,16 +239,31 @@ _SURGE_MAPPER: Mapping[BasicRuleType, type[_SurgeBasicRule]] = {
     "script": ScriptRule,
     "cellular-radio": CellularRadioRule,
     "device-name": DeviceNameRule,
-    "rule-set": RuleSetRule,
-    "domain-set": DomainSetRule,
+}
+
+_SURGE_NO_RESOLVE_MAPPER: Mapping[
+    BasicNoResolableRuleType, type[_SurgeNoResolvableRule]
+] = {
+    "ip-cidr": IPCidrRule,
+    "ip-cidr6": IPCidr6Rule,
+    "geoip": GeoIPRule,
+    "ip-asn": IPAsn,
 }
 
 
 def make_rules_from_uniproxy(rule: UniproxyRule) -> Sequence[SurgeRule]:
     policy = to_name(rule.policy)
 
-    if isinstance(rule, UniproxyBaseBasicRule):
-        return (_SURGE_MAPPER[rule.type](matcher=to_name(rule.matcher), policy=policy),)
+    if is_basic_rule(rule):
+        return (_SURGE_MAPPER[rule.type](matcher=to_name(rule.matcher), policy=policy),)  # type: ignore[reportArgumentType]
+    elif is_basic_no_resolvable_rule(rule):
+        return (
+            _SURGE_NO_RESOLVE_MAPPER[rule.type](  # type: ignore[reportArgumentType]
+                matcher=to_name(rule.matcher),  # type: ignore[reportArgumentType]
+                policy=policy,
+                no_resolve=rule.no_resolve,  # type: ignore[reportArgumentType]
+            ),
+        )
     elif isinstance(rule, UniproxyDomainGroupRule):
         return tuple(
             DomainRule(matcher=str(each), policy=policy) for each in rule.matcher

@@ -8,16 +8,12 @@ from attrs import define, field
 from uniproxy.abc import AbstractClash
 from uniproxy.utils import maybe_map_to_str
 
-from .typing import GroupType, ProtocolType
-
 
 @define
 class BaseProtocol(AbstractClash):
     name: str
     server: ServerAddress
     port: int
-
-    # type: ProtocolType
 
     def __str__(self) -> str:
         return str(self.name)
@@ -46,7 +42,6 @@ class BaseRule(AbstractClash): ...
 class BaseBasicRule(BaseRule):
     matcher: RuleProviderLike
     policy: ProtocolLike
-    # type: RuleType
 
     def __str__(self) -> str:
         if hasattr(self, "type"):
@@ -82,8 +77,6 @@ class BaseProxyGroup(AbstractClash):
 
     filter: str | None = None
     # timeout: float = 5  # seconds
-
-    # type: GroupType
 
     def __str__(self) -> str:
         return str(self.name)

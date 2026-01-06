@@ -61,13 +61,13 @@ class BaseRule(AbstractUniproxy): ...
 
 @define
 class BaseBasicRule(BaseRule):
-    matcher: RuleProviderLike
+    matcher: str
     policy: ProtocolLike
 
 
 @define
 class BaseGroupRule(BaseRule):
-    matcher: Sequence[RuleProviderLike]
+    matcher: Sequence[str]
     policy: ProtocolLike
 
 
@@ -81,4 +81,3 @@ class BaseRuleProvider(AbstractUniproxy):
 
 ProtocolLike = BaseProtocol | BaseProxyGroup | str
 ProxyProviderLike = BaseProxyProvider | str
-RuleProviderLike = BaseRuleProvider | str

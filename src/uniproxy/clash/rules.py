@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 from typing import Literal, Mapping, Union
-from uniproxy.typing import BasicRuleType
+from uniproxy.typing import (
+    BASIC_NO_RESOLABLE_RULES,
+    BASIC_RULES,
+    BasicNoResolableRuleType,
+    BasicRuleType,
+    GroupRuleType,
+)
 
 from attrs import define
 
@@ -13,7 +19,11 @@ from uniproxy.rules import (
     IPCidr6GroupRule,
     IPCidrGroupRule,
     UniproxyRule,
+    is_basic_no_resolvable_rule,
+    is_basic_rule,
 )
+from uniproxy.rules import FinalRule as UniproxyFinalRule
+from uniproxy.shared import NoResoleMixin
 from uniproxy.utils import to_name
 
 from .base import BaseBasicRule
@@ -41,9 +51,7 @@ class DomainSetRule(BaseBasicRule):
 
 
 @define
-class IPCidrRule(BaseBasicRule):
-    # temporarily set to True
-    no_resolve: bool | None = True
+class IPCidrRule(NoResoleMixin, BaseBasicRule):
     type: Literal["ip-cidr"] = "ip-cidr"
 
     def __str__(self) -> str:
@@ -54,9 +62,7 @@ class IPCidrRule(BaseBasicRule):
 
 
 @define
-class IPCidr6Rule(BaseBasicRule):
-    # temporarily set to True
-    no_resolve: bool | None = True
+class IPCidr6Rule(NoResoleMixin, BaseBasicRule):
     type: Literal["ip-cidr6"] = "ip-cidr6"
 
     def __str__(self) -> str:
@@ -67,9 +73,7 @@ class IPCidr6Rule(BaseBasicRule):
 
 
 @define
-class GeoIPRule(BaseBasicRule):
-    # temporarily set to True
-    no_resolve: bool | None = True
+class GeoIPRule(NoResoleMixin, BaseBasicRule):
     type: Literal["geoip"] = "geoip"
 
     def __str__(self) -> str:
@@ -159,7 +163,7 @@ class RuleSetRule(BaseBasicRule):
     type: Literal["rule-set"] = "rule-set"
 
 
-ClashRule = Union[
+ClashBasicRule = Union[
     DomainRule,
     DomainSuffixRule,
     DomainKeywordRule,
@@ -185,13 +189,16 @@ ClashRule = Union[
     DomainSetRule,
 ]
 
-_CLASH_MAPPER: Mapping[BasicRuleType, type[ClashRule]] = {
+ClashRule = Union[ClashBasicRule, FinalRule]
+
+_CLASH_RESOLVABLE_MAPPER: Mapping[
+    BasicNoResolableRuleType, type[IPCidrRule | IPCidr6Rule | GeoIPRule]
+] = {"ip-cidr": IPCidrRule, "ip-cidr6": IPCidr6Rule, "geoip": GeoIPRule}
+
+_CLASH_MAPPER: Mapping[BasicRuleType, type[ClashBasicRule]] = {
     "domain": DomainRule,
     "domain-suffix": DomainSuffixRule,
     "domain-keyword": DomainKeywordRule,
-    "ip-cidr": IPCidrRule,
-    "ip-cidr6": IPCidr6Rule,
-    "geoip": GeoIPRule,
     "user-agent": UserAgentRule,
     "url-regex": UrlRegexRule,
     "process-name": ProcessNameRule,
@@ -207,12 +214,12 @@ _CLASH_MAPPER: Mapping[BasicRuleType, type[ClashRule]] = {
     "script": ScriptRule,
     "cellular-radio": CellularRadioRule,
     "device-name": DeviceNameRule,
-    "rule-set": RuleSetRule,
-    "domain-set": DomainSetRule,
+    # "rule-set": RuleSetRule,
+    # "domain-set": DomainSetRule,
 }
 
 
-def make_rules_from_uniproxy(rule: UniproxyRule) -> tuple[BaseBasicRule, ...]:
+def make_rules_from_uniproxy(rule: UniproxyRule) -> tuple[ClashRule, ...]:
     if rule.type == "ip-asn":
         raise NotImplementedError("`ip-asn` rule type not implemented yet for Clash")
 
@@ -220,7 +227,17 @@ def make_rules_from_uniproxy(rule: UniproxyRule) -> tuple[BaseBasicRule, ...]:
 
     match rule:
         case UniproxyBaseBasicRule(matcher=matcher, type=typ):
-            return (_CLASH_MAPPER[typ](matcher=to_name(matcher), policy=policy),)
+            if typ in BASIC_NO_RESOLABLE_RULES and is_basic_no_resolvable_rule(rule):
+                return (
+                    _CLASH_RESOLVABLE_MAPPER[typ](
+                        matcher=to_name(matcher),
+                        policy=policy,
+                        no_resolve=rule.no_resolve,
+                    ),
+                )
+            else:
+                assert typ in BASIC_RULES
+                return (_CLASH_MAPPER[typ](matcher=to_name(matcher), policy=policy),)
         case DomainGroupRule(matcher=matcher):
             return tuple(
                 DomainRule(matcher=str(each), policy=policy) for each in matcher
@@ -243,5 +260,7 @@ def make_rules_from_uniproxy(rule: UniproxyRule) -> tuple[BaseBasicRule, ...]:
                 IPCidr6Rule(matcher=str(each), policy=policy, no_resolve=no_resolve)
                 for each in matcher
             )
+        case UniproxyFinalRule(policy=policy):
+            return (FinalRule(policy=str(policy)),)
         case _:
             raise ValueError("Invalid rule type")

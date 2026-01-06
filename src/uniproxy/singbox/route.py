@@ -10,7 +10,6 @@ from uniproxy.rules import (
     DomainKeywordGroupRule,
     DomainKeywordRule,
     DomainRule,
-    DomainSetRule,
     DomainSuffixGroupRule,
     DomainSuffixRule,
     GeoIPRule,
@@ -18,9 +17,11 @@ from uniproxy.rules import (
     IPCidr6Rule,
     IPCidrGroupRule,
     IPCidrRule,
-    RuleSetRule,
+    UniproxyBasicNoResolvableRule,
     UniproxyBasicRule,
+    UniproxyGroupNoResolvableRule,
     UniproxyGroupRule,
+    UniproxyRule,
 )
 from uniproxy.utils import maybe_flatmap_to_str, maybe_flatmap_to_tag, maybe_to_str
 
@@ -260,8 +261,23 @@ class Route(AbstractSingBox):
     """
 
 
-def route_rule_from_uniproxy(rule: UniproxyBasicRule | UniproxyGroupRule) -> Rule:
-    if not isinstance(rule, Union[UniproxyBasicRule, UniproxyGroupRule]):
+def route_rule_from_uniproxy(
+    rule: Union[
+        UniproxyBasicNoResolvableRule,
+        UniproxyBasicRule,
+        UniproxyGroupNoResolvableRule,
+        UniproxyGroupRule,
+    ],
+) -> Rule:
+    if not isinstance(
+        rule,
+        Union[
+            UniproxyBasicNoResolvableRule,
+            UniproxyBasicRule,
+            UniproxyGroupNoResolvableRule,
+            UniproxyGroupRule,
+        ],
+    ):
         raise ValueError(f"Expected type of Uniproxy Rules, got {type(rule)}")
 
     if str(rule.policy).upper() == "REJECT":
@@ -278,37 +294,38 @@ def route_rule_from_uniproxy(rule: UniproxyBasicRule | UniproxyGroupRule) -> Rul
             DomainRule(matcher=matcher, policy=policy)
             | DomainGroupRule(matcher=matcher, policy=policy)
         ):
-            return RouteRule(outbound=str(policy), domain=matcher)  # type: ignore[reportArgumentType, arg-type]
+            return RouteRule(outbound=str(policy), domain=matcher)
         case (
             DomainSuffixRule(matcher=matcher, policy=policy)
             | DomainSuffixGroupRule(matcher=matcher, policy=policy)
         ):
-            return RouteRule(outbound=str(policy), domain_suffix=matcher)  # type: ignore[reportArgumentType, arg-type]
+            return RouteRule(outbound=str(policy), domain_suffix=matcher)
         case (
             DomainKeywordRule(matcher=matcher, policy=policy)
             | DomainKeywordGroupRule(matcher=matcher, policy=policy)
         ):
-            return RouteRule(outbound=str(policy), domain_keyword=matcher)  # type: ignore[reportArgumentType, arg-type]
+            return RouteRule(outbound=str(policy), domain_keyword=matcher)
         case (
             IPCidrRule(matcher=matcher, policy=policy)
             | IPCidrGroupRule(matcher=matcher, policy=policy)
             | IPCidr6Rule(matcher=matcher, policy=policy)
             | IPCidr6GroupRule(matcher=matcher, policy=policy)
         ):
-            return RouteRule(outbound=str(policy), ip_cidr=matcher)  # type: ignore[reportArgumentType, arg-type]
+            return RouteRule(outbound=str(policy), ip_cidr=matcher)
         case GeoIPRule(matcher=matcher, policy=policy):
             # TODO: add extra opts to give a prefix or suffix
             return RouteRule(
                 outbound=str(policy), rule_set=f"rs-geoip-{matcher}".lower()
             )
-        case (
-            RuleSetRule(matcher, policy) | DomainSetRule(matcher=matcher, policy=policy)
-        ):
-            matcher = str(matcher)
-            if matcher.startswith("http") and "://" in matcher:
-                raise ValueError(
-                    f"Direct URL ({matcher}) is not supported currently while transforming from uniproxy external rule to sing-box rule"
-                )
-            return RouteRule(outbound=str(policy), rule_set=matcher)
+        # case (
+        #     RuleSetRule(matcher, policy) | DomainSetRule(matcher=matcher, policy=policy)
+        # ):
+        #     matcher = str(matcher)
+        #     if matcher.startswith("http") and "://" in matcher:
+        #         raise ValueError(
+        #             f"Direct URL ({matcher}) is not supported currently while transforming from uniproxy external rule to sing-box rule"
+        #         )
+        #     return RouteRule(outbound=str(policy), rule_set=matcher)
         case _:
+            print(rule)
             raise ValueError(f"Unsupported rule type yet: {type(rule)}")

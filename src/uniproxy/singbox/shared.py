@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence, TypedDict
+from typing import Literal, Sequence, TypedDict, Union
 from uniproxy.typing import AlpnType, ServerAddress
 
 from ipaddress import IPv4Address, IPv6Address
@@ -44,7 +44,7 @@ class AliDNS01Challenge(AbstractSingBox):
     provider: Literal["alidns"] = "alidns"
 
 
-type DNS01Challenge = CloudflareDNS01Challenge | AliDNS01Challenge
+DNS01Challenge = Union[CloudflareDNS01Challenge, AliDNS01Challenge]
 
 
 @define
