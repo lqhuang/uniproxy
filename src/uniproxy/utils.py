@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Protocol, Sequence, cast
 
+import binascii
+from base64 import b64decode
 from configparser import ConfigParser
 
 
@@ -9,6 +11,14 @@ def load_ini_without_section(s: str) -> dict:
     parser = ConfigParser()
     parser.read_string(f"[{parser.default_section}]\n{s}")
     return cast(dict, parser.defaults())
+
+
+def padded_b64decode(b64: str) -> bytes:
+    try:
+        return b64decode(b64)
+    except binascii.Error:
+        padding = "=" * ((4 - len(b64) % 4) % 4)
+        return b64decode(b64 + padding)
 
 
 class HasName(Protocol):

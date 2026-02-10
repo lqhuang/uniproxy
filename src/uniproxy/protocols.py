@@ -12,10 +12,11 @@ from uniproxy.typing import (
 from ipaddress import IPv4Address
 
 from attrs import define
+from attrs.converters import to_bool
 
 from uniproxy.base import BaseProtocol
 from uniproxy.shared import TLS
-from uniproxy.uri import parse_ss_uri
+from uniproxy.uri import parse_ss_uri, parse_trojan_uri
 
 
 @define
@@ -121,6 +122,29 @@ class TrojanProtocol(BaseProtocol):
     network: Network = "tcp_and_udp"
 
     type: Literal["trojan"] = "trojan"
+
+    @classmethod
+    def from_uri(cls, uri: str, **kwargs) -> TrojanProtocol:
+        merged = {**parse_trojan_uri(uri), **kwargs}
+        network: Network = "tcp_and_udp" if to_bool(merged.get("udp", "0")) else "tcp"
+
+        if "sni" in merged or "allowInsecure" in merged:
+            tls = TLS(
+                server_name=merged.get("sni", None),
+                sni=True,
+                verify=not to_bool(merged.get("allowInsecure", "1")),
+            )
+        else:
+            tls = None
+
+        return cls(
+            name=merged["name"],
+            server=merged["server"],
+            port=merged["port"],
+            password=merged["password"],
+            tls=tls,
+            network=network,
+        )
 
 
 @define

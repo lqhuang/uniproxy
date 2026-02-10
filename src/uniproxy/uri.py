@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import cast
 from uniproxy.typing import ShadowsocksCipher
 
-from base64 import b64decode
-from urllib.parse import unquote_plus, urlparse
+from urllib.parse import parse_qs, unquote_plus, urlparse
+
+from uniproxy.utils import padded_b64decode
 
 
 def parse_ss_uri(uri: str) -> dict:
@@ -40,7 +41,7 @@ def parse_ss_uri(uri: str) -> dict:
     if result.password is None and result.username is not None:
         padding = "=" * ((4 - len(result.username) % 4) % 4)
         encoded = result.username + padding
-        method, password = b64decode(encoded).decode().split(":", 1)
+        method, password = padded_b64decode(encoded).decode().split(":", 1)
     elif result.password is not None and result.username is not None:
         method, password = result.username, result.password
     else:
@@ -63,4 +64,61 @@ def parse_ss_uri(uri: str) -> dict:
         port=result.port,
         method=cast(ShadowsocksCipher, method),
         password=password,
+    )
+
+
+def parse_trojan_uri(uri: str) -> dict:
+    """Parse a Trojan URI.
+
+    ```
+    TROJAN-URI = trojan://password@remote_host:remote_port
+    ```
+
+    Example:
+
+    ```
+    trojan://98b34529-a3b9-448b-a371-0decd024ee0e@example.com:1780?allowInsecure=1&udp=1&peer=example.org&sni=example.com#Example+Trojan+Server
+    ```
+
+    References:
+
+    1. [trojan-gfw/trojan-url](https://github.com/trojan-gfw/trojan-url)
+    """
+    result = urlparse(uri, allow_fragments=True)
+    if result.scheme != "trojan":
+        raise ValueError("Invalid URI scheme value '%s'" % result.scheme)
+    if result.hostname is None:
+        raise ValueError("Invalid hostname value '%s'" % result.hostname)
+
+    if result.fragment is None:
+        raise ValueError("Invalid fragment value '%s'" % result.fragment)
+
+    if result.port is None:
+        port = 443
+    else:
+        port = int(result.port)
+
+    if result.password is None and result.username is not None:
+        password = result.username
+    else:
+        raise ValueError("Invalid userinfo value '%s'" % result.netloc)
+
+    if result.query:
+        parsed = parse_qs(result.query)
+        # Only support single value for each query parameter, and ignore unsupported parameters.
+        count_perfield = [len(v) for v in parsed.values()]
+        if any(count > 1 for count in count_perfield):
+            raise ValueError("Invalid query parameter value '%s'" % result.query)
+        query_params = {k: v[0] for k, v in parsed.items()}
+    else:
+        query_params = {}
+
+    return dict(
+        name=unquote_plus(result.fragment),
+        server=result.hostname,
+        port=port,
+        password=password,
+        # just flatten the query parameters into the result dict,
+        # and let the caller decide which parameters to use.
+        **query_params,
     )
