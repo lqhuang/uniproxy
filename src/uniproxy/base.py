@@ -15,7 +15,6 @@ class BaseProtocol(AbstractUniproxy):
     name: str
     server: ServerAddress
     port: int
-    # type: ProtocolType
 
     def __str__(self) -> str:
         return str(self.name)
@@ -30,15 +29,13 @@ class BaseProxyGroup(AbstractUniproxy):
 
     url: str = "https://www.gstatic.com/generate_204"
     interval: float = 300
-    timeout: float = 3000
+    timeout: float = 500
     """
     timeout. unit (ms)
     """
 
     # TODO: update to `HealthCheck` class
     health_check: bool | None = None
-
-    # type: GroupType
 
     def __str__(self) -> str:
         return str(self.name)
