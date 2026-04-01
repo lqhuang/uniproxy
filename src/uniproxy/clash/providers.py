@@ -12,10 +12,16 @@ from .typing import RuleProviderBehaviorType, RuleProviderFormatType, RuleProvid
 
 @frozen
 class HealthCheck:
+    """
+    ref: https://wiki.metacubex.one/en/config/proxy-providers/#health-check
+    """
+
     enable: bool = True
-    interval: float = 120
+    url: str = "https://cp.cloudflare.com"  # or https://www.gstatic.com/generate_204
+    interval: float = 120  # seconds
+    timeout: float = 2000  # milliseconds
     lazy: bool = True
-    # url: str = "https://www.gstatic.com/generate_204"
+    expected_status: str = "200/204/302"
 
 
 @define
