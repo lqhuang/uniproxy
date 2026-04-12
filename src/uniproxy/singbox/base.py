@@ -38,6 +38,15 @@ class BaseInbound(AbstractSingBox):
 
 
 @define(slots=False)
+class BaseEndpoint(AbstractSingBox):
+    tag: str
+    # type: str
+
+    def __str__(self) -> str:
+        return str(self.tag)
+
+
+@define(slots=False)
 class BaseDnsServer(AbstractSingBox):
     tag: str
     # type: str

@@ -611,3 +611,16 @@ class DomainResolverMap(TypedDict):
 
     Will overrides `dns.client_subnet`.
     """
+
+
+class UdpOverTcp(TypedDict):
+    """
+    References:
+
+    - https://sing-box.sagernet.org/configuration/shared/udp-over-tcp/
+    """
+
+    enabled: bool | None
+    """Enable the UDP over TCP protocol."""
+    version: Literal[1, 2] | None
+    """The protocol version, `1` or `2`. Version `2` is used by default."""

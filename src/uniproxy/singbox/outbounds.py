@@ -20,17 +20,17 @@ from uniproxy.protocols import (
     UniproxyProtocol,
     VmessProtocol,
 )
-from uniproxy.proxy_groups import (
-    LoadBalanceGroup,
-    SelectGroup,
-    UniproxyProxyGroup,
-    UrlTestGroup,
-)
+from uniproxy.proxy_groups import SelectGroup, UniproxyProxyGroup, UrlTestGroup
 from uniproxy.utils import map_to_str
 
 from .base import BaseOutbound
-from .dns import BaseDnsServer
-from .shared import BaseTransport, DialFieldsMixin, OutboundMultiplex, OutboundTLS
+from .shared import (
+    BaseTransport,
+    DialFieldsMixin,
+    OutboundMultiplex,
+    OutboundTLS,
+    UdpOverTcp,
+)
 from .typing import SingBoxNetwork
 
 __all__ = (
@@ -38,10 +38,10 @@ __all__ = (
     "ShadowsocksOutbound",
     "VmessOutbound",
     "TrojanOutbound",
-    "Peer",
-    "WireguardOutbound",
-    "SelectorOutbound",
+    "NaiveOutbound",
+    "AnyTLSOutbound",
     "UrlTestOutbound",
+    "SelectorOutbound",
 )
 
 
@@ -59,7 +59,7 @@ class DirectMixin:
 
 
 @define
-class DirectOutbound(DialFieldsMixin, DirectMixin, BaseOutbound):  # type: ignore[misc]
+class DirectOutbound(DialFieldsMixin, DirectMixin, BaseOutbound):
     """
     Examples:
 
@@ -98,7 +98,7 @@ class HttpMixin:
 
 
 @define
-class HttpOutbound(DialFieldsMixin, HttpMixin, BaseOutbound):  # type: ignore[misc]
+class HttpOutbound(DialFieldsMixin, HttpMixin, BaseOutbound):
     """
     Examples:
 
@@ -160,7 +160,7 @@ class ShadowsocksMixin:
     """Shadowsocks SIP003 plugin options."""
     network: SingBoxNetwork | None = None
     """Enabled network. One of `tcp`, `udp`. Both is enabled by default."""
-    udp_over_tcp: bool | None = None
+    udp_over_tcp: Literal[False] | UdpOverTcp | None = None
     """UDP over TCP configuration. Conflict with `multiplex`."""
     multiplex: OutboundMultiplex | None = None
     """See Multiplex for details."""
@@ -173,7 +173,7 @@ class ShadowsocksMixin:
 
 
 @define
-class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, BaseOutbound):  # type: ignore[misc]
+class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, BaseOutbound):
     """
 
     Examples:
@@ -250,7 +250,7 @@ class VmessMixin:
 
 
 @define
-class VmessOutbound(DialFieldsMixin, VmessMixin, BaseOutbound):  # type: ignore[misc]
+class VmessOutbound(DialFieldsMixin, VmessMixin, BaseOutbound):
     type: Literal["vmess"] = "vmess"
 
     @classmethod
@@ -301,7 +301,7 @@ class TrojanMixin:
 
 
 @define
-class TrojanOutbound(DialFieldsMixin, TrojanMixin, BaseOutbound):  # type: ignore[misc]
+class TrojanOutbound(DialFieldsMixin, TrojanMixin, BaseOutbound):
     """
     Examples:
 
@@ -342,136 +342,117 @@ class TrojanOutbound(DialFieldsMixin, TrojanMixin, BaseOutbound):  # type: ignor
         )
 
 
-@define
-class Peer:
-    allowed_ips: Sequence[IPAddress]
-    """WireGuard allowed IPs."""
-
-    server: ServerAddress | None = None
-    """The server address. Required if multi-peer disabled"""
-    server_port: int | None = None
-    """The server port. Required if multi-peer disabled"""
-    peer_public_key: str | None = None
-    """
-    Required if multi-peer disabled
-
-    WireGuard peer public key."""
-    pre_shared_key: str | None = None
-    """WireGuard pre-shared key."""
-
-    reserved: Sequence[int] | None = None
-    """
-    WireGuard reserved field bytes.
-
-    $outbound.reserved will be used if empty.
-    """
-
-
 @define(slots=False)
-class WireguardMixin:
-    local_address: Sequence[IPAddress]
+class NaiveMixin:
+    server: ServerAddress
+    """The server address."""
+    server_port: int
+    """The server port."""
+    tls: OutboundTLS
+    """TLS configuration, see [[TLS]]."""
+
+    username: str | None = None
+    """Authentication username."""
+    password: str | None = None
+    """Authentication password."""
+
+    insecure_concurrency: bool | None = None
     """
-    **Required**
-
-    List of IP (v4 or v6) address prefixes to be assigned to the interface.
+    Number of concurrent tunnel connections. Multiple connections make the
+    tunneling easier to detect through traffic analysis, which defeats the
+    purpose of NaiveProxy's design to resist traffic analysis."""
+    extra_headers: dict | None = None
+    """Extra headers to send in HTTP requests."""
+    udp_over_tcp: Literal[False] | UdpOverTcp | None = None
+    """UDP over TCP protocol settings. See [[UDP Over TCP]] for details."""
+    quic: bool | None = None
+    """Use QUIC instead of HTTP/2."""
+    quic_congestion_control: str | None = None
     """
-    private_key: str
+    QUIC congestion control algorithm.
+
+    | Algorithm | Description |
+    | --------- | ----------- |
+    | `bbr`     | BBR         |
+    | `bbr2`    | BBRv2       |
+    | `cubic`   | CUBIC       |
+    | `reno`    | New Reno    |
+
+    `bbr` is used by default (the default of QUICHE, used by Chromium which NaiveProxy is based on).
     """
-    **Required**
-
-    WireGuard requires base64-encoded public and private keys.
-    These can be generated using the wg(8) utility:
-
-    ```
-    wg genkey
-    echo "private key" || wg pubkey
-    ```
-    """
-
-    server: ServerAddress | None = None
-    """The server address. Required if multi-peer disabled."""
-    server_port: int | None = None
-    """The server port. Required if multi-peer disabled."""
-    peer_public_key: str | None = None
-    """Required if multi-peer disabled. WireGuard peer public key."""
-
-    pre_shared_key: str | None = None
-    """WireGuard pre-shared key."""
-
-    peers: Sequence[Peer] | None = None
-    """
-    Multi-peer support.
-
-    If enabled, `server`, `server_port`, `peer_public_key`, `pre_shared_key` will be ignored.
-    """
-
-    reserved: Sequence[int] | None = None
-    """WireGuard reserved field bytes."""
-
-    system_interface: str | None = None
-    """
-    Use system interface.
-
-    Requires privilege and cannot conflict with exists system interfaces.
-
-    Forced if gVisor not included in the build.
-    """
-    interface_name: str | None = None
-    """Custom interface name for system interface."""
-    gso: bool | None = None
-    """Try to enable generic segmentation offload."""
-    workers: int | None = None
-    """WireGuard worker count. CPU count is used by default."""
-    mtu: int | None = None
-    """WireGuard MTU. 1408 will be used if empty."""
-    network: SingBoxNetwork | None = None
-    """Enabled network. One of tcp udp. Both is enabled by default."""
 
 
 @define
-class WireguardOutbound(DialFieldsMixin, WireguardMixin, BaseOutbound):  # type: ignore[misc]
+class NaiveOutbound(DialFieldsMixin, NaiveMixin, BaseOutbound):
     """
+    Since sing-box 1.13.0
+
     Examples:
 
     ```json
-    {
-    "type": "wireguard",
-    "tag": "wireguard-out",
+    "type": "naive",
+    "tag": "naive-out",
 
     "server": "127.0.0.1",
-    "server_port": 1080,
-    "system_interface": false,
-    "gso": false,
-    "interface_name": "wg0",
-    "local_address": [
-        "10.0.0.2/32"
-    ],
-    "private_key": "YNXtAzepDqRv9H52osJVDQnznT5AM11eCK3ESpwSt04=",
-    "peers": [
-        {
-        "server": "127.0.0.1",
-        "server_port": 1080,
-        "public_key": "Z1XXLsKYkYxuiYjJIkRvtIKFepCYHTgON+GwPq7SOV4=",
-        "pre_shared_key": "31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=",
-        "allowed_ips": [
-            "0.0.0.0/0"
-        ],
-        "reserved": [0, 0, 0]
-        }
-    ],
-    "peer_public_key": "Z1XXLsKYkYxuiYjJIkRvtIKFepCYHTgON+GwPq7SOV4=",
-    "pre_shared_key": "31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=",
-    "reserved": [0, 0, 0],
-    "workers": 4,
-    "mtu": 1408,
-    "network": "tcp",
+    "server_port": 443,
+    "username": "sekai",
+    "password": "password",
+    "insecure_concurrency": 0,
+    "extra_headers": {},
+    "udp_over_tcp": false | {},
+    "quic": false,
+    "quic_congestion_control": "",
+    "tls": {},
 
     ... // Dial Fields
-    }
     ```
     """
 
-    type: Literal["wireguard"] = "wireguard"
+    type: Literal["naive"] = "naive"
+
+
+@define(slots=False)
+class AnyTLSMixin:
+    server: ServerAddress
+    """The server address."""
+    server_port: int
+    """The server port."""
+    password: str
+    """The AnyTLS password."""
+    tls: OutboundTLS
+    """TLS configuration, see [[TLS]]."""
+    idle_session_check_interval: str | None = None
+    """Interval checking for idle sessions. Default: `30s`."""
+    idle_session_timeout: str | None = None
+    """In the check, close sessions that have been idle for longer than this. Default: `30s`."""
+    min_idle_session: int | None = None
+    """In the check, at least the first `n` idle sessions are kept open. Default value: `n=0`."""
+
+
+@define
+class AnyTLSOutbound(DialFieldsMixin, AnyTLSMixin, BaseOutbound):
+    """
+    Since sing-box 1.12.0
+
+    Examples:
+
+    ```json
+    "type": "anytls",
+    "tag": "anytls-out",
+
+    "server": "127.0.0.1",
+    "server_port": 1080,
+    "password": "8JCsPssfgS8tiRwiMlhARg==",
+    "idle_session_check_interval": "30s",
+    "idle_session_timeout": "30s",
+    "min_idle_session": 5,
+    "tls": {},
+
+    ... // Dial Fields
+    ```
+    """
+
+    type: Literal["anytls"] = "anytls"
 
 
 @define
@@ -568,49 +549,8 @@ class UrlTestOutbound(BaseOutbound):
         )
 
 
-@define
-class PseudoLoadBalanceOutbound(BaseOutbound):
-    outbounds: Sequence[SingBoxOutbound | str] = field(converter=map_to_str)
-    url: str | None = None
-    interval: str | None = None
-    tolerance: float | None = None
-    idle_timeout: str | None = None
-    interrupt_exist_connections: bool | None = None
-    type: Literal["urltest"] = "urltest"
-
-    @classmethod
-    def from_uniproxy(cls, protocol: LoadBalanceGroup, **kwargs) -> UrlTestOutbound:
-        return cls(  # type: ignore
-            tag=protocol.name,
-            outbounds=[str(i) for i in protocol.proxies] if protocol.proxies else [],
-            url=protocol.url,
-            interval=f"{protocol.interval}s" if protocol.interval else None,
-            tolerance=100,
-        )
-
-
-@define
-class PseudoFallbackOutbound(BaseOutbound):
-    outbounds: Sequence[SingBoxOutbound | str] = field(converter=map_to_str)
-    default: SingBoxOutbound | str | None = None
-    interrupt_exist_connections: bool | None = None
-    type: Literal["selector"] = "selector"
-
-    @classmethod
-    def from_uniproxy(cls, protocol: SelectGroup, **kwargs) -> SelectorOutbound:
-        return cls(  # type: ignore
-            tag=protocol.name,
-            outbounds=[str(i) for i in protocol.proxies] if protocol.proxies else [],
-            interrupt_exist_connections=False,
-        )
-
-
 SingBoxProtocolOutbound = (
-    DirectOutbound
-    | ShadowsocksOutbound
-    | VmessOutbound
-    | TrojanOutbound
-    | WireguardOutbound
+    DirectOutbound | ShadowsocksOutbound | VmessOutbound | TrojanOutbound
 )
 SingBoxGroupOutbound = SelectorOutbound | UrlTestOutbound
 SingBoxOutbound = SingBoxProtocolOutbound | SingBoxGroupOutbound
@@ -625,13 +565,12 @@ _SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, SingBoxProtocolOutbound] = 
     "shadowsocks": ShadowsocksOutbound,
     "vmess": VmessOutbound,
     "trojan": TrojanOutbound,
-    "wireguard": WireguardOutbound,
+    "anytls": AnyTLSOutbound,
+    "naive": NaiveOutbound,
 }
 _SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, SingBoxGroupOutbound] = {  # type: ignore[reportAssignmentType]
     "select": SelectorOutbound,
     "url-test": UrlTestOutbound,
-    "load-balance": PseudoLoadBalanceOutbound,
-    "fallback": PseudoFallbackOutbound,
 }
 
 
