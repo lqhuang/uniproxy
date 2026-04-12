@@ -26,6 +26,7 @@ ProtocolType = Literal[
     "naive",
     "tuic",
     "wireguard",
+    "anytls",
 ]
 Network = Literal["tcp", "udp", "tcp_and_udp"]
 

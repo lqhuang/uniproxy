@@ -185,8 +185,20 @@ class NaiveProtocol(BaseProtocol):
     username: str
     password: str
     proto: Literal["http2", "quic"]
+    network: Network = "tcp_and_udp"
     extra_headers: dict[str, str] | None = None
-    type: ProtocolType = "naive"
+
+    type: Literal["naive"] = "naive"
+
+
+@define
+class AnyTLSProtocol(BaseProtocol):
+    password: str
+    tls: TLS | None = None
+    reuse: bool | None = None
+    network: Network = "tcp_and_udp"
+
+    type: Literal["anytls"] = "anytls"
 
 
 @define
@@ -249,6 +261,7 @@ UniproxyProtocol = Union[
     TrojanProtocol,
     TuicProtocol,
     NaiveProtocol,
+    AnyTLSProtocol,
     VmessProtocol,
     WireGuardProtocol,
 ]

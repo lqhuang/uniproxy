@@ -15,6 +15,7 @@ from uniproxy.typing import (
 from attrs import define, field
 from xattrs._metadata import _Metadata
 
+from uniproxy.protocols import AnyTLSProtocol as UniproxyAnyTLSProtocol
 from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
 from uniproxy.protocols import ShadowsocksObfsPlugin as UniproxyShadowsocksObfsPlugin
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
@@ -209,6 +210,58 @@ class TrojanProtocol(BaseProtocol):
     def from_uniproxy(
         cls, protocol: UniproxyTrojanProtocol, **kwargs
     ) -> TrojanProtocol:
+        if protocol.tls is not None:
+            skip_cert_verify = not protocol.tls.verify
+            sni = protocol.tls.server_name
+            alpn = protocol.tls.alpn
+        else:
+            skip_cert_verify = None
+            sni = None
+            alpn = None
+
+        return cls(
+            protocol.name,
+            protocol.server,
+            protocol.port,
+            password=protocol.password,
+            sni=sni,
+            skip_cert_verify=skip_cert_verify,
+            alpn=alpn,
+            udp=protocol.network != "tcp",
+        )
+
+
+@define
+class AnyTLSProtocol(BaseProtocol):
+    """
+    ```yaml
+    name: anytls
+    type: anytls
+    server: server
+    port: 443
+    password: yourpassword
+    # udp: true
+    # sni: example.com # Server Name Indication, value of `server` will be used if not set
+    # alpn:
+    #   - h2
+    #   - http/1.1
+    # skip-cert-verify: true
+    ```
+    """
+
+    password: str
+    sni: str | None = None
+    skip_cert_verify: bool | None = None
+    alpn: Sequence[AlpnType] | None = None
+
+    udp: bool | None = None
+
+    type: Literal["anytls"] = "anytls"
+
+    @classmethod
+    def from_uniproxy(
+        cls, protocol: UniproxyAnyTLSProtocol, **kwargs
+    ) -> AnyTLSProtocol:
         if protocol.tls is not None:
             skip_cert_verify = not protocol.tls.verify
             sni = protocol.tls.server_name

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from uniproxy.uri import parse_ss_uri, parse_trojan_uri
+from uniproxy.uri import parse_anytls_uri, parse_ss_uri, parse_trojan_uri
 
 
 @pytest.mark.parametrize(
@@ -62,3 +62,43 @@ def test_parse_trojan_uri_no_duplicate_params():
     )
     with pytest.raises(ValueError):
         parse_trojan_uri(url)
+
+
+@pytest.mark.parametrize(
+    ("uri", "expected"),
+    [
+        (
+            "anytls://letmein@example.com/?sni=real.example.com#Example1",
+            {
+                "name": "Example1",
+                "server": "example.com",
+                "port": 443,
+                "password": "letmein",
+                "sni": "real.example.com",
+            },
+        ),
+        (
+            "anytls://letmein@example.com/?sni=127.0.0.1&insecure=1#Example2",
+            {
+                "name": "Example2",
+                "server": "example.com",
+                "port": 443,
+                "password": "letmein",
+                "sni": "127.0.0.1",
+                "insecure": True,
+            },
+        ),
+        (
+            "anytls://0fdf77d7-d4ba-455e-9ed9-a98dd6d5489a@[2409:8a71:6a00:1953::615]:8964/?insecure=1#Example3",
+            {
+                "name": "Example3",
+                "server": "2409:8a71:6a00:1953::615",
+                "port": 8964,
+                "password": "0fdf77d7-d4ba-455e-9ed9-a98dd6d5489a",
+                "insecure": True,
+            },
+        ),
+    ],
+)
+def test_parse_anytls_uri(uri, expected):
+    assert parse_anytls_uri(uri) == expected

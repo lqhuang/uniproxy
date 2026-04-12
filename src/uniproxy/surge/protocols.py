@@ -8,6 +8,7 @@ from ipaddress import IPv4Address, IPv6Address
 
 from attrs import define
 
+from uniproxy.protocols import AnyTLSProtocol as UniproxyAnyTLSProtocol
 from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
 from uniproxy.protocols import ShadowsocksObfsPlugin, UniproxyProtocol
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
@@ -376,7 +377,7 @@ class TrojanProtocol(BaseProtocol):
             server=protocol.server,
             port=protocol.port,
             password=protocol.password,
-            tls=SurgeTLS.from_uniproxy(protocol.tls) if protocol.tls else None,
+            tls=protocol.tls and SurgeTLS.from_uniproxy(protocol.tls),
             udp_relay=UniproxyTrojanProtocol.network != "tcp",
         )
 
@@ -423,6 +424,41 @@ class TuicProtocol(BaseProtocol):
             token=protocol.token,
             alpn=tls.alpn[0] if tls.alpn else None,
             udp_relay=True,
+            **kwargs,
+        )
+
+
+@define
+class AnyTLSProtocol(BaseProtocol):
+    """
+    ```ini
+    [Proxy]
+    Proxy-AnyTLS = anytls, 192.168.20.6, 443, password=pwd
+    ```
+    """
+
+    password: str
+    tls: SurgeTLS | None = None
+    reuse: bool | None = None
+    type: Literal["tuic"] = "tuic"
+
+    def __attrs_asdict__(self) -> dict:
+        must_opts = f"{self.type}, {self.server}, {self.port}, password={self.password}"
+        tls_opts = str(self.tls) if self.tls else ""
+        misc_opts = f"reuse={str(self.reuse).lower()}" if self.reuse is not None else ""
+        return {self.name: ", ".join(filter(bool, (must_opts, tls_opts, misc_opts)))}
+
+    @classmethod
+    def from_uniproxy(
+        cls, protocol: UniproxyAnyTLSProtocol, **kwargs
+    ) -> AnyTLSProtocol:
+        return cls(
+            name=protocol.name,
+            server=protocol.server,
+            port=protocol.port,
+            password=protocol.password,
+            tls=protocol.tls and SurgeTLS.from_uniproxy(protocol.tls),
+            reuse=protocol.reuse,
             **kwargs,
         )
 

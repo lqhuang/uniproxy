@@ -122,3 +122,75 @@ def parse_trojan_uri(uri: str) -> dict:
         # and let the caller decide which parameters to use.
         **query_params,
     )
+
+
+def parse_anytls_uri(uri: str) -> dict:
+    """Parse a AnyTLS URI.
+
+    ref: https://github.com/anytls/anytls-go/blob/main/docs/uri_scheme.md
+
+    ```
+    anytls://[auth@]hostname[:port]/?[key=value]&[key=value]...
+    ```
+
+    Example:
+
+    ```
+    anytls://letmein@example.com/?sni=real.example.com
+    anytls://letmein@example.com/?sni=127.0.0.1&insecure=1
+    anytls://0fdf77d7-d4ba-455e-9ed9-a98dd6d5489a@[2409:8a71:6a00:1953::615]:8964/?insecure=1
+    ```
+    """
+    result = urlparse(uri, allow_fragments=True)
+    if result.scheme != "anytls":
+        raise ValueError("Invalid URI scheme value '%s'" % result.scheme)
+    if result.hostname is None:
+        raise ValueError("Invalid hostname value '%s'" % result.hostname)
+
+    if result.fragment is None:
+        raise ValueError("Invalid fragment value '%s'" % result.fragment)
+
+    if result.port is None:
+        port = 443
+    else:
+        port = int(result.port)
+
+    if result.password is None and result.username is not None:
+        password = result.username
+    else:
+        raise ValueError("Invalid userinfo value '%s'" % result.netloc)
+
+    if result.query:
+        parsed = parse_qs(result.query)
+        # Only support single value for each query parameter, and ignore unsupported parameters.
+        count_perfield = [len(v) for v in parsed.values()]
+        if any(count > 1 for count in count_perfield):
+            raise ValueError("Invalid query parameter value '%s'" % result.query)
+        query_params = {k: v[0] for k, v in parsed.items()}
+    else:
+        query_params = {}
+
+    sni = query_params.pop("sni", None)
+    insecure = query_params.pop("insecure", None)
+    if insecure is not None:
+        if insecure == "1":
+            insecure = True
+        elif insecure == "0":
+            insecure = False
+        else:
+            raise ValueError("Invalid value for 'insecure' parameter: '%s'" % insecure)
+
+    sni_kw = {} if sni is None else {"sni": sni}
+    insecure_kw = {} if insecure is None else {"insecure": insecure}
+
+    return dict(
+        name=unquote_plus(result.fragment),
+        server=result.hostname,
+        port=port,
+        password=password,
+        **sni_kw,
+        **insecure_kw,
+        # just flatten the query parameters into the result dict,
+        # and let the caller decide which parameters to use.
+        **query_params,
+    )
