@@ -45,8 +45,8 @@ class SurgeTLS(AbstractSurge):
     def from_uniproxy(cls, tls: TLS | None) -> SurgeTLS:
         if tls is None:
             sni = None
-        elif tls.sni is False:
-            sni = "off"
+        # elif tls.sni is False:
+        #     sni = "off"
         else:
             sni = tls.server_name
 

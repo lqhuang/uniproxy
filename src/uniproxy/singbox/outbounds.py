@@ -13,6 +13,7 @@ from uniproxy.typing import (
 from attrs import define, field
 
 from uniproxy.protocols import (
+    AnyTLSProtocol,
     HttpProtocol,
     ShadowsocksObfsPlugin,
     ShadowsocksProtocol,
@@ -453,6 +454,19 @@ class AnyTLSOutbound(DialFieldsMixin, AnyTLSMixin, BaseOutbound):
     """
 
     type: Literal["anytls"] = "anytls"
+
+    @classmethod
+    def from_uniproxy(cls, protocol: AnyTLSProtocol, **kwargs) -> AnyTLSOutbound:
+        if protocol.tls is None:
+            raise ValueError("TLS configuration is required for AnyTLS protocol")
+        return cls(
+            tag=protocol.name,
+            server=protocol.server,
+            server_port=protocol.port,
+            password=protocol.password,
+            tls=OutboundTLS.from_uniproxy(protocol.tls),
+            **kwargs,
+        )
 
 
 @define

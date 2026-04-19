@@ -515,6 +515,7 @@ _CLASH_MAPPER: Mapping[ProtocolType, type[BaseProtocol]] = {
     "trojan": TrojanProtocol,
     # "tuic": TuicProtocol,
     "wireguard": WireguardProtocol,
+    "anytls": AnyTLSProtocol,
 }
 
 ClashProtocol = (

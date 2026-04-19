@@ -40,7 +40,6 @@ class HttpProtocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
     tls: SurgeTLS | None = None
-
     tfo: bool | None = None
     always_use_connect: bool | None = None
 
@@ -109,7 +108,6 @@ class Socks5Protocol(BaseProtocol):
     username: str | None = None
     password: str | None = None
     tls: SurgeTLS | None = None
-
     udp_relay: bool | None = None
 
     type: Literal["socks5", "socks5-tls"] = "socks5"
@@ -158,18 +156,8 @@ class Socks5Protocol(BaseProtocol):
 class ShadowsocksProtocol(BaseProtocol):
     password: str
     encrypt_method: ShadowsocksCipher
-
     udp_relay: bool | None = None
-
-    obfs: Literal["http", "tls"] | None = None
-    obfs_host: str | None = None
-
     ecn: bool | None = None
-
-    type: Literal["ss"] = "ss"
-
-    obfs_uri: str | None = None
-    """deprecated"""
 
     # https://manual.nssurge.com/policy/proxy.html
     underlying_proxy: ProtocolLike | None = None
@@ -179,6 +167,13 @@ class ShadowsocksProtocol(BaseProtocol):
     Use a proxy to connect another proxy, aka proxy chain.
     It can be another proxy policy's or policy group's name.
     """
+
+    obfs: Literal["http", "tls"] | None = None
+    obfs_host: str | None = None
+    obfs_uri: str | None = None
+    """deprecated"""
+
+    type: Literal["ss"] = "ss"
 
     @classmethod
     def from_uniproxy(
@@ -273,7 +268,6 @@ class VmessTransport(AbstractSurge):
 class VmessProtocol(BaseProtocol):
     username: str
     """uuid"""
-
     encrypt_method: VmessCipher | None = None
     tls: SurgeTLS | None = None
     transport: VmessTransport | None = None
@@ -346,7 +340,6 @@ class VmessProtocol(BaseProtocol):
 class TrojanProtocol(BaseProtocol):
     password: str
     tls: SurgeTLS | None = None
-
     udp_relay: bool | None = None
 
     type: Literal["trojan"] = "trojan"
@@ -393,9 +386,8 @@ class TuicProtocol(BaseProtocol):
 
     token: str
     alpn: AlpnType | None = None
-
     tls: SurgeTLS | None = None
-    udp_relay: bool | None = True
+    udp_relay: bool | None = None
 
     type: Literal["tuic"] = "tuic"
 
@@ -440,7 +432,8 @@ class AnyTLSProtocol(BaseProtocol):
     password: str
     tls: SurgeTLS | None = None
     reuse: bool | None = None
-    type: Literal["tuic"] = "tuic"
+
+    type: Literal["anytls"] = "anytls"
 
     def __attrs_asdict__(self) -> dict:
         must_opts = f"{self.type}, {self.server}, {self.port}, password={self.password}"
@@ -566,6 +559,7 @@ _SURGE_MAPPER: Mapping[UniproxyProtocolType, type[BaseProtocol]] = {
     "trojan": TrojanProtocol,
     "tuic": TuicProtocol,
     "wireguard": WireguardProtocol,
+    "anytls": AnyTLSProtocol,
 }
 
 

@@ -11,10 +11,10 @@ from attrs import define, frozen
 @frozen
 class TLS:
     server_name: str | None = None
-    sni: bool | None = None
+    # sni: bool | None = None
     # https://github.com/quicwg/base-drafts/wiki/ALPN-IDs-used-with-QUIC
     alpn: Sequence[AlpnType] | None = None
-    verify: bool = True
+    verify: bool | None = None
     cert_ca: Sequence[str] | PathLike | None = None
     cert_private_key: Sequence[str] | PathLike | None = None
     cert_private_password: str | None = None

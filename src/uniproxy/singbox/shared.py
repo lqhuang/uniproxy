@@ -227,7 +227,6 @@ class OutboundTLS(BaseTLS):
         # TODO: cert or cert path are not handled yet
         return cls(
             enabled=tls is not None,
-            disable_sni=not tls.sni,
             server_name=tls.server_name,
             insecure=not tls.verify,
             alpn=tls.alpn,

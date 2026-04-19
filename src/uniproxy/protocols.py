@@ -11,12 +11,12 @@ from uniproxy.typing import (
 
 from ipaddress import IPv4Address
 
-from attrs import define
+from attrs import define, evolve
 from attrs.converters import to_bool
 
 from uniproxy.base import BaseProtocol
 from uniproxy.shared import TLS
-from uniproxy.uri import parse_ss_uri, parse_trojan_uri
+from uniproxy.uri import AnyTLSConfig, parse_anytls_uri, parse_ss_uri, parse_trojan_uri
 
 
 @define
@@ -128,14 +128,12 @@ class TrojanProtocol(BaseProtocol):
         merged = {**parse_trojan_uri(uri), **kwargs}
         network: Network = "tcp_and_udp" if to_bool(merged.get("udp", "0")) else "tcp"
 
+        tls = TLS()
         if "sni" in merged or "allowInsecure" in merged:
-            tls = TLS(
-                server_name=merged.get("sni", None),
-                sni=True,
-                verify=not to_bool(merged.get("allowInsecure", "1")),
-            )
-        else:
-            tls = None
+            if "sni" in merged:
+                tls = evolve(tls, server_name=merged["sni"])
+            if "allowInsecure" in merged:
+                tls = evolve(tls, verify=not to_bool(merged["allowInsecure"]))
 
         return cls(
             name=merged["name"],
@@ -199,6 +197,26 @@ class AnyTLSProtocol(BaseProtocol):
     network: Network = "tcp_and_udp"
 
     type: Literal["anytls"] = "anytls"
+
+    @classmethod
+    def from_uri(cls, uri: str, **kwargs) -> AnyTLSProtocol:
+        merged: AnyTLSConfig = {**parse_anytls_uri(uri), **kwargs}  # pyright: ignore[reportAssignmentType]
+        network: Network = "tcp_and_udp" if to_bool(merged.get("udp", "1")) else "tcp"
+
+        tls = TLS()
+        if "sni" in merged:
+            tls = evolve(tls, server_name=merged["sni"])
+        if "insecure" in merged:
+            tls = evolve(tls, verify=not to_bool(merged["insecure"]))
+
+        return cls(
+            name=merged["name"],
+            server=merged["server"],
+            port=merged["port"],
+            password=merged["password"],
+            tls=tls,
+            network=network,
+        )
 
 
 @define

@@ -29,7 +29,7 @@ class BaseProxyGroup(AbstractUniproxy):
 
     url: str = "https://www.gstatic.com/generate_204"
     interval: float = 300
-    timeout: float = 500
+    timeout: float = 1000
     """
     timeout. unit (ms)
     """

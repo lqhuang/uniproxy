@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import NotRequired, TypedDict, cast
 from uniproxy.typing import ShadowsocksCipher
 
 from urllib.parse import parse_qs, unquote_plus, urlparse
+
+from attrs.converters import to_bool
 
 from uniproxy.utils import padded_b64decode
 
@@ -124,7 +126,16 @@ def parse_trojan_uri(uri: str) -> dict:
     )
 
 
-def parse_anytls_uri(uri: str) -> dict:
+class AnyTLSConfig(TypedDict):
+    name: str
+    server: str
+    port: int
+    password: str
+    sni: NotRequired[str]
+    insecure: NotRequired[bool]
+
+
+def parse_anytls_uri(uri: str) -> AnyTLSConfig:
     """Parse a AnyTLS URI.
 
     ref: https://github.com/anytls/anytls-go/blob/main/docs/uri_scheme.md
@@ -173,17 +184,12 @@ def parse_anytls_uri(uri: str) -> dict:
     sni = query_params.pop("sni", None)
     insecure = query_params.pop("insecure", None)
     if insecure is not None:
-        if insecure == "1":
-            insecure = True
-        elif insecure == "0":
-            insecure = False
-        else:
-            raise ValueError("Invalid value for 'insecure' parameter: '%s'" % insecure)
+        insecure = to_bool(insecure)
 
     sni_kw = {} if sni is None else {"sni": sni}
     insecure_kw = {} if insecure is None else {"insecure": insecure}
 
-    return dict(
+    return dict(  # pyright: ignore[reportReturnType]
         name=unquote_plus(result.fragment),
         server=result.hostname,
         port=port,
