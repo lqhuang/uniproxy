@@ -37,9 +37,15 @@ class DNS(AbstractSingBox):
     # Disable dns cache expire.
     disable_expire: bool | None = None
 
-    # Make each DNS server's cache independent for special purposes.
-    # If enabled, will slightly degrade performance.
     independent_cache: bool | None = None
+    """
+    Make each DNS server's cache independent for special purposes.
+    If enabled, will slightly degrade performance.
+
+    > Deprecated in sing-box 1.14.0
+    >
+    > `independent_cache` is deprecated and will be removed in sing-box 1.14.0.
+    """
 
     # Stores a reverse mapping of IP addresses after responding to a DNS query
     # in order to provide domain names when routing.
@@ -307,7 +313,9 @@ type DnsServer = (
 )
 
 
-type DnsRuleAction = Literal["route", "route-options", "reject", "predefined", "fakeip"]
+type DnsRuleAction = Literal[
+    "route", "evaluate", "respond", "route-options", "reject", "predefined"
+]
 
 
 @define

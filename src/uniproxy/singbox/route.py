@@ -39,13 +39,26 @@ class LocalRuleSet(BaseRuleSet):
 @define
 class RemoteRuleSet(BaseRuleSet):
     url: str
+    update_interval: float | None = None
+
+    http_client: None = None
+
     download_detour: BaseOutbound | str | None = field(
         default=None, converter=maybe_to_str
     )
-    update_interval: float | None = None
+    """
+    Tag of the outbound to download rule-set.
+
+    > Deprecated in sing-box 1.14.0
+    >
+    > `download_detour` is deprecated in sing-box 1.14.0 and will be removed in
+    > sing-box 1.16.0, use `http_client` instead.
+    """
 
     type: Literal["remote"] = "remote"
 
+
+RuleSet = Union[LocalRuleSet, RemoteRuleSet]
 
 #
 # Route Rule
