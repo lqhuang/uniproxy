@@ -250,6 +250,52 @@ class TrojanInbound(ListenFieldsMixin, TrojanMixin, SingBoxInbound):  # type: ig
 
 
 @define(slots=False)
+class NaiveMixin:
+    """
+    ```json
+    {
+      "type": "naive",
+      "tag": "naive-in",
+      "network": "udp",
+      ...
+      // Listen Fields
+
+      "users": [
+        {
+          "username": "sekai",
+          "password": "password"
+        }
+      ],
+      "quic_congestion_control": "",
+      "tls": {}
+    }
+    ```
+    """
+
+    users: Sequence[ProxyUser]
+    """Naive users."""
+
+    tls: InboundTLS
+    """TLS configuration, see [TLS](https://sing-box.sagernet.org/configuration/shared/tls/#inbound)."""
+
+    network: SingBoxNetwork | None = None
+    """
+    Listen network, one of `tcp` `udp`.
+
+    Both if empty.
+    """
+
+    quic_congestion_control: (
+        Literal["bbr", "bbr_standard", "bbr2", "bbr2_variant", "cubic", "reno"] | None
+    ) = None
+
+
+@define
+class NaiveInbound(ListenFieldsMixin, NaiveMixin, SingBoxInbound):  # type: ignore[misc]
+    type: Literal["naive"] = "naive"
+
+
+@define(slots=False)
 class TuicMixin:
     """
     ```json
@@ -317,6 +363,61 @@ class TuicMixin:
 @define
 class TuicInbound(ListenFieldsMixin, TuicMixin, SingBoxInbound):  # type: ignore[misc]
     type: Literal["tuic"] = "tuic"
+
+
+@define(slots=False)
+class AnyTLSMixin:
+    """
+    ```json
+    {
+      "type": "anytls",
+      "tag": "anytls-in",
+
+      ... // Listen Fields
+
+      "users": [
+        {
+          "name": "sekai",
+          "password": "8JCsPssfgS8tiRwiMlhARg=="
+        }
+      ],
+      "padding_scheme": [],
+      "tls": {}
+    }
+    ```
+    """
+
+    users: Sequence[SimpleUser]
+    """AnyTLS users."""
+
+    tls: InboundTLS
+    """TLS configuration, see [TLS](https://sing-box.sagernet.org/configuration/shared/tls/#inbound)."""
+
+    padding_scheme: Sequence[str] | None = None
+    """
+    AnyTLS padding scheme line array.
+
+    Default padding scheme:
+
+    ```
+    [
+      "stop=8",
+      "0=30-30",
+      "1=100-400",
+      "2=400-500,c,500-1000,c,500-1000,c,500-1000,c,500-1000",
+      "3=9-9,500-1000",
+      "4=500-1000",
+      "5=500-1000",
+      "6=500-1000",
+      "7=500-1000"
+    ]
+    ```
+    """
+
+
+@define
+class AnyTLSInbound(ListenFieldsMixin, AnyTLSMixin, SingBoxInbound):  # type: ignore[misc]
+    type: Literal["anytls"] = "anytls"
 
 
 @define

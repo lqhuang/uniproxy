@@ -176,6 +176,10 @@ class BaseTLS(AbstractSingBox):
     If empty, a safe default list is used. The default cipher suites might change over time.
     """
 
+    #
+    # shared certificate settings
+    #
+
     certificate: Sequence[str] | None = None
     """The server certificate line array, in PEM format."""
 
@@ -190,9 +194,33 @@ class BaseTLS(AbstractSingBox):
     The path to the server certificate, in PEM format.
     """
 
+    client_certificate: Sequence[str] | None = None
+    """
+    > [!NOTE]
+    >
+    > Since sing-box 1.13.0
+
+    Client certificate chain line array, in PEM format.
+    """
+
+    client_certificate_path: PathLike | str | None = field(
+        default=None, converter=maybe_to_str
+    )
+    """
+    > [!NOTE]
+    >
+    > Since sing-box 1.13.0
+
+    The path to client certificate chain, in PEM format.
+    """
+
 
 @define
 class InboundTLS(BaseTLS):
+    """
+    Known as Server TLS in sing-box config.
+    """
+
     key: Sequence[str] | None = None
     """The server private key line array, in PEM format."""
 
@@ -205,20 +233,108 @@ class InboundTLS(BaseTLS):
     The path to the server certificate, in PEM format.
     """
 
-    acme: ACME | None = None
+    client_authentication: dict | None = None
+    """
+    > [!NOTE]
+    >
+    > Since sing-box 1.13.0
+
+    The type of client authentication to use.
+
+    Available values:
+
+    - `no` (default)
+    - `request`
+    - `require-any`
+    - `verify-if-given`
+    - `require-and-verify`
+
+    One of `client_certificate`, `client_certificate_path`, or `client_certificate_public_key_sha256`
+    is required if this option is set to `verify-if-given`, or `require-and-verify`.
+    """
+
+    client_certificate_public_key_sha256: Sequence[str] | None = None
+    """
+    > [!NOTE]
+    >
+    > Since sing-box 1.13.0
+
+    List of SHA-256 hashes of client certificate public keys, in base64 format.
+    """
 
     ech: ECH | None = None
+
+    acme: ACME | None = None
+
+    def __attrs_post_init__(self):
+        if self.client_authentication in (
+            "verify-if-given",
+            "require-and-verify",
+        ) and not any([
+            self.client_certificate,
+            self.client_certificate_path,
+            self.client_certificate_public_key_sha256,
+        ]):
+            raise ValueError(
+                "One of `client_certificate`, `client_certificate_path`, "
+                "or `client_certificate_public_key_sha256` is required when "
+                "`client_authentication` is set to "
+                "`verify-if-given` or `require-and-verify`."
+            )
 
 
 @define
 class OutboundTLS(BaseTLS):
+    """
+    Known as Client TLS in sing-box config.
+    """
+
+    engine: Literal["go", "apple", "windows"] | None = None
+    """
+    > [!NOTE]
+    > Since sing-box 1.14.0
+
+    TLS engine to use.
+
+    Values:
+
+    - `go` (default)
+    - `apple`
+    - `windows`
+    """
+
     disable_sni: bool | None = None
     """Do not send server name in ClientHello."""
 
     insecure: bool | None = None
     """Accepts any server certificate."""
 
-    utls: UTLS | None = None
+    certificate_public_key_sha256: Sequence[str] | None = None
+    """
+    > [!NOTE]
+    >
+    > Since sing-box 1.13.0
+
+    List of SHA-256 hashes of server certificate public keys, in base64 format.
+    """
+
+    client_key: Sequence[str] | None = None
+    """
+    > [!NOTE]
+    >
+    > Since sing-box 1.13.0
+
+    Client private key line array, in PEM format.
+    """
+
+    client_key_path: PathLike | str | None = field(default=None, converter=maybe_to_str)
+    """
+    > [!NOTE]
+    >
+    > Since sing-box 1.13.0
+
+    The path to client private key, in PEM format.
+    """
 
     ech: ECH | None = None
 

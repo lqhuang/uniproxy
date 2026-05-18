@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Literal, Mapping, Sequence, TypeGuard, cast
 from uniproxy.typing import (
     GroupType,
-    IPAddress,
     ProtocolType,
     ServerAddress,
     ShadowsocksCipher,
@@ -15,6 +14,7 @@ from attrs import define, field
 from uniproxy.protocols import (
     AnyTLSProtocol,
     HttpProtocol,
+    NaiveProtocol,
     ShadowsocksObfsPlugin,
     ShadowsocksProtocol,
     TrojanProtocol,
@@ -391,25 +391,47 @@ class NaiveOutbound(DialFieldsMixin, NaiveMixin, BaseOutbound):
     Examples:
 
     ```json
-    "type": "naive",
-    "tag": "naive-out",
+    {
+      "type": "naive",
+      "tag": "naive-out",
 
-    "server": "127.0.0.1",
-    "server_port": 443,
-    "username": "sekai",
-    "password": "password",
-    "insecure_concurrency": 0,
-    "extra_headers": {},
-    "udp_over_tcp": false | {},
-    "quic": false,
-    "quic_congestion_control": "",
-    "tls": {},
+      "server": "127.0.0.1",
+      "server_port": 443,
+      "username": "sekai",
+      "password": "password",
+      "insecure_concurrency": 0,
+      "extra_headers": {},
+      "udp_over_tcp": false | {},
+      "quic": false,
+      "quic_congestion_control": "",
+      "tls": {},
 
-    ... // Dial Fields
+      ... // Dial Fields
+    }
     ```
     """
 
     type: Literal["naive"] = "naive"
+
+    @classmethod
+    def from_uniproxy(cls, protocol: NaiveProtocol, **kwargs) -> NaiveOutbound:
+        if protocol.tls is None:
+            tls = OutboundTLS(enabled=True)
+        else:
+            tls = OutboundTLS.from_uniproxy(protocol.tls)
+
+        return cls(
+            tag=protocol.name,
+            server=protocol.server,
+            server_port=protocol.port,
+            username=protocol.username,
+            password=protocol.password,
+            quic=protocol.quic,
+            quic_congestion_control=protocol.quic_congestion_control,
+            tls=tls,
+            extra_headers=protocol.extra_headers,
+            **kwargs,
+        )
 
 
 @define(slots=False)
@@ -458,13 +480,16 @@ class AnyTLSOutbound(DialFieldsMixin, AnyTLSMixin, BaseOutbound):
     @classmethod
     def from_uniproxy(cls, protocol: AnyTLSProtocol, **kwargs) -> AnyTLSOutbound:
         if protocol.tls is None:
-            raise ValueError("TLS configuration is required for AnyTLS protocol")
+            tls = OutboundTLS(enabled=True)
+        else:
+            tls = OutboundTLS.from_uniproxy(protocol.tls)
+
         return cls(
             tag=protocol.name,
             server=protocol.server,
             server_port=protocol.port,
             password=protocol.password,
-            tls=OutboundTLS.from_uniproxy(protocol.tls),
+            tls=tls,
             **kwargs,
         )
 

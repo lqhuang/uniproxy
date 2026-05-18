@@ -182,11 +182,24 @@ class TuicProtocol(BaseProtocol):
 class NaiveProtocol(BaseProtocol):
     username: str
     password: str
-    proto: Literal["http2", "quic"]
     network: Network = "tcp_and_udp"
+    quic: bool | None = None
+    quic_congestion_control: Literal["cubic", "reno", "bbr", "bbr2"] | None = None
+    tls: TLS | None = None
     extra_headers: dict[str, str] | None = None
-
     type: Literal["naive"] = "naive"
+
+    def __attrs_post_init__(self) -> None:
+        if self.quic and self.network == "tcp":
+            raise ValueError("QUIC protocol is not compatible with tcp only network.")
+        if self.tls is not None and self.tls.alpn is not None:
+            h3 = any(alpn in ("h3", "http/3") for alpn in self.tls.alpn)
+            if h3 and self.network == "tcp":
+                raise ValueError("HTTP/3 ALPN is not compatible with tcp only network.")
+
+            h2 = any(alpn in ("h2", "http/2") for alpn in self.tls.alpn)
+            if h2 and self.network == "udp":
+                raise ValueError("HTTP/2 ALPN is not compatible with udp only network.")
 
 
 @define
