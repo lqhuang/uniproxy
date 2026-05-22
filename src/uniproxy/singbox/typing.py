@@ -48,16 +48,6 @@ type OutboundType = ProtocolOutboundType | GroupOutboundType
 
 type TLSVersion = Literal["1.0", "1.1", "1.2", "1.3"]
 
-# DNS
-type DnsReturnCode = Literal[
-    "rcode://success",
-    "rcode://format_error",
-    "rcode://server_failure",
-    "rcode://name_error",
-    "rcode://not_implemented",
-    "rcode://refused",
-]
-type DnsStrategy = Literal["prefer_ipv4", "prefer_ipv6", "ipv4_only", "ipv6_only"]
 
 # Shared
 SNIFF_PROTOCOLS = {

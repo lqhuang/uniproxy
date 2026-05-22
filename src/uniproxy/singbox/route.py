@@ -26,6 +26,7 @@ from uniproxy.rules import (
 from uniproxy.utils import maybe_flatmap_to_str, maybe_flatmap_to_tag, maybe_to_str
 
 from .base import BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
+from .shared import HttpClient
 from .typing import SniffProtocol
 
 
@@ -43,17 +44,17 @@ class RemoteRuleSet(BaseRuleSet):
 
     http_client: None = None
 
-    download_detour: BaseOutbound | str | None = field(
-        default=None, converter=maybe_to_str
-    )
-    """
-    Tag of the outbound to download rule-set.
+    # download_detour: BaseOutbound | str | None = field(
+    #     default=None, converter=maybe_to_str
+    # )
+    # """
+    # Tag of the outbound to download rule-set.
 
-    > Deprecated in sing-box 1.14.0
-    >
-    > `download_detour` is deprecated in sing-box 1.14.0 and will be removed in
-    > sing-box 1.16.0, use `http_client` instead.
-    """
+    # > Deprecated in sing-box 1.14.0
+    # >
+    # > `download_detour` is deprecated in sing-box 1.14.0 and will be removed in
+    # > sing-box 1.16.0, use `http_client` instead.
+    # """
 
     type: Literal["remote"] = "remote"
 
@@ -223,6 +224,15 @@ Rule = Union[RouteRule, RejectRule, HijackDnsRule, SniffRule]
 class Route(AbstractSingBox):
     rules: Sequence[Rule]
     """List of [[Rule]]"""
+
+    default_http_client: HttpClient | None = None
+    """
+    > [!NEW] Since sing-box 1.14.0
+
+    Tag of the default HTTP Client used by remote rule-sets.
+
+    If empty and `http_clients` is defined, the first HTTP client is used.
+    """
 
     rule_set: Sequence[BaseRuleSet] | None = None
     """List of [[rule-set]]"""

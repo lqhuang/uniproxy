@@ -11,7 +11,18 @@ from uniproxy.utils import maybe_flatmap_to_str, maybe_to_str
 from .base import BaseDnsServer, BaseInbound, BaseOutbound
 from .route import BaseRuleSet
 from .shared import DialFieldsMixin, OutboundTLS
-from .typing import DnsReturnCode, DnsStrategy, SniffProtocol
+from .typing import SniffProtocol
+
+# DNS
+type DnsReturnCode = Literal[
+    "rcode://success",
+    "rcode://format_error",
+    "rcode://server_failure",
+    "rcode://name_error",
+    "rcode://not_implemented",
+    "rcode://refused",
+]
+type DnsStrategy = Literal["prefer_ipv4", "prefer_ipv6", "ipv4_only", "ipv6_only"]
 
 
 @define
@@ -21,31 +32,69 @@ class DNS(AbstractSingBox):
     """
 
     servers: Sequence[BaseDnsServer] | None
+
     rules: Sequence[DnsRule] | None = None
 
-    # Default dns server tag. The first server will be used if empty.
     final: str | BaseDnsServer | None = field(default=None, converter=maybe_to_str)
+    """
+    Default dns server tag. The first server will be used if empty.
+    """
 
-    # Default domain strategy for resolving the domain names.
-    # One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
-    # Take no effect if `server.strategy` is set.
     strategy: DnsStrategy | None = None
+    """
+    Default domain strategy for resolving the domain names.
 
-    # Disable dns cache.
+    One of `prefer_ipv4`, `prefer_ipv6`, `ipv4_only`, `ipv6_only`.
+
+    Take no effect if `server.strategy` is set.
+    """
+
     disable_cache: bool | None = None
+    """
+    Disable dns cache.
+    """
 
-    # Disable dns cache expire.
     disable_expire: bool | None = None
-
-    independent_cache: bool | None = None
     """
-    Make each DNS server's cache independent for special purposes.
-    If enabled, will slightly degrade performance.
-
-    > Deprecated in sing-box 1.14.0
-    >
-    > `independent_cache` is deprecated and will be removed in sing-box 1.14.0.
+    Disable dns cache expire.
     """
+
+    # independent_cache: bool | None = None
+    # """
+    # Make each DNS server's cache independent for special purposes.
+    # If enabled, will slightly degrade performance.
+
+    # > Deprecated in sing-box 1.14.0
+    # >
+    # > `independent_cache` is deprecated and will be removed in sing-box 1.14.0.
+    # """
+
+    cache_capacity: int | None = None
+    """
+    LRU cache capacity.
+
+    Value less than 1024 will be ignored.
+    """
+
+    optimistic: bool | dict | None = None
+    """
+    > [!NEW] Since sing-box 1.14.0
+
+    Enable optimistic DNS caching. When a cached DNS entry has expired but is still within the timeout window, the stale response is returned immediately while a background refresh is triggered.
+
+    Conflict with disable_cache and disable_expire.
+
+    Accepts a boolean or an object. When set to true, the default timeout of 3d is used.
+
+    ```json
+    {
+      "enabled": true,
+      "timeout": "3d"
+    }
+    ```
+    """
+
+    timeout: str | None = None
 
     # Stores a reverse mapping of IP addresses after responding to a DNS query
     # in order to provide domain names when routing.
@@ -56,18 +105,12 @@ class DNS(AbstractSingBox):
     # the system.
     reverse_mapping: bool | None = None
 
-    # FakeIP settings.
-    # @deprecated since 1.12.0, use `FakeIPDnsServer` instead.
-    # fakeip: FakeIP | None = None
-
     # > Since `sing-box`  1.9.0
     #
     # Append a `edns0-subnet`` OPT extra record with the specified IP address to every query by default.
     #
     # Can be overrides by `servers.[].client_subnet`` or `rules.[].client_subnet`.
     client_subnet: str | None = None
-
-    cache_capacity: int = 4096
 
 
 @define
@@ -317,38 +360,117 @@ type DnsRuleAction = Literal[
     "route", "evaluate", "respond", "route-options", "reject", "predefined"
 ]
 
+type DnsPreferredBy = Literal["hosts", "local", "mdns", "tailscale", "resolved"]
 
-@define
-class DnsRule(AbstractSingBox):
-    server: str | BaseDnsServer = field(converter=str)
-    action: DnsRuleAction | None = None
-    strategy: DnsStrategy | None = None
-    client_subnet: str | None = None
 
-    # outbound: Sequence[BaseOutbound] | Sequence[str] | Literal["any"] | None = None
+@define(slots=False)
+class BaseDnsRule(AbstractSingBox): ...
 
+
+@define(slots=False)
+class DnsRuleMixin:
     inbound: Sequence[BaseInbound | str] | None = field(
         default=None, converter=maybe_flatmap_to_str
     )
+    """
+    Tags of Inbound
+    """
+
     ip_version: Literal["4", "6", None] = None
+    """
+
+    """
+
+    query_type: None = None
+
+    network: Literal["tcp", "udp"] | None = None
+
     auth_user: str | None = None
+    """
+    Username, see each inbound for details.
+    """
+
     protocol: SniffProtocol | None = None
-    network: str | None = None
-    domain: str | None = None
+    """
+    Sniffed protocol, see Sniff for details.
+    """
+
+    domain: str | Sequence[str] | None = None
     domain_suffix: str | Sequence[str] | None = None
     domain_keyword: str | Sequence[str] | None = None
     domain_regex: str | Sequence[str] | None = None
-    ip_cidr: str | NetworkCIDR | Sequence[NetworkCIDR | str] | None = None
-    ip_is_private: bool | None = None
+
     source_ip_cidr: Sequence[NetworkCIDR] | None = None
     source_ip_is_private: bool | None = None
-    source_port: int | None = None
+    source_port: int | Sequence[int] | None = None
     source_port_range: Sequence[str] | None = None
+
     port: Sequence[int] | None = None
     port_range: Sequence[str] | None = None
+
+    package_name: str | Sequence[str] | None = None
+    package_name_regex: str | Sequence[str] | None = None
+
+    preferred_by: DnsPreferredBy | Sequence[DnsPreferredBy] | None = None
+    """
+    The tag of a rule or server that is preferred when multiple rules match.
+    """
+
     rule_set: Sequence[str | BaseRuleSet] | str | BaseRuleSet | None = field(
         default=None, converter=maybe_flatmap_to_str
     )
     rule_set_ip_cidr_match_source: bool | None = None
-    rule_set_ip_cidr_accept_empty: bool | None = None
+
+    match_response: bool | None = None
+    ip_accept_any: bool | None = None
     invert: bool | None = None
+
+
+@define(slots=False)
+class BaseDnsRouteRule(BaseDnsRule):
+    server: str | BaseDnsServer = field(converter=str)
+    """
+    Tag of target server.
+    """
+
+    disable_cache: bool | None = None
+    """
+    Disable dns cache.
+    """
+
+    disable_optimistic_cache: bool | None = None
+    """
+    Disable optimistic DNS caching in this query.
+    """
+
+    rewrite_ttl: str | None = None
+
+    timeout: str | None = None
+
+    client_subnet: str | None = None
+    """
+    Append a `edns0-subnet` OPT extra record with the specified IP address to every query by default.
+
+    If value is an IP address instead of prefix, `/32` or `/128` will be appended automatically.
+
+    Will override `dns.client_subnet`.
+    """
+
+
+@define
+class DnsRouteRule(DnsRuleMixin, BaseDnsRouteRule):
+    action: Literal["route"] | None = None
+
+
+@define(slots=False)
+class BaseDnsRejectRule(BaseDnsRule):
+    method: Literal["default", "drop"] | None = None
+    no_drop: bool | None = None
+
+
+@define
+class DnsRejectRule(DnsRuleMixin, BaseDnsRejectRule):
+    action: Literal["reject"] = "reject"
+
+
+type DnsRule = DnsRouteRule | DnsRejectRule
