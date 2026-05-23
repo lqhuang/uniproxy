@@ -5,6 +5,7 @@ from typing import Literal, Sequence, Union
 from attrs import define, field
 
 from uniproxy.abc import AbstractSingBox
+from uniproxy.rules import BaseRule as UniproxyBaseRule
 from uniproxy.rules import (
     DomainGroupRule,
     DomainKeywordGroupRule,
@@ -17,16 +18,13 @@ from uniproxy.rules import (
     IPCidr6Rule,
     IPCidrGroupRule,
     IPCidrRule,
-    UniproxyBasicNoResolvableRule,
-    UniproxyBasicRule,
-    UniproxyGroupNoResolvableRule,
-    UniproxyGroupRule,
     UniproxyRule,
 )
+from uniproxy.rules import FinalRule as UniproxyFinalRule
 from uniproxy.utils import maybe_flatmap_to_str, maybe_flatmap_to_tag, maybe_to_str
 
 from .base import BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
-from .shared import HttpClient
+from .http_clients import HttpClient
 from .typing import SniffProtocol
 
 
@@ -59,7 +57,7 @@ class RemoteRuleSet(BaseRuleSet):
     type: Literal["remote"] = "remote"
 
 
-RuleSet = Union[LocalRuleSet, RemoteRuleSet]
+type RuleSet = LocalRuleSet | RemoteRuleSet
 
 #
 # Route Rule
@@ -217,22 +215,13 @@ class SniffRule(BaseNonFinalActionRule):
     action: Literal["sniff"] = "sniff"
 
 
-Rule = Union[RouteRule, RejectRule, HijackDnsRule, SniffRule]
+type Rule = RouteRule | RejectRule | HijackDnsRule | SniffRule
 
 
 @define
 class Route(AbstractSingBox):
     rules: Sequence[Rule]
     """List of [[Rule]]"""
-
-    default_http_client: HttpClient | None = None
-    """
-    > [!NEW] Since sing-box 1.14.0
-
-    Tag of the default HTTP Client used by remote rule-sets.
-
-    If empty and `http_clients` is defined, the first HTTP client is used.
-    """
 
     rule_set: Sequence[BaseRuleSet] | None = None
     """List of [[rule-set]]"""
@@ -274,6 +263,18 @@ class Route(AbstractSingBox):
     Takes no effect if `outbound.routing_mark` is set.
     """
 
+    default_http_client: HttpClient | str | None = field(
+        default=None,
+        converter=lambda x: x.tag if hasattr(x, "tag") else maybe_to_str(x),
+    )
+    """
+    > [!NEW] Since sing-box 1.14.0
+
+    Tag of the default HTTP Client used by remote rule-sets.
+
+    If empty and `http_clients` is defined, the first HTTP client is used.
+    """
+
     default_domain_resolver: BaseDnsServer | str | None = field(
         default=None, converter=maybe_to_str
     )
@@ -284,24 +285,26 @@ class Route(AbstractSingBox):
     """
 
 
-def route_rule_from_uniproxy(
-    rule: Union[
-        UniproxyBasicNoResolvableRule,
-        UniproxyBasicRule,
-        UniproxyGroupNoResolvableRule,
-        UniproxyGroupRule,
-    ],
-) -> Rule:
-    if not isinstance(
-        rule,
-        Union[
-            UniproxyBasicNoResolvableRule,
-            UniproxyBasicRule,
-            UniproxyGroupNoResolvableRule,
-            UniproxyGroupRule,
-        ],
-    ):
+def unify_mixed_route_rules(rules: Sequence[Rule | UniproxyRule]) -> Sequence[Rule]:
+    out_rules: list[Rule] = []
+    for r in rules:
+        if isinstance(r, BaseRule):
+            out_rules.append(r)
+        elif isinstance(r, UniproxyFinalRule):
+            pass
+        elif isinstance(r, UniproxyBaseRule):
+            out_rules.append(route_rule_from_uniproxy(r))
+        else:
+            print(r)
+            raise ValueError(f"Unexpected rule type: {type(r)}")
+    return out_rules
+
+
+def route_rule_from_uniproxy(rule: UniproxyRule) -> Rule:
+    if not isinstance(rule, UniproxyBaseRule):
         raise ValueError(f"Expected type of Uniproxy Rules, got {type(rule)}")
+    if isinstance(rule, UniproxyFinalRule):
+        raise ValueError(f"Final rule is not expected here, got {type(rule)}")
 
     if str(rule.policy).upper() == "REJECT":
         return RejectRule(domain_suffix=maybe_flatmap_to_str(rule.matcher))

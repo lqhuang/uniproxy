@@ -97,6 +97,6 @@ class BaseRuleProvider(AbstractSurge):
         return str(self.name)
 
 
-ProtocolLike = Union[BaseProtocol, BaseProxyProvider, BaseProxyGroup, str]
-RuleProviderLike = Union[BaseRuleProvider, str]
-RuleLike = Union[BaseRule, str]
+type ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str
+type RuleProviderLike = BaseRuleProvider | str
+type RuleLike = BaseRule | str

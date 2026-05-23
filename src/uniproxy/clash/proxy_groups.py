@@ -98,7 +98,7 @@ class LoadBalanceGroup(BaseProxyGroup):
         )
 
 
-ClashProxyGroup = Union[SelectGroup, UrlTestGroup, LoadBalanceGroup, FallBackGroup]
+type ClashProxyGroup = SelectGroup | UrlTestGroup | LoadBalanceGroup | FallBackGroup
 
 _CLASH_MAPPER: Mapping[GroupType, type[BaseProxyGroup]] = {
     "select": SelectGroup,

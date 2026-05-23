@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from uniproxy.singbox.dns import FakeIPDnsServer, H3DnsServer, LocalDnsServer
+from uniproxy.singbox.http_clients import Http2Client
 from uniproxy.singbox.outbounds import DirectOutbound
 from uniproxy.singbox.route import HijackDnsRule, SniffRule
 
@@ -12,6 +13,8 @@ TAG_DROP_OUTBOUND = "REJECT-DROP"
 
 TAG_DNS_SERVER_SYSTEM = "dns-system"
 TAG_DNS_SERVER_FAKEIP = "dns-fakeip"
+
+TAG_DEFAULT_HTTP_CLIENT = "http-client-default"
 
 #### ------------- Snippets for DNS Servers ------------- ####
 dns_server_system = LocalDnsServer(tag=TAG_DNS_SERVER_SYSTEM)
@@ -25,8 +28,11 @@ dns_server_cloudflare_h3 = H3DnsServer(tag="dns-cloudflare-h3", server="1.1.1.1"
 out_direct = DirectOutbound(tag=TAG_DIRECT_OUTBOUND)
 # out_dns = DnsOutbound(tag=TAG_DNS_OUTBOUND)
 
-#### ------------- Snippets for Route rules ------------- ####
+#### ------------- Snippets for Route Rules ------------- ####
 # rule_dns = Rule(outbound=TAG_DNS_OUTBOUND, protocol="dns")
 # rule_dns_bypass = Rule(outbound=TAG_DIRECT_OUTBOUND, protocol="dns")  # bypass dns query
 rule_sniff = SniffRule()
 rule_hijack_dns = HijackDnsRule()
+
+#### ------------- Snippets for Http Clients ------------- ####
+hc_default = Http2Client(tag=TAG_DEFAULT_HTTP_CLIENT, version=2)

@@ -4,14 +4,14 @@ from typing import Literal, Union
 
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 
-Backend = Literal["surge", "clash", "sing-box"]
+type Backend = Literal["surge", "clash", "sing-box"]
 
-ServerAddress = Union[str, IPv4Address, IPv6Address]
-IPAddress = Union[str, IPv4Address, IPv6Address]
-NetworkCIDR = Union[str, IPv4Network, IPv6Network]
+type ServerAddress = str | IPv4Address | IPv6Address
+type IPAddress = str | IPv4Address | IPv6Address
+type NetworkCIDR = str | IPv4Network | IPv6Network
 
 
-ProtocolType = Literal[
+type ProtocolType = Literal[
     "http",
     "https",
     "http2",
@@ -28,10 +28,10 @@ ProtocolType = Literal[
     "wireguard",
     "anytls",
 ]
-Network = Literal["tcp", "udp", "tcp_and_udp"]
+type Network = Literal["tcp", "udp", "tcp_and_udp"]
 
 
-ShadowsocksCipher = Literal[
+type ShadowsocksCipher = Literal[
     "aes-128-gcm",
     "aes-256-gcm",
     "chacha20-ietf-poly1305",
@@ -40,16 +40,16 @@ ShadowsocksCipher = Literal[
     "2022-blake3-chacha20-poly1305",
     "2022-blake3-chacha8-poly1305",
 ]
-VmessCipher = Literal["none", "auto", "zero", "aes-128-gcm", "chacha20-poly1305"]
-VmessTransportType = Literal["http", "ws", "grpc", "h2"]
+type VmessCipher = Literal["none", "auto", "zero", "aes-128-gcm", "chacha20-poly1305"]
+type VmessTransportType = Literal["http", "ws", "grpc", "h2"]
 
 
-GroupType = Literal[
+type GroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet"
 ]
 
 
-BasicRuleType = Literal[
+type BasicRuleType = Literal[
     # Domain-based Rule
     "domain",
     "domain-suffix",
@@ -109,7 +109,7 @@ BASIC_RULES = frozenset((
 # EXTERNAL_RULES = set(("rule-set", "domain-set"))
 
 # IP-based Rule
-BasicNoResolableRuleType = Literal["ip-cidr", "ip-cidr6", "ip-asn", "geoip"]
+type BasicNoResolableRuleType = Literal["ip-cidr", "ip-cidr6", "ip-asn", "geoip"]
 BASIC_NO_RESOLABLE_RULES = set((
     # IP-based Rule
     "ip-cidr",
@@ -119,7 +119,9 @@ BASIC_NO_RESOLABLE_RULES = set((
 ))
 
 # Group Rule
-GroupRuleType = Literal["domain-group", "domain-suffix-group", "domain-keyword-group"]
+type GroupRuleType = Literal[
+    "domain-group", "domain-suffix-group", "domain-keyword-group"
+]
 GROUP_RULES = set((
     "domain-group",
     "domain-suffix-group",
@@ -127,14 +129,14 @@ GROUP_RULES = set((
     "ip-cidr-group",
     "ip-cidr6-group",
 ))
-GroupNoResolvableRuleType = Literal["ip-cidr-group", "ip-cidr6-group"]
+type GroupNoResolvableRuleType = Literal["ip-cidr-group", "ip-cidr6-group"]
 GROUP_NO_RESOLVABLE_RULES = set(("ip-cidr-group", "ip-cidr6-group"))
 
-FinalRuleType = Literal["final"]
+type FinalRuleType = Literal["final"]
 
-UniproxyRuleType = (
+type UniproxyRuleType = (
     BasicRuleType | BasicNoResolableRuleType | GroupRuleType | FinalRuleType
 )
 
 
-AlpnType = Literal["http/1.1", "h2", "h3"]
+type AlpnType = Literal["http/1.1", "h2", "h3"]

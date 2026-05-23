@@ -161,47 +161,49 @@ class FinalRule(BaseRule):
     type: Literal["final"] = "final"
 
 
-UniproxyBasicRule = Union[
-    DomainRule,
-    DomainGroupRule,
-    DomainSuffixRule,
-    DomainSuffixGroupRule,
-    DomainKeywordRule,
-    DomainKeywordGroupRule,
-    UserAgentRule,
-    UrlRegexRule,
-    ProcessNameRule,
-    AndRule,
-    OrRule,
-    NotRule,
-    SubnetRule,
-    DestPortRule,
-    SrcPortRule,
-    InPortRule,
-    SrcIPRule,
-    ProtocolRule,
-    ScriptRule,
-    CellularRadioRule,
-    DeviceNameRule,
-    # DomainSetRule,
-    # RuleSetRule,
-]
-UniproxyBasicNoResolvableRule = Union[
-    IPCidrRule, IPCidrGroupRule, IPCidr6Rule, IPCidr6GroupRule, GeoIPRule
-]
+type UniproxyBasicRule = (
+    DomainRule
+    | DomainGroupRule
+    | DomainSuffixRule
+    | DomainSuffixGroupRule
+    | DomainKeywordRule
+    | DomainKeywordGroupRule
+    | UserAgentRule
+    | UrlRegexRule
+    | ProcessNameRule
+    | AndRule
+    | OrRule
+    | NotRule
+    | SubnetRule
+    | DestPortRule
+    | SrcPortRule
+    | InPortRule
+    | SrcIPRule
+    | ProtocolRule
+    | ScriptRule
+    | CellularRadioRule
+    | DeviceNameRule
+)
+# DomainSetRule,
+# RuleSetRule,
 
-UniproxyGroupRule = Union[
-    DomainGroupRule, DomainSuffixGroupRule, DomainKeywordGroupRule
-]
-UniproxyGroupNoResolvableRule = Union[IPCidrGroupRule, IPCidr6GroupRule]
+type UniproxyBasicNoResolvableRule = (
+    IPCidrRule | IPCidrGroupRule | IPCidr6Rule | IPCidr6GroupRule | GeoIPRule
+)
 
-UniproxyRule = Union[
-    UniproxyBasicRule,
-    UniproxyBasicNoResolvableRule,
-    UniproxyGroupRule,
-    UniproxyGroupNoResolvableRule,
-    FinalRule,
-]
+type UniproxyGroupRule = (
+    DomainGroupRule | DomainSuffixGroupRule | DomainKeywordGroupRule
+)
+
+type UniproxyGroupNoResolvableRule = IPCidrGroupRule | IPCidr6GroupRule
+
+type UniproxyRule = (
+    UniproxyBasicRule
+    | UniproxyBasicNoResolvableRule
+    | UniproxyGroupRule
+    | UniproxyGroupNoResolvableRule
+    | FinalRule
+)
 
 
 def is_basic_rule(rule: UniproxyRule) -> TypeGuard[UniproxyBasicRule]:

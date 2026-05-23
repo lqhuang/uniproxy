@@ -193,32 +193,33 @@ class FinalRule(BaseRule):
             return f"{self.type.upper()},{self.policy}"
 
 
-_SurgeBasicRule = Union[
-    DomainRule,
-    DomainSuffixRule,
-    DomainKeywordRule,
-    UserAgentRule,
-    UrlRegexRule,
-    ProcessNameRule,
-    AndRule,
-    OrRule,
-    NotRule,
-    SubnetRule,
-    DestPortRule,
-    InPortRule,
-    SrcPortRule,
-    SrcIPRule,
-    ProtocolRule,
-    ScriptRule,
-    CellularRadioRule,
-    DeviceNameRule,
-]
-_SurgeNoResolvableRule = Union[IPCidrRule, IPCidr6Rule, GeoIPRule, IPAsn]
-_SurgeExternalRule = Union[RuleSetRule, DomainSetRule]
+type _SurgeBasicRule = (
+    DomainRule
+    | DomainSuffixRule
+    | DomainKeywordRule
+    | UserAgentRule
+    | UrlRegexRule
+    | ProcessNameRule
+    | AndRule
+    | OrRule
+    | NotRule
+    | SubnetRule
+    | DestPortRule
+    | InPortRule
+    | SrcPortRule
+    | SrcIPRule
+    | ProtocolRule
+    | ScriptRule
+    | CellularRadioRule
+    | DeviceNameRule
+)
+type _SurgeNoResolvableRule = IPCidrRule | IPCidr6Rule | GeoIPRule | IPAsn
+type _SurgeExternalRule = RuleSetRule | DomainSetRule
 
-SurgeRule = Union[
-    _SurgeBasicRule, _SurgeNoResolvableRule, _SurgeExternalRule, FinalRule
-]
+type SurgeRule = (
+    _SurgeBasicRule | _SurgeNoResolvableRule | _SurgeExternalRule | FinalRule
+)
+
 
 _SURGE_MAPPER: Mapping[BasicRuleType, type[_SurgeBasicRule]] = {
     "domain": DomainRule,

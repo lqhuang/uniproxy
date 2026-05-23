@@ -252,7 +252,7 @@ class VmessH2Transport(BaseVmessTransport):
     type: Literal["h2"] = "h2"
 
 
-VmessTransport = Union[VmessWsTransport, VmessH2Transport]
+type VmessTransport = VmessWsTransport | VmessH2Transport
 
 
 @define
@@ -284,15 +284,15 @@ class WireGuardPeer:
     persistent_keepalive: int | None = None
 
 
-UniproxyProtocol = Union[
-    HttpProtocol,
-    QuicProtocol,
-    Socks5Protocol,
-    ShadowsocksProtocol,
-    TrojanProtocol,
-    TuicProtocol,
-    NaiveProtocol,
-    AnyTLSProtocol,
-    VmessProtocol,
-    WireGuardProtocol,
-]
+type UniproxyProtocol = (
+    HttpProtocol
+    | QuicProtocol
+    | Socks5Protocol
+    | ShadowsocksProtocol
+    | TrojanProtocol
+    | TuicProtocol
+    | NaiveProtocol
+    | AnyTLSProtocol
+    | VmessProtocol
+    | WireGuardProtocol
+)

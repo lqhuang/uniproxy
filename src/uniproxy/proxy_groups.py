@@ -33,4 +33,4 @@ class LoadBalanceGroup(BaseProxyGroup):
     type: Literal["load-balance"] = "load-balance"
 
 
-UniproxyProxyGroup = Union[SelectGroup, UrlTestGroup, FallBackGroup, LoadBalanceGroup]
+type UniproxyProxyGroup = SelectGroup | UrlTestGroup | FallBackGroup | LoadBalanceGroup

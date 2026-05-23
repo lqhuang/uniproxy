@@ -8,6 +8,7 @@ from uniproxy.abc import AbstractSingBox
 
 from .base import BaseInbound, BaseOutbound
 from .dns import DNS
+from .http_clients import HttpClient
 from .route import Route
 from .typing import LogLevel
 
@@ -24,6 +25,10 @@ class SingBoxConfig(AbstractSingBox):
     inbounds: Sequence[BaseInbound]
     outbounds: Sequence[BaseOutbound]
     route: Route
+    http_clients: Sequence[HttpClient] | None = None
+    certificate: None = None
+    certificate_providers: None = None
+    endpoints: None = None
     log: Log | None = None
     ntp: NTP | None = None
     experimental: dict | None = None

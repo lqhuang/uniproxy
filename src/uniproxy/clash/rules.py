@@ -26,7 +26,7 @@ from uniproxy.rules import FinalRule as UniproxyFinalRule
 from uniproxy.shared import NoResoleMixin
 from uniproxy.utils import to_name
 
-from .base import BaseBasicRule
+from .base import BaseBasicRule, BaseRule
 from .base import FinalRule as FinalRule
 
 
@@ -163,33 +163,33 @@ class RuleSetRule(BaseBasicRule):
     type: Literal["rule-set"] = "rule-set"
 
 
-ClashBasicRule = Union[
-    DomainRule,
-    DomainSuffixRule,
-    DomainKeywordRule,
-    IPCidrRule,
-    IPCidr6Rule,
-    GeoIPRule,
-    UserAgentRule,
-    UrlRegexRule,
-    ProcessNameRule,
-    AndRule,
-    OrRule,
-    NotRule,
-    SubnetRule,
-    DestPortRule,
-    InPortRule,
-    SrcPortRule,
-    SrcIPRule,
-    ProtocolRule,
-    ScriptRule,
-    CellularRadioRule,
-    DeviceNameRule,
-    RuleSetRule,
-    DomainSetRule,
-]
+type ClashBasicRule = (
+    DomainRule
+    | DomainSuffixRule
+    | DomainKeywordRule
+    | IPCidrRule
+    | IPCidr6Rule
+    | GeoIPRule
+    | UserAgentRule
+    | UrlRegexRule
+    | ProcessNameRule
+    | AndRule
+    | OrRule
+    | NotRule
+    | SubnetRule
+    | DestPortRule
+    | InPortRule
+    | SrcPortRule
+    | SrcIPRule
+    | ProtocolRule
+    | ScriptRule
+    | CellularRadioRule
+    | DeviceNameRule
+    | RuleSetRule
+    | DomainSetRule
+)
 
-ClashRule = Union[ClashBasicRule, FinalRule]
+type ClashRule = ClashBasicRule | FinalRule
 
 _CLASH_RESOLVABLE_MAPPER: Mapping[
     BasicNoResolableRuleType, type[IPCidrRule | IPCidr6Rule | GeoIPRule]

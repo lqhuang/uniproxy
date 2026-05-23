@@ -125,7 +125,7 @@ class LoadBalanceGroup(BaseProxyGroup):
         )
 
 
-SurgeProxyGroup = Union[SelectGroup, UrlTestGroup, FallBackGroup, LoadBalanceGroup]
+type SurgeProxyGroup = SelectGroup | UrlTestGroup | FallBackGroup | LoadBalanceGroup
 
 _SURGE_MAPPER: Mapping[UniproxyGroupType, type[SurgeProxyGroup]] = {
     "select": SelectGroup,

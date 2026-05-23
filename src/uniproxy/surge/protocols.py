@@ -9,6 +9,7 @@ from ipaddress import IPv4Address, IPv6Address
 from attrs import define
 
 from uniproxy.protocols import AnyTLSProtocol as UniproxyAnyTLSProtocol
+from uniproxy.protocols import BaseProtocol as UniproxyBaseProtocol
 from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
 from uniproxy.protocols import ShadowsocksObfsPlugin, UniproxyProtocol
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
@@ -539,15 +540,15 @@ class WireguardSection(AbstractSurge):
         return {f"WireGuard {self.name}": {}}
 
 
-SurgeProtocol = Union[
-    HttpProtocol,
-    Socks5Protocol,
-    ShadowsocksProtocol,
-    VmessProtocol,
-    TrojanProtocol,
-    TuicProtocol,
-    WireguardProtocol,
-]
+type SurgeProtocol = (
+    HttpProtocol
+    | Socks5Protocol
+    | ShadowsocksProtocol
+    | VmessProtocol
+    | TrojanProtocol
+    | TuicProtocol
+    | WireguardProtocol
+)
 
 _SURGE_MAPPER: Mapping[UniproxyProtocolType, type[BaseProtocol]] = {
     "http": HttpProtocol,
@@ -566,9 +567,9 @@ _SURGE_MAPPER: Mapping[UniproxyProtocolType, type[BaseProtocol]] = {
 def make_protocol_from_uniproxy(
     protocol: UniproxyProtocol | SurgeProtocol, **kwargs
 ) -> SurgeProtocol:
-    if isinstance(protocol, SurgeProtocol):
+    if isinstance(protocol, BaseProtocol):
         return protocol
-    elif isinstance(protocol, UniproxyProtocol):
+    elif isinstance(protocol, UniproxyBaseProtocol):
         try:
             return _SURGE_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
         except KeyError:

@@ -16,6 +16,7 @@ from attrs import define, field
 from xattrs._metadata import _Metadata
 
 from uniproxy.protocols import AnyTLSProtocol as UniproxyAnyTLSProtocol
+from uniproxy.protocols import BaseProtocol as UniproxyBaseProtocol
 from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
 from uniproxy.protocols import ShadowsocksObfsPlugin as UniproxyShadowsocksObfsPlugin
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
@@ -531,9 +532,9 @@ ClashProtocol = (
 def make_protocol_from_uniproxy(
     protocol: UniproxyProtocol | ClashProtocol, **kwargs
 ) -> ClashProtocol:
-    if isinstance(protocol, ClashProtocol):
+    if isinstance(protocol, BaseProtocol):
         return protocol
-    elif isinstance(protocol, UniproxyProtocol):
+    elif isinstance(protocol, UniproxyBaseProtocol):
         try:
             return _CLASH_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
         except KeyError:
