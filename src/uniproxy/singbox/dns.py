@@ -376,7 +376,7 @@ class DnsRuleMixin:
     Tags of Inbound
     """
 
-    ip_version: Literal["4", "6", None] = None
+    ip_version: Literal[4, 6, None] = None
     """
 
     """
