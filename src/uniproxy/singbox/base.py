@@ -63,3 +63,15 @@ class BaseRuleSet(AbstractSingBox):
 
     def __str__(self) -> str:
         return str(self.tag)
+
+
+@define(slots=False)
+class BaseService(AbstractSingBox):
+    """
+    since sing-box 1.12.0
+    """
+
+    tag: str
+
+    def __str__(self) -> str:
+        return str(self.tag)

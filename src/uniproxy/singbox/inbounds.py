@@ -7,7 +7,7 @@ from attrs import define
 
 from uniproxy.common import ProxyUser, SimpleUser, TuicUser
 
-from .base import BaseInbound as SingBoxInbound
+from .base import BaseInbound
 from .route import BaseRuleSet
 from .shared import (
     BaseTransport,
@@ -26,7 +26,10 @@ __all__ = (
     "ShadowsocksInbound",
     "TrojanInbound",
     "TuicInbound",
+    "NaiveInbound",
+    "AnyTLSInbound",
     "TunInbound",
+    "SingBoxInbound",
     #
     "ProxyUser",
     "SimpleUser",
@@ -64,11 +67,11 @@ class DirectMixin:
 
 
 @define
-class DirectInbound(ListenFieldsMixin, DirectMixin, SingBoxInbound): ...  # type: ignore[misc]
+class DirectInbound(ListenFieldsMixin, DirectMixin, BaseInbound): ...
 
 
 @define
-class HTTPInbound(SingBoxInbound):
+class HTTPInbound(BaseInbound):
     users: Sequence[ProxyUser] | None = None
     tls: InboundTLS | None = None
     set_system_proxy: bool | None = None
@@ -76,7 +79,7 @@ class HTTPInbound(SingBoxInbound):
 
 
 @define
-class Socks5Inbound(SingBoxInbound):
+class Socks5Inbound(BaseInbound):
     users: Sequence[ProxyUser] | None = None
     type: Literal["socks"] = "socks"
 
@@ -176,7 +179,7 @@ class ShadowsocksMixin:
 
 
 @define
-class ShadowsocksInbound(ListenFieldsMixin, ShadowsocksMixin, SingBoxInbound):  # type: ignore[misc]
+class ShadowsocksInbound(ListenFieldsMixin, ShadowsocksMixin, BaseInbound):
     type: Literal["shadowsocks"] = "shadowsocks"
 
 
@@ -245,7 +248,7 @@ class TrojanMixin:
 
 
 @define
-class TrojanInbound(ListenFieldsMixin, TrojanMixin, SingBoxInbound):  # type: ignore[misc]
+class TrojanInbound(ListenFieldsMixin, TrojanMixin, BaseInbound):
     type: Literal["trojan"] = "trojan"
 
 
@@ -291,7 +294,7 @@ class NaiveMixin:
 
 
 @define
-class NaiveInbound(ListenFieldsMixin, NaiveMixin, SingBoxInbound):  # type: ignore[misc]
+class NaiveInbound(ListenFieldsMixin, NaiveMixin, BaseInbound):
     type: Literal["naive"] = "naive"
 
 
@@ -361,7 +364,7 @@ class TuicMixin:
 
 
 @define
-class TuicInbound(ListenFieldsMixin, TuicMixin, SingBoxInbound):  # type: ignore[misc]
+class TuicInbound(ListenFieldsMixin, TuicMixin, BaseInbound):
     type: Literal["tuic"] = "tuic"
 
 
@@ -416,7 +419,7 @@ class AnyTLSMixin:
 
 
 @define
-class AnyTLSInbound(ListenFieldsMixin, AnyTLSMixin, SingBoxInbound):  # type: ignore[misc]
+class AnyTLSInbound(ListenFieldsMixin, AnyTLSMixin, BaseInbound):
     type: Literal["anytls"] = "anytls"
 
 
@@ -744,8 +747,9 @@ class TunMixin:
     """Platform-specific settings, provided by client applications."""
 
 
+# FIXME: type error
 @define
-class TunInbound(ListenFieldsMixin, TunMixin, SingBoxInbound):  # type: ignore[misc]
+class TunInbound(ListenFieldsMixin, TunMixin, BaseInbound):  # type: ignore[misc]
     type: Literal["tun"] = "tun"
 
     def __attrs_post_init__(self):
@@ -753,3 +757,16 @@ class TunInbound(ListenFieldsMixin, TunMixin, SingBoxInbound):  # type: ignore[m
             raise ValueError(
                 "Option 'include_interface' and 'exclude_interface' are mutually conflicting."
             )
+
+
+type SingBoxInbound = (
+    DirectInbound
+    | HTTPInbound
+    | Socks5Inbound
+    | ShadowsocksInbound
+    | TrojanInbound
+    | NaiveInbound
+    | AnyTLSInbound
+    | TuicInbound
+    | TunInbound
+)
