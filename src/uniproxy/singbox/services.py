@@ -6,7 +6,7 @@ from attrs import define
 
 from .base import AbstractSingBox, BaseService
 from .http_clients import HttpClient
-from .shared import InboundTLS, ListenFieldsMixin
+from .shared import InboundTLS, ListenableMixin, ListenFieldsMixin
 
 
 @define
@@ -33,7 +33,9 @@ class _SingBoxApiMixin:
 
 
 @define
-class SingBoxApiService(_SingBoxApiMixin, ListenFieldsMixin, BaseService):
+class SingBoxApiService(
+    ListenFieldsMixin, _SingBoxApiMixin, ListenableMixin, BaseService
+):
     """
     sing-box API
 

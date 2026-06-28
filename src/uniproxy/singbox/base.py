@@ -29,8 +29,6 @@ class BaseOutbound(AbstractSingBox):
 @define(slots=False)
 class BaseInbound(AbstractSingBox):
     tag: str
-    listen: str | None
-    listen_port: int | None
     # type: str
 
     def __str__(self) -> str:

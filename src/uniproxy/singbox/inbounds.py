@@ -14,6 +14,7 @@ from .shared import (
     Fallback,
     InboundMultiplex,
     InboundTLS,
+    ListenableMixin,
     ListenFieldsMixin,
     Platform,
 )
@@ -71,7 +72,7 @@ class DirectInbound(ListenFieldsMixin, DirectMixin, BaseInbound): ...
 
 
 @define
-class HTTPInbound(BaseInbound):
+class HTTPInbound(ListenableMixin, BaseInbound):
     users: Sequence[ProxyUser] | None = None
     tls: InboundTLS | None = None
     set_system_proxy: bool | None = None
@@ -79,7 +80,7 @@ class HTTPInbound(BaseInbound):
 
 
 @define
-class Socks5Inbound(BaseInbound):
+class Socks5Inbound(ListenableMixin, BaseInbound):
     users: Sequence[ProxyUser] | None = None
     type: Literal["socks"] = "socks"
 
@@ -179,7 +180,9 @@ class ShadowsocksMixin:
 
 
 @define
-class ShadowsocksInbound(ListenFieldsMixin, ShadowsocksMixin, BaseInbound):
+class ShadowsocksInbound(
+    ListenFieldsMixin, ShadowsocksMixin, ListenableMixin, BaseInbound
+):
     type: Literal["shadowsocks"] = "shadowsocks"
 
 
@@ -248,7 +251,7 @@ class TrojanMixin:
 
 
 @define
-class TrojanInbound(ListenFieldsMixin, TrojanMixin, BaseInbound):
+class TrojanInbound(ListenFieldsMixin, TrojanMixin, ListenableMixin, BaseInbound):
     type: Literal["trojan"] = "trojan"
 
 
@@ -294,7 +297,7 @@ class NaiveMixin:
 
 
 @define
-class NaiveInbound(ListenFieldsMixin, NaiveMixin, BaseInbound):
+class NaiveInbound(ListenFieldsMixin, NaiveMixin, ListenableMixin, BaseInbound):
     type: Literal["naive"] = "naive"
 
 
@@ -364,7 +367,7 @@ class TuicMixin:
 
 
 @define
-class TuicInbound(ListenFieldsMixin, TuicMixin, BaseInbound):
+class TuicInbound(ListenFieldsMixin, TuicMixin, ListenableMixin, BaseInbound):
     type: Literal["tuic"] = "tuic"
 
 
@@ -419,7 +422,7 @@ class AnyTLSMixin:
 
 
 @define
-class AnyTLSInbound(ListenFieldsMixin, AnyTLSMixin, BaseInbound):
+class AnyTLSInbound(ListenFieldsMixin, AnyTLSMixin, ListenableMixin, BaseInbound):
     type: Literal["anytls"] = "anytls"
 
 

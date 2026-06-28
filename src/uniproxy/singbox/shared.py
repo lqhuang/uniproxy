@@ -353,6 +353,12 @@ class OutboundTLS(BaseTLS):
 
 
 @define(slots=False)
+class ListenableMixin:
+    listen: str | None
+    listen_port: int | None
+
+
+@define(slots=False)
 class ListenFieldsMixin:
     tcp_fast_open: bool | None = None
     """Enable TCP Fast Open."""
