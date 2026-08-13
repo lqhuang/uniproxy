@@ -76,5 +76,6 @@ class BaseRuleProvider(AbstractUniproxy):
     interval: float | None
 
 
-ProtocolLike = BaseProtocol | BaseProxyGroup | str
-ProxyProviderLike = BaseProxyProvider | str
+type ProtocolLike = BaseProtocol | BaseProxyGroup | str
+type ProxyProviderLike = BaseProxyProvider | str
+type RuleProviderLike = BaseRuleProvider | str

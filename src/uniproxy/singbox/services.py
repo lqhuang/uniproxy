@@ -4,13 +4,14 @@ from typing import Literal, Sequence
 
 from attrs import define
 
-from .base import AbstractSingBox, BaseService
+from ..abc import AbstractSingBox
+from .base import BaseService
 from .http_clients import HttpClient
 from .shared import InboundTLS, ListenableMixin, ListenFieldsMixin
 
 
 @define
-class SingBoxDashboard(AbstractSingBox):
+class Dashboard(AbstractSingBox):
     enabled: bool | None = None
     path: str | None = None
     download_url: str | None = None
@@ -28,14 +29,12 @@ class _SingBoxApiMixin:
     secret: str | None = None
     access_control_allow_origin: Sequence[str] | None = None
     access_control_allow_private_network: bool | None = None
-    dashboard: SingBoxDashboard | bool | None = None
+    dashboard: Dashboard | bool | None = None
     tls: InboundTLS | None = None
 
 
 @define
-class SingBoxApiService(
-    ListenFieldsMixin, _SingBoxApiMixin, ListenableMixin, BaseService
-):
+class ApiService(ListenFieldsMixin, _SingBoxApiMixin, ListenableMixin, BaseService):
     """
     sing-box API
 
@@ -76,4 +75,4 @@ class SingBoxApiService(
     type: Literal["api"] = "api"
 
 
-type SingBoxService = SingBoxApiService
+type Service = ApiService

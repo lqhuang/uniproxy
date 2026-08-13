@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from .dns import DNS, DnsRule
-from .endpoints import SingBoxEndpoint
+from .endpoints import Endpoint
 from .general import Log, SingBoxConfig
-from .inbounds import SingBoxInbound
-from .outbounds import SingBoxOutbound
-from .route import Route, SingBoxRule, SingboxRuleSet
+from .http_clients import HttpClient
+from .inbounds import Inbound
+from .outbounds import Outbound
+from .route import Route, Rule, RuleSet
+from .services import Dashboard, Service
 
 __all__ = [
     "Log",
@@ -14,9 +16,12 @@ __all__ = [
     "DnsRule",
     "Route",
     "SingBoxConfig",
-    "SingBoxInbound",
-    "SingBoxOutbound",
-    "SingboxRuleSet",
-    "SingBoxRule",
-    "SingBoxEndpoint",
+    "Inbound",
+    "Outbound",
+    "RuleSet",
+    "Rule",
+    "Endpoint",
+    "HttpClient",
+    "Service",
+    "Dashboard",
 ]

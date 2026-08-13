@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence, Union
-from uniproxy.typing import (
-    Network,
-    NetworkCIDR,
-    ProtocolType,
-    ShadowsocksCipher,
-    VmessCipher,
-)
+from typing import Literal, Sequence
+from uniproxy.typing import Network, NetworkCIDR, ShadowsocksCipher, VmessCipher
 
 from ipaddress import IPv4Address
 

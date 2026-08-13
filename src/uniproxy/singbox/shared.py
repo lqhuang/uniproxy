@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Sequence, TypedDict, Union
+from typing import TYPE_CHECKING, Literal, Sequence, TypedDict
 from uniproxy.typing import AlpnType, ServerAddress
 
 from ipaddress import IPv4Address, IPv6Address
@@ -9,7 +9,7 @@ from os import PathLike
 from attrs import define, field
 
 from uniproxy.abc import AbstractSingBox
-from uniproxy.protocols import TLS as UniproxyTLS
+from uniproxy.shared import TLS as UniproxyTLS
 from uniproxy.utils import maybe_to_str
 
 from .base import BaseDnsServer, BaseInbound, BaseOutbound

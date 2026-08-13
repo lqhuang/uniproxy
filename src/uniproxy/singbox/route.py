@@ -57,7 +57,7 @@ class RemoteRuleSet(BaseRuleSet):
     type: Literal["remote"] = "remote"
 
 
-type SingboxRuleSet = LocalRuleSet | RemoteRuleSet
+type RuleSet = LocalRuleSet | RemoteRuleSet
 
 #
 # Route Rule
@@ -215,12 +215,12 @@ class SniffRule(BaseNonFinalActionRule):
     action: Literal["sniff"] = "sniff"
 
 
-type SingBoxRule = RouteRule | RejectRule | HijackDnsRule | SniffRule
+type Rule = RouteRule | RejectRule | HijackDnsRule | SniffRule
 
 
 @define
 class Route(AbstractSingBox):
-    rules: Sequence[SingBoxRule]
+    rules: Sequence[Rule]
     """List of [[Rule]]"""
 
     rule_set: Sequence[BaseRuleSet] | None = None
@@ -285,10 +285,8 @@ class Route(AbstractSingBox):
     """
 
 
-def unify_mixed_route_rules(
-    rules: Sequence[SingBoxRule | UniproxyRule],
-) -> Sequence[SingBoxRule]:
-    out_rules: list[SingBoxRule] = []
+def unify_mixed_route_rules(rules: Sequence[Rule | UniproxyRule]) -> Sequence[Rule]:
+    out_rules: list[Rule] = []
     for r in rules:
         if isinstance(r, BaseRule):
             out_rules.append(r)
@@ -302,7 +300,7 @@ def unify_mixed_route_rules(
     return out_rules
 
 
-def route_rule_from_uniproxy(rule: UniproxyRule) -> SingBoxRule:
+def route_rule_from_uniproxy(rule: UniproxyRule) -> Rule:
     if not isinstance(rule, UniproxyBaseRule):
         raise ValueError(f"Expected type of Uniproxy Rules, got {type(rule)}")
     if isinstance(rule, UniproxyFinalRule):

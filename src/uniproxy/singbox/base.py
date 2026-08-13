@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from abc import abstractmethod
 
 from attrs import define
 
 from uniproxy.abc import AbstractSingBox
-
-if TYPE_CHECKING:
-    from .outbounds import SingBoxOutbound
 
 
 @define(slots=False)

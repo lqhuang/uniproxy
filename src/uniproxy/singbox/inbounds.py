@@ -7,8 +7,7 @@ from attrs import define
 
 from uniproxy.common import ProxyUser, SimpleUser, TuicUser
 
-from .base import BaseInbound
-from .route import BaseRuleSet
+from .base import BaseInbound, BaseRuleSet
 from .shared import (
     BaseTransport,
     Fallback,
@@ -30,7 +29,7 @@ __all__ = (
     "NaiveInbound",
     "AnyTLSInbound",
     "TunInbound",
-    "SingBoxInbound",
+    "Inbound",
     #
     "ProxyUser",
     "SimpleUser",
@@ -762,7 +761,7 @@ class TunInbound(ListenFieldsMixin, TunMixin, BaseInbound):  # type: ignore[misc
             )
 
 
-type SingBoxInbound = (
+type Inbound = (
     DirectInbound
     | HTTPInbound
     | Socks5Inbound

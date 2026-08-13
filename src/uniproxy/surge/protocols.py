@@ -8,8 +8,8 @@ from ipaddress import IPv4Address, IPv6Address
 
 from attrs import define
 
+from uniproxy.base import BaseProtocol as UniproxyBaseProtocol
 from uniproxy.protocols import AnyTLSProtocol as UniproxyAnyTLSProtocol
-from uniproxy.protocols import BaseProtocol as UniproxyBaseProtocol
 from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
 from uniproxy.protocols import ShadowsocksObfsPlugin, UniproxyProtocol
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
@@ -17,7 +17,8 @@ from uniproxy.protocols import TrojanProtocol as UniproxyTrojanProtocol
 from uniproxy.protocols import TuicProtocol as UniproxyTuicProtocol
 from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
 
-from .base import AbstractSurge, BaseProtocol, ProtocolLike
+from ..abc import AbstractSurge
+from .base import BaseProtocol, ProtocolLike
 from .shared import SurgeTLS
 from .typing import _ProtocolOptions
 

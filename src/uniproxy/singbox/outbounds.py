@@ -516,8 +516,8 @@ class SelectorOutbound(BaseOutbound):
     ```
     """
 
-    outbounds: Sequence[SingBoxOutbound | str] = field(converter=map_to_str)
-    default: SingBoxOutbound | str | None = None
+    outbounds: Sequence[Outbound | str] = field(converter=map_to_str)
+    default: Outbound | str | None = None
     interrupt_exist_connections: bool | None = None
     type: Literal["selector"] = "selector"
 
@@ -554,7 +554,7 @@ class UrlTestOutbound(BaseOutbound):
     ```
     """
 
-    outbounds: Sequence[SingBoxOutbound | str] = field(converter=map_to_str)
+    outbounds: Sequence[Outbound | str] = field(converter=map_to_str)
     """List of outbound tags to test."""
     url: str | None = None
     """The URL to test. `https://www.gstatic.com/generate_204` will be used if empty."""
@@ -588,14 +588,14 @@ class UrlTestOutbound(BaseOutbound):
         )
 
 
-type SingBoxProtocolOutbound = (
+type ProtocolOutbound = (
     DirectOutbound | ShadowsocksOutbound | VmessOutbound | TrojanOutbound
 )
-type SingBoxGroupOutbound = SelectorOutbound | UrlTestOutbound
-type SingBoxOutbound = SingBoxProtocolOutbound | SingBoxGroupOutbound
+type GroupOutbound = SelectorOutbound | UrlTestOutbound
+type Outbound = ProtocolOutbound | GroupOutbound
 
 
-_SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, SingBoxProtocolOutbound] = {  # type: ignore[reportAssignmentType]
+_SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, ProtocolOutbound] = {  # type: ignore[reportAssignmentType]
     # "direct": DirectOutbound,
     # "block": BlockOutbound,
     # "dns": DnsOutbound,
@@ -607,7 +607,7 @@ _SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, SingBoxProtocolOutbound] = 
     "anytls": AnyTLSOutbound,
     "naive": NaiveOutbound,
 }
-_SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, SingBoxGroupOutbound] = {  # type: ignore[reportAssignmentType]
+_SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, GroupOutbound] = {  # type: ignore[reportAssignmentType]
     "select": SelectorOutbound,
     "url-test": UrlTestOutbound,
 }
@@ -633,7 +633,7 @@ def is_valid_protocol_group(proxy: Any) -> TypeGuard[UniproxyProxyGroup]:
 
 def _make_protocol_outbound_from_uniproxy(
     protocol: UniproxyProtocol, **kwargs
-) -> SingBoxProtocolOutbound:
+) -> ProtocolOutbound:
     if is_valid_protocol(protocol):
         # FIXME: type violation
         return _SINGBOX_REGISTERED_PROTOCOLS[protocol.type].from_uniproxy(
@@ -647,7 +647,7 @@ def _make_protocol_outbound_from_uniproxy(
 
 def _make_group_outbound_from_uniproxy(
     protocol: UniproxyProxyGroup, **kwargs
-) -> SingBoxOutbound:
+) -> Outbound:
     if protocol.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys():
         return _SINGBOX_REGISTERED_PROXY_GROUPS[protocol.type].from_uniproxy(
             protocol, **kwargs
@@ -660,7 +660,7 @@ def _make_group_outbound_from_uniproxy(
 
 def make_outbound_from_uniproxy(
     protocol: UniproxyProtocol | UniproxyProxyGroup, **kwargs
-) -> SingBoxOutbound:
+) -> Outbound:
     if is_valid_protocol(protocol):
         return _make_protocol_outbound_from_uniproxy(protocol, **kwargs)
     elif is_valid_protocol_group(protocol):

@@ -1,22 +1,22 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Mapping, Sequence, cast
+from typing import Literal, Mapping, Sequence, cast
 from uniproxy.typing import (
     AlpnType,
     IPAddress,
-    IPv4Address,
-    IPv6Address,
     ProtocolType,
     ShadowsocksCipher,
     VmessCipher,
     VmessTransportType,
 )
 
+from ipaddress import IPv4Address, IPv6Address
+
 from attrs import define, field
 from xattrs._metadata import _Metadata
 
+from uniproxy.base import BaseProtocol as UniproxyBaseProtocol
 from uniproxy.protocols import AnyTLSProtocol as UniproxyAnyTLSProtocol
-from uniproxy.protocols import BaseProtocol as UniproxyBaseProtocol
 from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
 from uniproxy.protocols import ShadowsocksObfsPlugin as UniproxyShadowsocksObfsPlugin
 from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
