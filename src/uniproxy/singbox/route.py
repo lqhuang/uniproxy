@@ -5,7 +5,7 @@ from typing import Literal, Sequence, Union
 from attrs import define, field
 
 from uniproxy.abc import AbstractSingBox
-from uniproxy.rules import BaseRule as UniproxyBaseRule
+from uniproxy.base import BaseRule as UniproxyBaseRule
 from uniproxy.rules import (
     DomainGroupRule,
     DomainKeywordGroupRule,
@@ -57,7 +57,7 @@ class RemoteRuleSet(BaseRuleSet):
     type: Literal["remote"] = "remote"
 
 
-type RuleSet = LocalRuleSet | RemoteRuleSet
+type SingboxRuleSet = LocalRuleSet | RemoteRuleSet
 
 #
 # Route Rule
@@ -215,12 +215,12 @@ class SniffRule(BaseNonFinalActionRule):
     action: Literal["sniff"] = "sniff"
 
 
-type Rule = RouteRule | RejectRule | HijackDnsRule | SniffRule
+type SingBoxRule = RouteRule | RejectRule | HijackDnsRule | SniffRule
 
 
 @define
 class Route(AbstractSingBox):
-    rules: Sequence[Rule]
+    rules: Sequence[SingBoxRule]
     """List of [[Rule]]"""
 
     rule_set: Sequence[BaseRuleSet] | None = None
@@ -285,8 +285,10 @@ class Route(AbstractSingBox):
     """
 
 
-def unify_mixed_route_rules(rules: Sequence[Rule | UniproxyRule]) -> Sequence[Rule]:
-    out_rules: list[Rule] = []
+def unify_mixed_route_rules(
+    rules: Sequence[SingBoxRule | UniproxyRule],
+) -> Sequence[SingBoxRule]:
+    out_rules: list[SingBoxRule] = []
     for r in rules:
         if isinstance(r, BaseRule):
             out_rules.append(r)
@@ -300,7 +302,7 @@ def unify_mixed_route_rules(rules: Sequence[Rule | UniproxyRule]) -> Sequence[Ru
     return out_rules
 
 
-def route_rule_from_uniproxy(rule: UniproxyRule) -> Rule:
+def route_rule_from_uniproxy(rule: UniproxyRule) -> SingBoxRule:
     if not isinstance(rule, UniproxyBaseRule):
         raise ValueError(f"Expected type of Uniproxy Rules, got {type(rule)}")
     if isinstance(rule, UniproxyFinalRule):

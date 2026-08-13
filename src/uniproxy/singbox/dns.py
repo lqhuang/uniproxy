@@ -8,8 +8,7 @@ from attrs import define, field
 from uniproxy.abc import AbstractSingBox
 from uniproxy.utils import maybe_flatmap_to_str, maybe_to_str
 
-from .base import BaseDnsServer, BaseInbound, BaseOutbound
-from .route import BaseRuleSet
+from .base import BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
 from .shared import DialFieldsMixin, OutboundTLS
 from .typing import SniffProtocol
 

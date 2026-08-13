@@ -159,3 +159,6 @@ class WireguardEndpoint(DialFieldsMixin, WireguardMixin, BaseEndpoint):  # type:
     """
 
     type: Literal["wireguard"] = "wireguard"
+
+
+type SingBoxEndpoint = WireguardEndpoint

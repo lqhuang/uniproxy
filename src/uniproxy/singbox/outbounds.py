@@ -588,11 +588,11 @@ class UrlTestOutbound(BaseOutbound):
         )
 
 
-SingBoxProtocolOutbound = (
+type SingBoxProtocolOutbound = (
     DirectOutbound | ShadowsocksOutbound | VmessOutbound | TrojanOutbound
 )
-SingBoxGroupOutbound = SelectorOutbound | UrlTestOutbound
-SingBoxOutbound = SingBoxProtocolOutbound | SingBoxGroupOutbound
+type SingBoxGroupOutbound = SelectorOutbound | UrlTestOutbound
+type SingBoxOutbound = SingBoxProtocolOutbound | SingBoxGroupOutbound
 
 
 _SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, SingBoxProtocolOutbound] = {  # type: ignore[reportAssignmentType]
