@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from uniproxy.typing import GroupType, Network
-
 from attrs import define
 
-from uniproxy.base import BaseProxyProvider, BaseRuleProvider
+from .base import BaseProxyProvider, BaseRuleProvider
+from .typing import GroupType, Network
 
 
 @define

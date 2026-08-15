@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 from typing import Literal, TypeGuard, Union
-from uniproxy.typing import (
+
+from attrs import define
+
+from uniproxy.uniproxy.base import BaseBasicRule, BaseGroupRule, BaseRule, ProtocolLike
+from uniproxy.uniproxy.shared import NoResoleMixin
+from uniproxy.uniproxy.typing import (
     BASIC_NO_RESOLABLE_RULES,
     BASIC_RULES,
     GROUP_NO_RESOLVABLE_RULES,
     GROUP_RULES,
     UniproxyRuleType,
 )
-
-from attrs import define
-
-from uniproxy.base import BaseBasicRule, BaseGroupRule, BaseRule, ProtocolLike
-from uniproxy.shared import NoResoleMixin
 
 
 @define

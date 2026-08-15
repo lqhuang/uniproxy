@@ -1,13 +1,21 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import ClassVar, Sequence
+from uniproxy.typing import ServerAddress
 
 from attrs import define
 
-from uniproxy.abc import AbstractUniproxy
-from uniproxy.uniproxy.typing import GroupType, Network, ServerAddress
+from uniproxy.uniproxy.typing import GroupType, Network
 
-# from uniproxy.shared import HealthCheck
+
+class AbstractUniproxy:
+    """
+    Abstract Uniproxy Class
+
+    All uniproxy classes should inherit from this class.
+    """
+
+    __uniproxy_impl__: ClassVar[str] = "uniproxy"
 
 
 @define
