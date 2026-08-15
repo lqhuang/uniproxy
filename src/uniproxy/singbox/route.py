@@ -4,9 +4,8 @@ from typing import Literal, Sequence, Union
 
 from attrs import define, field
 
-from uniproxy.abc import AbstractSingBox
-from uniproxy.base import BaseRule as UniproxyBaseRule
-from uniproxy.rules import (
+from uniproxy.uniproxy.base import BaseRule as UniproxyBaseRule
+from uniproxy.uniproxy.rules import (
     DomainGroupRule,
     DomainKeywordGroupRule,
     DomainKeywordRule,
@@ -20,10 +19,10 @@ from uniproxy.rules import (
     IPCidrRule,
     UniproxyRule,
 )
-from uniproxy.rules import FinalRule as UniproxyFinalRule
+from uniproxy.uniproxy.rules import FinalRule as UniproxyFinalRule
 from uniproxy.utils import maybe_flatmap_to_str, maybe_flatmap_to_tag, maybe_to_str
 
-from .base import BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
+from .base import AbstractSingBox, BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
 from .http_clients import HttpClient
 from .typing import SniffProtocol
 
@@ -265,6 +264,7 @@ class Route(AbstractSingBox):
 
     default_http_client: HttpClient | str | None = field(
         default=None,
+        # pyrefly: ignore [implicit-any-lambda]
         converter=lambda x: x.tag if hasattr(x, "tag") else maybe_to_str(x),
     )
     """

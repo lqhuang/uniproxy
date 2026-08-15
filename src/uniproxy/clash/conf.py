@@ -11,7 +11,7 @@ from .base import (
     BaseProxyProvider,
     BaseRule,
 )
-from .rules import RuleProvider
+from .providers import RuleProvider
 
 Hosts: TypeAlias = Mapping[str, str]
 Proxies: TypeAlias = Sequence[BaseProtocol]

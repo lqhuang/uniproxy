@@ -1,18 +1,11 @@
 from __future__ import annotations
 
 from typing import Literal, Mapping, Union
-from uniproxy.typing import (
-    BASIC_NO_RESOLABLE_RULES,
-    BASIC_RULES,
-    BasicNoResolableRuleType,
-    BasicRuleType,
-    GroupRuleType,
-)
 
 from attrs import define
 
-from uniproxy.rules import BaseBasicRule as UniproxyBaseBasicRule
-from uniproxy.rules import (
+from uniproxy.uniproxy.rules import BaseBasicRule as UniproxyBaseBasicRule
+from uniproxy.uniproxy.rules import (
     DomainGroupRule,
     DomainKeywordGroupRule,
     DomainSuffixGroupRule,
@@ -22,8 +15,15 @@ from uniproxy.rules import (
     is_basic_no_resolvable_rule,
     is_basic_rule,
 )
-from uniproxy.rules import FinalRule as UniproxyFinalRule
-from uniproxy.shared import NoResoleMixin
+from uniproxy.uniproxy.rules import FinalRule as UniproxyFinalRule
+from uniproxy.uniproxy.shared import NoResoleMixin
+from uniproxy.uniproxy.typing import (
+    BASIC_NO_RESOLABLE_RULES,
+    BASIC_RULES,
+    BasicNoResolableRuleType,
+    BasicRuleType,
+    GroupRuleType,
+)
 from uniproxy.utils import to_name
 
 from .base import BaseBasicRule, BaseRule

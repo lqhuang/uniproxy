@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Union
-from uniproxy.typing import GroupType
+from typing import Literal, Mapping
 
 from attrs import define
 
-from uniproxy.proxy_groups import FallBackGroup as UniproxyFallBackGroup
-from uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
-from uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
-from uniproxy.proxy_groups import UniproxyProxyGroup
-from uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
+from uniproxy.uniproxy.proxy_groups import FallBackGroup as UniproxyFallBackGroup
+from uniproxy.uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
+from uniproxy.uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
+from uniproxy.uniproxy.proxy_groups import UniproxyProxyGroup
+from uniproxy.uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
+from uniproxy.uniproxy.typing import GroupType
 from uniproxy.utils import maybe_map_to_str
 
 from .base import BaseProxyGroup

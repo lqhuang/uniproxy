@@ -4,8 +4,7 @@ from typing import Sequence
 
 from attrs import define
 
-from uniproxy.abc import AbstractSingBox
-
+from .base import AbstractSingBox
 from .dns import DNS
 from .http_clients import HttpClient
 from .inbounds import Inbound
@@ -34,6 +33,7 @@ class SingBoxConfig(AbstractSingBox):
     services: Sequence[Service] | None = None
     log: Log | None = None
     ntp: NTP | None = None
+    # pyrefly: ignore [implicit-any-type-argument]
     experimental: dict | None = None
 
 
@@ -73,7 +73,9 @@ class Experimental(AbstractSingBox):
     """
 
     cache_file: CacheFile | None = None
+    # pyrefly: ignore [implicit-any-type-argument]
     clash_api: dict | None = None
+    # pyrefly: ignore [implicit-any-type-argument]
     v2ray_api: dict | None = None
 
 

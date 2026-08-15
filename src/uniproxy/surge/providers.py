@@ -4,7 +4,7 @@ from typing import Literal
 
 from attrs import define
 
-from uniproxy.providers import ProxyProvider as UniproxyProxyProvider
+from uniproxy.uniproxy.providers import ProxyProvider as UniproxyProxyProvider
 
 from .base import BaseProxyProvider
 from .typing import SurgeGroupType

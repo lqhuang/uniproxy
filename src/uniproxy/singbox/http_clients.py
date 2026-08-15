@@ -4,8 +4,7 @@ from typing import Literal
 
 from attrs import define
 
-from uniproxy.abc import AbstractSingBox
-
+from .base import AbstractSingBox
 from .shared import DialFieldsMixin, OutboundTLS
 
 

@@ -10,7 +10,15 @@ from attrs.converters import to_bool
 from uniproxy.utils import padded_b64decode
 
 
-def parse_ss_uri(uri: str) -> dict:
+class ShadowsocksConfig(TypedDict):
+    name: str
+    server: str
+    port: int
+    method: ShadowsocksCipher
+    password: str
+
+
+def parse_ss_uri(uri: str) -> ShadowsocksConfig:
     """Parse a Shadowsocks URI (SIP002).
 
     ```
@@ -69,7 +77,18 @@ def parse_ss_uri(uri: str) -> dict:
     )
 
 
-def parse_trojan_uri(uri: str) -> dict:
+class TrojanConfig(TypedDict):
+    name: str
+    server: str
+    port: int
+    password: str
+    allow_insecure: NotRequired[bool]
+    udp: NotRequired[bool]
+    peer: NotRequired[str]
+    sni: NotRequired[str]
+
+
+def parse_trojan_uri(uri: str) -> TrojanConfig:
     """Parse a Trojan URI.
 
     ```

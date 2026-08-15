@@ -4,15 +4,14 @@ from typing import TYPE_CHECKING, Literal, Sequence, TypedDict
 from uniproxy.typing import AlpnType, ServerAddress
 
 from ipaddress import IPv4Address, IPv6Address
-from os import PathLike
+from pathlib import Path
 
 from attrs import define, field
 
-from uniproxy.abc import AbstractSingBox
-from uniproxy.shared import TLS as UniproxyTLS
+from uniproxy.uniproxy.shared import TLS as UniproxyTLS
 from uniproxy.utils import maybe_to_str
 
-from .base import BaseDnsServer, BaseInbound, BaseOutbound
+from .base import AbstractSingBox, BaseDnsServer, BaseInbound, BaseOutbound
 from .typing import TLSVersion, TransportType
 
 if TYPE_CHECKING:
@@ -186,9 +185,7 @@ class BaseTLS(AbstractSingBox):
     certificate: Sequence[str] | None = None
     """The server certificate line array, in PEM format."""
 
-    certificate_path: PathLike | str | None = field(
-        default=None, converter=maybe_to_str
-    )
+    certificate_path: Path | str | None = field(default=None, converter=maybe_to_str)
     """
     > [!NOTE]
     >
@@ -206,7 +203,7 @@ class BaseTLS(AbstractSingBox):
     Client certificate chain line array, in PEM format.
     """
 
-    client_certificate_path: PathLike | str | None = field(
+    client_certificate_path: Path | str | None = field(
         default=None, converter=maybe_to_str
     )
     """
@@ -227,7 +224,7 @@ class InboundTLS(BaseTLS):
     key: Sequence[str] | None = None
     """The server private key line array, in PEM format."""
 
-    key_path: PathLike | str | None = field(default=None, converter=maybe_to_str)
+    key_path: Path | str | None = field(default=None, converter=maybe_to_str)
     """
     > [!NOTE]
     >
@@ -236,6 +233,7 @@ class InboundTLS(BaseTLS):
     The path to the server certificate, in PEM format.
     """
 
+    # pyrefly: ignore [implicit-any-type-argument]
     client_authentication: dict | None = None
     """
     > [!NOTE]
@@ -330,7 +328,7 @@ class OutboundTLS(BaseTLS):
     Client private key line array, in PEM format.
     """
 
-    client_key_path: PathLike | str | None = field(default=None, converter=maybe_to_str)
+    client_key_path: Path | str | None = field(default=None, converter=maybe_to_str)
     """
     > [!NOTE]
     >
@@ -590,6 +588,7 @@ class OutboundMultiplex:
     padding: bool | None = None
     """Enable padding for each stream."""
 
+    # pyrefly: ignore [implicit-any-type-argument]
     brutal: dict | None = None
     """See TCP Brutal for details."""
 

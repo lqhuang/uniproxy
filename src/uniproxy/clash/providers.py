@@ -4,7 +4,7 @@ from typing import Literal
 
 from attrs import define, field, frozen
 
-from uniproxy.providers import ProxyProvider as UniproxyProxyProvider
+from uniproxy.uniproxy.providers import ProxyProvider as UniproxyProxyProvider
 
 from .base import BaseProxyProvider, BaseRuleProvider
 from .typing import RuleProviderBehaviorType, RuleProviderFormatType, RuleProviderType
@@ -35,9 +35,6 @@ class ProxyProvider(BaseProxyProvider):
 
     filter: str | None = None  # golang regex
     health_check: HealthCheck | None = HealthCheck()
-
-    def __str__(self) -> str:
-        return str(self.name)
 
     @classmethod
     def from_uniproxy(cls, provider: UniproxyProxyProvider, **kwargs) -> ProxyProvider:

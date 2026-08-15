@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal, Union
+from typing import Literal
 
 from attrs import define
 
-from uniproxy.base import BaseProxyGroup
+from .base import BaseProxyGroup
 
 
 @define

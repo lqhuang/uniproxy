@@ -1,12 +1,21 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Sequence
+from typing import ClassVar, Literal, Sequence
 from uniproxy.typing import ServerAddress
 
 from attrs import define, field
 
-from uniproxy.abc import AbstractClash
 from uniproxy.utils import maybe_map_to_str
+
+
+class AbstractClash:
+    """
+    Abstract Clash class
+
+    All Clash classes should inherit from this class.
+    """
+
+    __uniproxy_impl__: ClassVar[str] = "clash"
 
 
 @define
@@ -16,14 +25,7 @@ class BaseProtocol(AbstractClash):
     port: int
 
     def __str__(self) -> str:
-        return str(self.name)
-
-    @classmethod
-    def from_uniproxy(cls, protocol: Any, **kwargs) -> Any:
-        raise NotImplementedError()
-
-    def to_uniproxy(self, **kwargs) -> Any:
-        raise NotImplementedError()
+        return self.name
 
 
 @define
@@ -31,7 +33,7 @@ class BaseProxyProvider(AbstractClash):
     name: str
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
 
 @define
@@ -79,18 +81,11 @@ class BaseProxyGroup(AbstractClash):
     # timeout: float = 5  # seconds
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
     def __attrs_post_init__(self):
         if self.proxies is None and self.use is None:
             raise ValueError("Either proxies or use must be provided")
-
-    @classmethod
-    def from_uniproxy(cls, protocol: Any, **kwargs) -> Any:
-        raise NotImplementedError()
-
-    def to_uniproxy(self, **kwargs) -> Any:
-        raise NotImplementedError()
 
 
 @define
@@ -98,8 +93,8 @@ class BaseRuleProvider:
     name: str
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
 
-ProtocolLike = BaseProtocol | BaseProxyGroup | BaseProxyProvider | str
-RuleProviderLike = BaseRuleProvider | str
+type ProtocolLike = BaseProtocol | BaseProxyGroup | BaseProxyProvider | str
+type RuleProviderLike = BaseRuleProvider | str

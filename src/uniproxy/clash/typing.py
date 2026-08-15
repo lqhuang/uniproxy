@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-ProtocolType = Literal[
+type ProtocolType = Literal[
     "http",
     "https",
     "socks5",
@@ -14,13 +14,13 @@ ProtocolType = Literal[
     "juicity",
     "wireguard",
 ]
-GroupType = Literal["select", "url-test", "fallback", "load-balance", "external"]
+type GroupType = Literal["select", "url-test", "fallback", "load-balance", "external"]
 
-RuleProviderType = Literal["http", "file"]
-RuleProviderBehaviorType = Literal["domain", "ipcidr", "classical"]
-RuleProviderFormatType = Literal["text", "yaml", "mrs"]
+type RuleProviderType = Literal["http", "file"]
+type RuleProviderBehaviorType = Literal["domain", "ipcidr", "classical"]
+type RuleProviderFormatType = Literal["text", "yaml", "mrs"]
 
-RuleType = Literal[
+type RuleType = Literal[
     # Domain-based Rule
     "domain",
     "domain-suffix",

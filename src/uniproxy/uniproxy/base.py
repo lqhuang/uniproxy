@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from typing import Sequence
-from uniproxy.typing import GroupType, Network, ServerAddress
 
 from attrs import define
 
 from uniproxy.abc import AbstractUniproxy
+from uniproxy.uniproxy.typing import GroupType, Network, ServerAddress
 
 # from uniproxy.shared import HealthCheck
 
@@ -17,7 +17,7 @@ class BaseProtocol(AbstractUniproxy):
     port: int
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
 
 @define
@@ -38,7 +38,7 @@ class BaseProxyGroup(AbstractUniproxy):
     health_check: bool | None = None
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
 
 @define
@@ -49,7 +49,7 @@ class BaseProxyProvider(AbstractUniproxy):
     path: str | None
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
 
 @define

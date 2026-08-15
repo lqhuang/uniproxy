@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Sequence
 from uniproxy.typing import AlpnType
 
-from os import PathLike
+from pathlib import Path
 
 from attrs import define, frozen
 
@@ -15,8 +15,8 @@ class TLS:
     # https://github.com/quicwg/base-drafts/wiki/ALPN-IDs-used-with-QUIC
     alpn: Sequence[AlpnType] | None = None
     verify: bool | None = None
-    cert_ca: Sequence[str] | PathLike | None = None
-    cert_private_key: Sequence[str] | PathLike | None = None
+    cert_ca: Sequence[str] | Path | None = None
+    cert_private_key: Sequence[str] | Path | None = None
     cert_private_password: str | None = None
 
 

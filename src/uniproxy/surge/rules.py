@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence, Union
-from uniproxy.typing import BasicNoResolableRuleType, BasicRuleType
+from typing import Literal, Mapping, Sequence
 
 from attrs import define, field
 
-from uniproxy.rules import DomainGroupRule as UniproxyDomainGroupRule
-from uniproxy.rules import (
+from uniproxy.uniproxy.rules import DomainGroupRule as UniproxyDomainGroupRule
+from uniproxy.uniproxy.rules import (
     DomainKeywordGroupRule,
     DomainSuffixGroupRule,
     IPCidr6GroupRule,
@@ -15,7 +14,8 @@ from uniproxy.rules import (
     is_basic_no_resolvable_rule,
     is_basic_rule,
 )
-from uniproxy.shared import NoResoleMixin
+from uniproxy.uniproxy.shared import NoResoleMixin
+from uniproxy.uniproxy.typing import BasicNoResolableRuleType, BasicRuleType
 from uniproxy.utils import to_name
 
 from .base import (
@@ -164,6 +164,7 @@ class DeviceNameRule(BaseBasicRule):
 @define
 class DomainSetRule(BaseProviderRule):
     matcher: str | BaseRuleProvider = field(
+        # pyrefly: ignore [implicit-any-lambda]
         converter=lambda x: x.url if isinstance(x, BaseRuleProvider) else x
     )
     policy: ProtocolLike
@@ -174,6 +175,7 @@ class DomainSetRule(BaseProviderRule):
 @define
 class RuleSetRule(BaseProviderRule):
     matcher: Literal["SYSTEM", "LAN"] | str | BaseRuleProvider = field(
+        # pyrefly: ignore [implicit-any-lambda]
         converter=lambda x: x.url if isinstance(x, BaseRuleProvider) else x
     )
     policy: ProtocolLike
@@ -266,25 +268,23 @@ def make_rules_from_uniproxy(rule: UniproxyRule) -> Sequence[SurgeRule]:
             ),
         )
     elif isinstance(rule, UniproxyDomainGroupRule):
-        return tuple(
-            DomainRule(matcher=str(each), policy=policy) for each in rule.matcher
-        )
+        return tuple(DomainRule(matcher=each, policy=policy) for each in rule.matcher)
     elif isinstance(rule, DomainSuffixGroupRule):
         return tuple(
-            DomainSuffixRule(matcher=str(each), policy=policy) for each in rule.matcher
+            DomainSuffixRule(matcher=each, policy=policy) for each in rule.matcher
         )
     elif isinstance(rule, DomainKeywordGroupRule):
         return tuple(
-            DomainKeywordRule(matcher=str(each), policy=policy) for each in rule.matcher
+            DomainKeywordRule(matcher=each, policy=policy) for each in rule.matcher
         )
     elif isinstance(rule, IPCidrGroupRule):
         return tuple(
-            IPCidrRule(matcher=str(each), policy=policy, no_resolve=rule.no_resolve)
+            IPCidrRule(matcher=each, policy=policy, no_resolve=rule.no_resolve)
             for each in rule.matcher
         )
     elif isinstance(rule, IPCidr6GroupRule):
         return tuple(
-            IPCidr6Rule(matcher=str(each), policy=policy, no_resolve=rule.no_resolve)
+            IPCidr6Rule(matcher=each, policy=policy, no_resolve=rule.no_resolve)
             for each in rule.matcher
         )
     else:

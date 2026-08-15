@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-from typing import Literal
-
-from abc import abstractmethod
+from typing import ClassVar, Literal
 
 from attrs import define
 
-from uniproxy.abc import AbstractSingBox
+
+class AbstractSingBox:
+    """
+    Abstract SingBox Class
+
+    All sing-box classes should inherit from this class.
+    """
+
+    __uniproxy_impl__: ClassVar[str] = "sing-box"
 
 
 @define(slots=False)
@@ -15,12 +21,7 @@ class BaseOutbound(AbstractSingBox):
     # type: str
 
     def __str__(self) -> str:
-        return str(self.tag)
-
-    @classmethod
-    @abstractmethod
-    def from_uniproxy(cls, protocol, **kwargs) -> BaseOutbound:
-        raise NotImplementedError
+        return self.tag
 
 
 @define(slots=False)
@@ -29,7 +30,7 @@ class BaseInbound(AbstractSingBox):
     # type: str
 
     def __str__(self) -> str:
-        return str(self.tag)
+        return self.tag
 
 
 @define(slots=False)
@@ -38,7 +39,7 @@ class BaseEndpoint(AbstractSingBox):
     # type: str
 
     def __str__(self) -> str:
-        return str(self.tag)
+        return self.tag
 
 
 @define(slots=False)
@@ -47,7 +48,7 @@ class BaseDnsServer(AbstractSingBox):
     # type: str
 
     def __str__(self) -> str:
-        return str(self.tag)
+        return self.tag
 
 
 @define(slots=False)
@@ -57,7 +58,7 @@ class BaseRuleSet(AbstractSingBox):
     # type: str
 
     def __str__(self) -> str:
-        return str(self.tag)
+        return self.tag
 
 
 @define(slots=False)
@@ -69,4 +70,4 @@ class BaseService(AbstractSingBox):
     tag: str
 
     def __str__(self) -> str:
-        return str(self.tag)
+        return self.tag

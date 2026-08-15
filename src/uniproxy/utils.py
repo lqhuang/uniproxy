@@ -7,10 +7,10 @@ from base64 import b64decode
 from configparser import ConfigParser
 
 
-def load_ini_without_section(s: str) -> dict:
+def load_ini_without_section(s: str) -> dict[str, Any]:
     parser = ConfigParser()
     parser.read_string(f"[{parser.default_section}]\n{s}")
-    return cast(dict, parser.defaults())
+    return cast(dict[str, Any], parser.defaults())
 
 
 def padded_b64decode(b64: str) -> bytes:

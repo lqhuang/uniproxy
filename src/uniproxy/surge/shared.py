@@ -4,9 +4,9 @@ from typing import Literal
 
 from attrs import frozen
 
-from uniproxy.abc import AbstractSurge
-from uniproxy.shared import TLS
+from uniproxy.uniproxy.shared import TLS
 
+from .base import AbstractSurge
 from .typing import _ProtocolOptions
 
 

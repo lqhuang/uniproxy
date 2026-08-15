@@ -1,13 +1,21 @@
 from __future__ import annotations
 
-from typing import Any, Sequence, Union
+from typing import Any, ClassVar, Sequence
 from uniproxy.typing import ServerAddress
 
 from attrs import define
 
-from uniproxy.abc import AbstractSurge
-
 from .typing import SurgeRuleProviderType
+
+
+class AbstractSurge:
+    """
+    Abstract Clash class
+
+    All Surge classes should inherit from this class.
+    """
+
+    __uniproxy_impl__: ClassVar[str] = "surge"
 
 
 @define
@@ -19,7 +27,7 @@ class BaseProtocol(AbstractSurge):
     # type: SurgeProtocolType
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
     def __attrs_asdict__(self) -> dict[str, str]:
         raise NotImplementedError()
@@ -37,7 +45,7 @@ class BaseProxyProvider(AbstractSurge):
     name: str
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
 
 @define
@@ -62,7 +70,7 @@ class BaseProxyGroup(AbstractSurge):
         )
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
 
 @define
@@ -75,6 +83,7 @@ class BaseBasicRule(BaseRule):
     policy: ProtocolLike
 
     def __str__(self) -> str:
+        # pyrefly: ignore [missing-attribute]
         return f"{self.type.upper()},{self.matcher},{self.policy}"  # pyright: ignore[reportAttributeAccessIssue]
 
 
@@ -84,6 +93,7 @@ class BaseProviderRule(BaseRule):
     policy: ProtocolLike
 
     def __str__(self) -> str:
+        # pyrefly: ignore [missing-attribute]
         return f"{self.type.upper()},{self.matcher},{self.policy}"  # pyright: ignore[reportAttributeAccessIssue]
 
 
@@ -94,7 +104,7 @@ class BaseRuleProvider(AbstractSurge):
     type: SurgeRuleProviderType
 
     def __str__(self) -> str:
-        return str(self.name)
+        return self.name
 
 
 type ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str

@@ -4,8 +4,7 @@ from typing import Literal, Sequence
 
 from attrs import define
 
-from ..abc import AbstractSingBox
-from .base import BaseService
+from .base import AbstractSingBox, BaseService
 from .http_clients import HttpClient
 from .shared import InboundTLS, ListenableMixin, ListenFieldsMixin
 

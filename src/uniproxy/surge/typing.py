@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal, TypeAlias
+from typing import Literal
 
-SurgeProtocolType = Literal[
+type SurgeProtocolType = Literal[
     "http",
     "https",
     "socks5",
@@ -19,6 +19,6 @@ SurgeGroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet", "smart"
 ]
 
-SurgeRuleProviderType = Literal["domain-set", "rule-set"]
+type SurgeRuleProviderType = Literal["domain-set", "rule-set"]
 
-_ProtocolOptions: TypeAlias = dict[str, str | None]
+type _ProtocolOptions = dict[str, str | None]

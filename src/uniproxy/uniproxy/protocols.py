@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 from typing import Literal, Sequence
-from uniproxy.typing import Network, NetworkCIDR, ShadowsocksCipher, VmessCipher
+from uniproxy.typing import NetworkCIDR, ShadowsocksCipher
 
 from ipaddress import IPv4Address
 
 from attrs import define, evolve
 from attrs.converters import to_bool
 
-from uniproxy.base import BaseProtocol
-from uniproxy.shared import TLS
 from uniproxy.uri import AnyTLSConfig, parse_anytls_uri, parse_ss_uri, parse_trojan_uri
+
+from .base import BaseProtocol
+from .shared import TLS
+from .typing import Network, VmessCipher
 
 
 @define

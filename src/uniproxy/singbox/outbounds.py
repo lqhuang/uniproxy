@@ -1,17 +1,11 @@
 from __future__ import annotations
 
 from typing import Any, Literal, Mapping, Sequence, TypeGuard, cast
-from uniproxy.typing import (
-    GroupType,
-    ProtocolType,
-    ServerAddress,
-    ShadowsocksCipher,
-    VmessCipher,
-)
+from uniproxy.typing import ServerAddress, ShadowsocksCipher
 
 from attrs import define, field
 
-from uniproxy.protocols import (
+from uniproxy.uniproxy.protocols import (
     AnyTLSProtocol,
     HttpProtocol,
     NaiveProtocol,
@@ -21,7 +15,8 @@ from uniproxy.protocols import (
     UniproxyProtocol,
     VmessProtocol,
 )
-from uniproxy.proxy_groups import SelectGroup, UniproxyProxyGroup, UrlTestGroup
+from uniproxy.uniproxy.proxy_groups import SelectGroup, UniproxyProxyGroup, UrlTestGroup
+from uniproxy.uniproxy.typing import GroupType, ProtocolType, VmessCipher
 from uniproxy.utils import map_to_str
 
 from .base import BaseOutbound
@@ -36,6 +31,7 @@ from .typing import SingBoxNetwork
 
 __all__ = (
     "DirectOutbound",
+    "HttpOutbound",
     "ShadowsocksOutbound",
     "VmessOutbound",
     "TrojanOutbound",
@@ -362,13 +358,13 @@ class NaiveMixin:
     Number of concurrent tunnel connections. Multiple connections make the
     tunneling easier to detect through traffic analysis, which defeats the
     purpose of NaiveProxy's design to resist traffic analysis."""
-    extra_headers: dict | None = None
+    extra_headers: Mapping[str, str] | None = None
     """Extra headers to send in HTTP requests."""
     udp_over_tcp: Literal[False] | UdpOverTcp | None = None
     """UDP over TCP protocol settings. See [[UDP Over TCP]] for details."""
     quic: bool | None = None
     """Use QUIC instead of HTTP/2."""
-    quic_congestion_control: str | None = None
+    quic_congestion_control: Literal["bbr", "bbr2", "cubic", "reno"] | None = None
     """
     QUIC congestion control algorithm.
 
@@ -589,13 +585,45 @@ class UrlTestOutbound(BaseOutbound):
 
 
 type ProtocolOutbound = (
-    DirectOutbound | ShadowsocksOutbound | VmessOutbound | TrojanOutbound
+    DirectOutbound
+    | HttpOutbound
+    | ShadowsocksOutbound
+    | VmessOutbound
+    | TrojanOutbound
+    | AnyTLSOutbound
+    | NaiveOutbound
 )
 type GroupOutbound = SelectorOutbound | UrlTestOutbound
 type Outbound = ProtocolOutbound | GroupOutbound
 
+_SINGBOX_OUTBOUND_TYPES = set((
+    DirectOutbound,
+    HttpOutbound,
+    ShadowsocksOutbound,
+    VmessOutbound,
+    TrojanOutbound,
+    AnyTLSOutbound,
+    NaiveOutbound,
+    SelectorOutbound,
+    UrlTestOutbound,
+))
 
-_SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, ProtocolOutbound] = {  # type: ignore[reportAssignmentType]
+
+def is_singbox_outbound(proxy: Any) -> TypeGuard[Outbound]:
+    """
+    Check if the instance is valid SingBox Outbound.
+    """
+
+    if isinstance(proxy, BaseOutbound):
+        try:
+            return type(proxy) in _SINGBOX_OUTBOUND_TYPES
+        except Exception:
+            return False
+    else:
+        return False
+
+
+_SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, type[ProtocolOutbound]] = {
     # "direct": DirectOutbound,
     # "block": BlockOutbound,
     # "dns": DnsOutbound,
@@ -607,9 +635,11 @@ _SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, ProtocolOutbound] = {  # ty
     "anytls": AnyTLSOutbound,
     "naive": NaiveOutbound,
 }
-_SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, GroupOutbound] = {  # type: ignore[reportAssignmentType]
+_SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, type[GroupOutbound]] = {
     "select": SelectorOutbound,
     "url-test": UrlTestOutbound,
+    "load-balance": UrlTestOutbound,
+    "fallback": UrlTestOutbound,
 }
 
 

@@ -1,33 +1,33 @@
 from __future__ import annotations
 
 from typing import Literal, Mapping, Sequence, cast
-from uniproxy.typing import (
-    AlpnType,
-    IPAddress,
-    ProtocolType,
-    ShadowsocksCipher,
-    VmessCipher,
-    VmessTransportType,
-)
+from uniproxy.typing import AlpnType, IPAddress, ShadowsocksCipher
 
 from ipaddress import IPv4Address, IPv6Address
 
 from attrs import define, field
 from xattrs._metadata import _Metadata
 
-from uniproxy.base import BaseProtocol as UniproxyBaseProtocol
-from uniproxy.protocols import AnyTLSProtocol as UniproxyAnyTLSProtocol
-from uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
-from uniproxy.protocols import ShadowsocksObfsPlugin as UniproxyShadowsocksObfsPlugin
-from uniproxy.protocols import ShadowsocksProtocol as UniproxyShadowsocksProtocol
-from uniproxy.protocols import ShadowsocksV2RayPlugin as UniproxyShadowsocksV2RayPlugin
-from uniproxy.protocols import TrojanProtocol as UniproxyTrojanProtocol
-from uniproxy.protocols import UniproxyProtocol
-from uniproxy.protocols import VmessH2Transport as UniproxyVmessH2Transport
-from uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
-from uniproxy.protocols import VmessWsTransport as UniproxyVmessWsTransport
-from uniproxy.protocols import WireGuardPeer as UniproxyWireguardPeer
-from uniproxy.protocols import WireGuardProtocol as UniproxyWireguardProtocol
+from uniproxy.uniproxy.base import BaseProtocol as UniproxyBaseProtocol
+from uniproxy.uniproxy.protocols import AnyTLSProtocol as UniproxyAnyTLSProtocol
+from uniproxy.uniproxy.protocols import HttpProtocol as UniproxyHttpProtocol
+from uniproxy.uniproxy.protocols import (
+    ShadowsocksObfsPlugin as UniproxyShadowsocksObfsPlugin,
+)
+from uniproxy.uniproxy.protocols import (
+    ShadowsocksProtocol as UniproxyShadowsocksProtocol,
+)
+from uniproxy.uniproxy.protocols import (
+    ShadowsocksV2RayPlugin as UniproxyShadowsocksV2RayPlugin,
+)
+from uniproxy.uniproxy.protocols import TrojanProtocol as UniproxyTrojanProtocol
+from uniproxy.uniproxy.protocols import UniproxyProtocol
+from uniproxy.uniproxy.protocols import VmessH2Transport as UniproxyVmessH2Transport
+from uniproxy.uniproxy.protocols import VmessProtocol as UniproxyVmessProtocol
+from uniproxy.uniproxy.protocols import VmessWsTransport as UniproxyVmessWsTransport
+from uniproxy.uniproxy.protocols import WireGuardPeer as UniproxyWireguardPeer
+from uniproxy.uniproxy.protocols import WireGuardProtocol as UniproxyWireguardProtocol
+from uniproxy.uniproxy.typing import ProtocolType, VmessCipher, VmessTransportType
 
 from .base import BaseProtocol
 
@@ -519,7 +519,7 @@ _CLASH_MAPPER: Mapping[ProtocolType, type[BaseProtocol]] = {
     "anytls": AnyTLSProtocol,
 }
 
-ClashProtocol = (
+type ClashProtocol = (
     HttpProtocol
     | Socks5Protocol
     | ShadowsocksProtocol

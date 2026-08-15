@@ -5,7 +5,12 @@ from typing import Callable, Sequence, TypeVar
 from itertools import chain
 from operator import itemgetter
 
-from uniproxy.base import BaseProtocol, BaseProxyGroup, BaseProxyProvider, ProtocolLike
+from uniproxy.uniproxy.base import (
+    BaseProtocol,
+    BaseProxyGroup,
+    BaseProxyProvider,
+    ProtocolLike,
+)
 
 
 def split_uniproxy_protocol_like(
