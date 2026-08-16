@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence, Union
+from typing import Literal, Sequence
 
 from attrs import define, field
 
@@ -17,7 +17,9 @@ from uniproxy.uniproxy.rules import (
     IPCidr6Rule,
     IPCidrGroupRule,
     IPCidrRule,
+    ProcessNameRule,
     UniproxyRule,
+    UserAgentRule,
 )
 from uniproxy.uniproxy.rules import FinalRule as UniproxyFinalRule
 from uniproxy.utils import maybe_flatmap_to_str, maybe_flatmap_to_tag, maybe_to_str
@@ -95,6 +97,7 @@ class RouteOptionFieldsMixin:
     source_port_range: str | Sequence[str] | None = None
     port: int | Sequence[int] | None = None
     port_range: str | Sequence[str] | None = None
+    process_name: str | Sequence[str] | None = None
     rule_set: str | Sequence[str] | BaseRuleSet | Sequence[BaseRuleSet] | None = field(
         default=None,
         # FIXME: This is a hack to make the converter work
@@ -343,6 +346,10 @@ def route_rule_from_uniproxy(rule: UniproxyRule) -> Rule:
             return RouteRule(
                 outbound=str(policy), rule_set=f"rs-geoip-{matcher}".lower()
             )
+        case ProcessNameRule(matcher=matcher, policy=policy):
+            return RouteRule(outbound=str(policy), process_name=matcher)
+        case UserAgentRule(matcher=matcher, policy=policy):
+            return RouteRule(outbound=str(policy), rule_set=f"rs-useragent-{matcher}")
         # case (
         #     RuleSetRule(matcher, policy) | DomainSetRule(matcher=matcher, policy=policy)
         # ):

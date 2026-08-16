@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Protocol
 
+from functools import cached_property
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 
 type Backend = Literal["surge", "clash", "sing-box"]
@@ -23,3 +24,8 @@ type ShadowsocksCipher = Literal[
     "2022-blake3-chacha20-poly1305",
     "2022-blake3-chacha8-poly1305",
 ]
+
+
+class Taggable(Protocol):
+    @cached_property
+    def to_tag(self) -> str: ...

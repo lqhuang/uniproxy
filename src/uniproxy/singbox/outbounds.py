@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any, Literal, Mapping, Sequence, TypeGuard, cast
 from uniproxy.typing import ServerAddress, ShadowsocksCipher
 
+from itertools import chain
+
 from attrs import define, field
 
 from uniproxy.uniproxy.protocols import (
@@ -15,9 +17,13 @@ from uniproxy.uniproxy.protocols import (
     UniproxyProtocol,
     VmessProtocol,
 )
-from uniproxy.uniproxy.proxy_groups import SelectGroup, UniproxyProxyGroup, UrlTestGroup
+from uniproxy.uniproxy.proxy_groups import FallBackGroup as UniproxyFallBackGroup
+from uniproxy.uniproxy.proxy_groups import LoadBalanceGroup as UniproxyLoadBalanceGroup
+from uniproxy.uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
+from uniproxy.uniproxy.proxy_groups import UniproxyProxyGroup
+from uniproxy.uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 from uniproxy.uniproxy.typing import GroupType, ProtocolType, VmessCipher
-from uniproxy.utils import map_to_str
+from uniproxy.utils import flatmap_to_str, map_to_str
 
 from .base import BaseOutbound
 from .shared import (
@@ -518,10 +524,16 @@ class SelectorOutbound(BaseOutbound):
     type: Literal["selector"] = "selector"
 
     @classmethod
-    def from_uniproxy(cls, protocol: SelectGroup, **kwargs) -> SelectorOutbound:
+    def from_uniproxy(
+        cls, protocol: UniproxySelectGroup | UniproxyFallBackGroup, **kwargs
+    ) -> SelectorOutbound:
+        if protocol.providers:
+            provider_proxies = map_to_str(chain(*protocol.providers))
+        else:
+            provider_proxies = []
         return cls(
             tag=protocol.name,
-            outbounds=[str(i) for i in protocol.proxies] if protocol.proxies else [],
+            outbounds=(flatmap_to_str(protocol.proxies) + provider_proxies),
             interrupt_exist_connections=False,
         )
 
@@ -574,13 +586,30 @@ class UrlTestOutbound(BaseOutbound):
     type: Literal["urltest"] = "urltest"
 
     @classmethod
-    def from_uniproxy(cls, protocol: UrlTestGroup, **kwargs) -> UrlTestOutbound:
+    def from_uniproxy(
+        cls, protocol: UniproxyUrlTestGroup | UniproxyLoadBalanceGroup, **kwargs
+    ) -> UrlTestOutbound:
+        if isinstance(protocol, UniproxyUrlTestGroup):
+            tolerance = protocol.tolerance
+        elif isinstance(protocol, UniproxyLoadBalanceGroup):
+            tolerance = None
+        else:
+            raise ValueError(
+                f"Unsupported or not implemented proxy group type {protocol.type}"
+            )
+
+        if protocol.providers:
+            provider_proxies = map_to_str(chain(*protocol.providers))
+        else:
+            provider_proxies = []
+
         return cls(
             tag=protocol.name,
-            outbounds=[str(i) for i in protocol.proxies] if protocol.proxies else [],
+            outbounds=(flatmap_to_str(protocol.proxies) + provider_proxies),
             url=protocol.url,
             interval=f"{protocol.interval}s" if protocol.interval else None,
-            tolerance=protocol.tolerance,
+            tolerance=tolerance,
+            interrupt_exist_connections=False,
         )
 
 
@@ -637,9 +666,9 @@ _SINGBOX_REGISTERED_PROTOCOLS: Mapping[ProtocolType, type[ProtocolOutbound]] = {
 }
 _SINGBOX_REGISTERED_PROXY_GROUPS: Mapping[GroupType, type[GroupOutbound]] = {
     "select": SelectorOutbound,
+    "fallback": SelectorOutbound,
     "url-test": UrlTestOutbound,
     "load-balance": UrlTestOutbound,
-    "fallback": UrlTestOutbound,
 }
 
 

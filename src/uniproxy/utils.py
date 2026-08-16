@@ -92,6 +92,10 @@ def map_to_str(xs: Iterable[Any | str]) -> list[str]:
     return [str(each) for each in xs]
 
 
+def flatmap_to_str(xs: Iterable[Any | str] | None) -> list[str]:
+    return [] if xs is None else [str(each) for each in xs]
+
+
 def maybe_map_to_str(xs: Iterable[Any | str] | None) -> list[str] | None:
     if xs is None:
         return None

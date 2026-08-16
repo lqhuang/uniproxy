@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Literal, Sequence, TypeGuard
 from uniproxy.typing import NetworkCIDR, ShadowsocksCipher
 
 from ipaddress import IPv4Address
@@ -292,3 +292,21 @@ type UniproxyProtocol = (
     | VmessProtocol
     | WireGuardProtocol
 )
+
+
+def is_uniproxy_protocol(obj: object) -> TypeGuard[UniproxyProtocol]:
+    return isinstance(
+        obj,
+        (
+            HttpProtocol,
+            QuicProtocol,
+            Socks5Protocol,
+            ShadowsocksProtocol,
+            TrojanProtocol,
+            TuicProtocol,
+            NaiveProtocol,
+            AnyTLSProtocol,
+            VmessProtocol,
+            WireGuardProtocol,
+        ),
+    )
