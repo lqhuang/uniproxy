@@ -287,6 +287,9 @@ class Route(AbstractSingBox):
     Tag of target DNS server.
     """
 
+    network_strategy: Literal["default", "hybrid", "fallback"] | None = None
+    default_network_type: Literal["wifi", "cellular", "ethernet", "other"] | None = None
+
 
 def unify_mixed_route_rules(rules: Sequence[Rule | UniproxyRule]) -> Sequence[Rule]:
     out_rules: list[Rule] = []

@@ -589,14 +589,15 @@ class UrlTestOutbound(BaseOutbound):
     def from_uniproxy(
         cls, protocol: UniproxyUrlTestGroup | UniproxyLoadBalanceGroup, **kwargs
     ) -> UrlTestOutbound:
-        if isinstance(protocol, UniproxyUrlTestGroup):
-            tolerance = protocol.tolerance
-        elif isinstance(protocol, UniproxyLoadBalanceGroup):
-            tolerance = None
-        else:
-            raise ValueError(
-                f"Unsupported or not implemented proxy group type {protocol.type}"
-            )
+        match protocol:
+            case UniproxyUrlTestGroup():
+                tolerance = protocol.tolerance
+            case UniproxyLoadBalanceGroup():
+                tolerance = None
+            case _:
+                raise ValueError(
+                    f"Unsupported or not implemented proxy group type {protocol.type}"
+                )
 
         if protocol.providers:
             provider_proxies = map_to_str(chain(*protocol.providers))

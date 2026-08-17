@@ -113,7 +113,7 @@ class DNS(AbstractSingBox):
 
 
 @define
-class LegacyDnsServer(BaseDnsServer):
+class LegacyDnsServer(AbstractSingBox):
     # Deprecate since 1.11.0, remove in 1.13.0
     address: str | DnsReturnCode | Literal["local", "dhcp://auto", "fakeip"]
 
@@ -224,7 +224,7 @@ class BaseQuic(BaseDnsServer):
 
 
 @define
-class QuicDnsServer(BaseDnsServer):
+class QuicDnsServer(DialFieldsMixin, BaseDnsServer):
     """
     Ref: https://sing-box.sagernet.org/configuration/dns/server/quic/
 
@@ -351,7 +351,6 @@ type DnsServer = (
     | HttpsDnsServer
     | H3DnsServer
     | FakeIPDnsServer
-    | LegacyDnsServer
 )
 
 
@@ -367,7 +366,7 @@ class BaseDnsRule(AbstractSingBox): ...
 
 
 @define(slots=False)
-class DnsRuleMixin:
+class _DnsRuleMixin:
     inbound: Sequence[BaseInbound | str] | None = field(
         default=None, converter=maybe_flatmap_to_str
     )
@@ -380,7 +379,10 @@ class DnsRuleMixin:
 
     """
 
-    query_type: None = None
+    query_type: Sequence[Literal["A", "AAAA", "CNAME", "DNSKEY"] | str] | None = None
+    """
+    https://en.wikipedia.org/wiki/List_of_DNS_record_types
+    """
 
     network: Literal["tcp", "udp"] | None = None
 
@@ -426,7 +428,7 @@ class DnsRuleMixin:
 
 
 @define(slots=False)
-class BaseDnsRouteRule(BaseDnsRule):
+class _BaseDnsRouteRule(BaseDnsRule):
     server: str | BaseDnsServer = field(converter=str)
     """
     Tag of target server.
@@ -457,18 +459,18 @@ class BaseDnsRouteRule(BaseDnsRule):
 
 
 @define
-class DnsRouteRule(DnsRuleMixin, BaseDnsRouteRule):
+class DnsRouteRule(_DnsRuleMixin, _BaseDnsRouteRule, BaseDnsRule):
     action: Literal["route"] | None = None
 
 
 @define(slots=False)
-class BaseDnsRejectRule(BaseDnsRule):
+class _BaseDnsRejectRule(BaseDnsRule):
     method: Literal["default", "drop"] | None = None
     no_drop: bool | None = None
 
 
 @define
-class DnsRejectRule(DnsRuleMixin, BaseDnsRejectRule):
+class DnsRejectRule(_DnsRuleMixin, _BaseDnsRejectRule):
     action: Literal["reject"] = "reject"
 
 
