@@ -22,10 +22,10 @@ class SingBoxConfig(AbstractSingBox):
     Ref: https://sing-box.sagernet.org/configuration/
     """
 
-    dns: DNS
     inbounds: Sequence[Inbound]
     outbounds: Sequence[Outbound]
     route: Route
+    dns: DNS | None = None
     http_clients: Sequence[HttpClient] | None = None
     certificate: None = None
     certificate_providers: None = None

@@ -33,12 +33,12 @@ dns_server_google_tls = TlsDnsServer(tag="dns-google-tls", server="8.8.8.8")
 dns_server_google_https = HttpsDnsServer(tag="dns-google-https", server="8.8.8.8")
 dns_server_google_h3 = H3DnsServer(tag="dns-google-h3", server="8.8.8.8")
 
+# fmt: off
 dns_server_cloudflare_udp = UdpDnsServer(tag="dns-cloudflare-udp", server="1.1.1.1")
 dns_server_cloudflare_tls = TlsDnsServer(tag="dns-cloudflare-tls", server="1.1.1.1")
-dns_server_cloudflare_https = HttpsDnsServer(
-    tag="dns-cloudflare-https", server="1.1.1.1"
-)
+dns_server_cloudflare_https = HttpsDnsServer(tag="dns-cloudflare-https", server="1.1.1.1")
 dns_server_cloudflare_h3 = H3DnsServer(tag="dns-cloudflare-h3", server="1.1.1.1")
+# fmt: on
 
 #### ------------- Snippets for Outbound ------------- ####
 out_direct = DirectOutbound(tag=TAG_DIRECT_OUTBOUND)
