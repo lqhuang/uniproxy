@@ -3,9 +3,12 @@ from __future__ import annotations
 from typing import Literal, Sequence
 from uniproxy.typing import NetworkCIDR, ShadowsocksCipher
 
-from attrs import define
+from ipaddress import IPv4Address, IPv6Address
+
+from attrs import define, field
 
 from uniproxy.common import ProxyUser, SimpleUser, TuicUser
+from uniproxy.utils import maybe_to_str
 
 from .base import BaseInbound, BaseRuleSet
 from .shared import (
@@ -38,27 +41,16 @@ __all__ = (
 
 
 @define(slots=False)
-class DirectMixin:
-    """
-    {
-    "type": "direct",
-    "tag": "direct-in",
-
-    ... // Listen fields
-
-    "network": "udp",
-    "override_address": "1.0.0.1",
-    "override_port": 53
-    }
-    """
-
+class _DirectMixin:
     network: SingBoxNetwork | None = None
     """
     Listen network, one of `tcp`, `udp`.
 
     Both if empty.
     """
-    override_address: str | None = None
+    override_address: str | IPv4Address | IPv6Address | None = field(
+        default=None, converter=maybe_to_str
+    )
     """Override the connection destination address."""
     override_port: int | None = None
     """Override the connection destination port."""
@@ -67,7 +59,28 @@ class DirectMixin:
 
 
 @define
-class DirectInbound(ListenFieldsMixin, DirectMixin, BaseInbound): ...
+class DirectInbound(ListenFieldsMixin, _DirectMixin, ListenableMixin, BaseInbound):
+    """
+    `direct` inbound is a tunnel server.
+
+    ```json
+    {
+        "type": "direct",
+        "tag": "direct-in",
+
+        ... // Listen Fields
+
+        "network": "udp",
+        "override_address": "1.0.0.1",
+        "override_port": 53
+    }
+    ```
+
+
+    References:
+
+    1. https://sing-box.sagernet.org/configuration/inbound/direct/
+    """
 
 
 @define
@@ -85,7 +98,7 @@ class Socks5Inbound(ListenableMixin, BaseInbound):
 
 
 @define(slots=False)
-class ShadowsocksMixin:
+class _ShadowsocksMixin:
     """
     Structure
 
@@ -102,7 +115,6 @@ class ShadowsocksMixin:
     }
 
     ```
-
 
     Multi-User Structure
 
@@ -156,7 +168,7 @@ class ShadowsocksMixin:
     |xchacha20-ietf-poly1305      |/         |
     """
 
-    password: str
+    password: str | None = None
     """Password for the Shadowsocks server."""
 
     network: SingBoxNetwork | None = None
@@ -180,13 +192,23 @@ class ShadowsocksMixin:
 
 @define
 class ShadowsocksInbound(
-    ListenFieldsMixin, ShadowsocksMixin, ListenableMixin, BaseInbound
+    ListenFieldsMixin, _ShadowsocksMixin, ListenableMixin, BaseInbound
 ):
     type: Literal["shadowsocks"] = "shadowsocks"
 
+    def __attrs_post_init__(self):
+        if self.users and self.password:
+            raise ValueError(
+                "ShadowsocksInbound: `users` and `password` are mutually exclusive."
+            )
+        if not self.users and not self.password:
+            raise ValueError(
+                "ShadowsocksInbound: either `users` or `password` must be provided."
+            )
+
 
 @define(slots=False)
-class TrojanMixin:
+class _TrojanMixin:
     """
     ```json
     {
@@ -250,7 +272,7 @@ class TrojanMixin:
 
 
 @define
-class TrojanInbound(ListenFieldsMixin, TrojanMixin, ListenableMixin, BaseInbound):
+class TrojanInbound(ListenFieldsMixin, _TrojanMixin, ListenableMixin, BaseInbound):
     type: Literal["trojan"] = "trojan"
 
 
@@ -301,7 +323,7 @@ class NaiveInbound(ListenFieldsMixin, NaiveMixin, ListenableMixin, BaseInbound):
 
 
 @define(slots=False)
-class TuicMixin:
+class _TuicMixin:
     """
     ```json
     {
@@ -366,12 +388,12 @@ class TuicMixin:
 
 
 @define
-class TuicInbound(ListenFieldsMixin, TuicMixin, ListenableMixin, BaseInbound):
+class TuicInbound(ListenFieldsMixin, _TuicMixin, ListenableMixin, BaseInbound):
     type: Literal["tuic"] = "tuic"
 
 
 @define(slots=False)
-class AnyTLSMixin:
+class _AnyTLSMixin:
     """
     ```json
     {
@@ -421,12 +443,12 @@ class AnyTLSMixin:
 
 
 @define
-class AnyTLSInbound(ListenFieldsMixin, AnyTLSMixin, ListenableMixin, BaseInbound):
+class AnyTLSInbound(ListenFieldsMixin, _AnyTLSMixin, ListenableMixin, BaseInbound):
     type: Literal["anytls"] = "anytls"
 
 
 @define
-class TunMixin:
+class _TunMixin:
     """
     ```json
     {
@@ -751,7 +773,7 @@ class TunMixin:
 
 # FIXME: type error
 @define
-class TunInbound(ListenFieldsMixin, TunMixin, BaseInbound):  # type: ignore[misc]
+class TunInbound(ListenFieldsMixin, _TunMixin, BaseInbound):  # type: ignore[misc]
     type: Literal["tun"] = "tun"
 
     def __attrs_post_init__(self):

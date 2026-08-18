@@ -149,7 +149,7 @@ class HttpOutbound(DialFieldsMixin, HttpMixin, BaseOutbound):
 
 @define(slots=False)
 class ShadowsocksMixin:
-    server: ServerAddress
+    server: ServerAddress = field(converter=str)
     """The server address."""
     server_port: int
     """The server port."""

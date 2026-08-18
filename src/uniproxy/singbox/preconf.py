@@ -11,6 +11,7 @@ from uniproxy.singbox.dns import (
 from uniproxy.singbox.http_clients import Http2Client
 from uniproxy.singbox.outbounds import DirectOutbound
 from uniproxy.singbox.route import HijackDnsRule, SniffRule
+from uniproxy.singbox.shared import OutboundTLS
 
 #### ------------- Snippets for flag as tag ------------- ####
 # TAG_DNS_OUTBOUND = "DNS"  # hijack dns query into sing box dns system
@@ -30,15 +31,35 @@ dns_server_fakeip = FakeIPDnsServer(tag=TAG_DNS_SERVER_FAKEIP)
 
 dns_server_google_udp = UdpDnsServer(tag="dns-google-udp", server="8.8.8.8")
 dns_server_google_tls = TlsDnsServer(tag="dns-google-tls", server="8.8.8.8")
-dns_server_google_https = HttpsDnsServer(tag="dns-google-https", server="8.8.8.8")
-dns_server_google_h3 = H3DnsServer(tag="dns-google-h3", server="8.8.8.8")
+dns_server_google_https = HttpsDnsServer(
+    tag="dns-google-https",
+    server="8.8.8.8",
+    tls=OutboundTLS(enabled=True, server_name="dns.google", min_version="1.3"),
+)
+dns_server_google_h3 = H3DnsServer(
+    tag="dns-google-h3",
+    server="8.8.8.8",
+    tls=OutboundTLS(enabled=True, server_name="dns.google", min_version="1.3"),
+)
 
-# fmt: off
-dns_server_cloudflare_udp = UdpDnsServer(tag="dns-cloudflare-udp", server="1.1.1.1")
-dns_server_cloudflare_tls = TlsDnsServer(tag="dns-cloudflare-tls", server="1.1.1.1")
-dns_server_cloudflare_https = HttpsDnsServer(tag="dns-cloudflare-https", server="1.1.1.1")
-dns_server_cloudflare_h3 = H3DnsServer(tag="dns-cloudflare-h3", server="1.1.1.1")
-# fmt: on
+
+dns_server_cloudflare_udp = UdpDnsServer(
+    tag="dns-cloudflare-udp", server="1.1.1.1", server_port=53
+)
+dns_server_cloudflare_tls = TlsDnsServer(
+    tag="dns-cloudflare-tls",
+    server="1.1.1.1",
+    tls=OutboundTLS(enabled=True, server_name="cloudflare-dns.com", min_version="1.3"),
+)
+dns_server_cloudflare_https = HttpsDnsServer(
+    tag="dns-cloudflare-https", server="1.1.1.1"
+)
+dns_server_cloudflare_h3 = H3DnsServer(
+    tag="dns-cloudflare-h3",
+    server="1.1.1.1",
+    tls=OutboundTLS(enabled=True, server_name="cloudflare-dns.com", min_version="1.3"),
+)
+
 
 #### ------------- Snippets for Outbound ------------- ####
 out_direct = DirectOutbound(tag=TAG_DIRECT_OUTBOUND)

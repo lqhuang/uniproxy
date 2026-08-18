@@ -23,8 +23,8 @@ class SingBoxConfig(AbstractSingBox):
     """
 
     inbounds: Sequence[Inbound]
-    outbounds: Sequence[Outbound]
-    route: Route
+    outbounds: Sequence[Outbound] | None = None
+    route: Route | None = None
     dns: DNS | None = None
     http_clients: Sequence[HttpClient] | None = None
     certificate: None = None
