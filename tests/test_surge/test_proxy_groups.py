@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from uniproxy.surge.proxy_groups import (
     FallBackGroup,
     LoadBalanceGroup,

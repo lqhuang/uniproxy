@@ -20,7 +20,7 @@ from uniproxy.uri import parse_anytls_uri, parse_ss_uri, parse_trojan_uri
         )
     ],
 )
-def test_parse_ss_uri(uri, expected):
+def test_parse_ss_uri(uri: str, expected: dict[str, str | int | bool]):
     assert parse_ss_uri(uri) == expected
 
 
@@ -51,7 +51,7 @@ def test_parse_ss_uri(uri, expected):
         ),
     ],
 )
-def test_parse_trojan_uri(uri, expected):
+def test_parse_trojan_uri(uri: str, expected: dict[str, str | int | bool]):
     assert parse_trojan_uri(uri) == expected
 
 
@@ -100,5 +100,5 @@ def test_parse_trojan_uri_no_duplicate_params():
         ),
     ],
 )
-def test_parse_anytls_uri(uri, expected):
+def test_parse_anytls_uri(uri: str, expected: dict[str, str | int | bool]):
     assert parse_anytls_uri(uri) == expected

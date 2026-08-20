@@ -14,9 +14,9 @@ from xattrs.preconf.yaml import _yaml_loads
 
 from uniproxy.clash.protocols import ShadowsocksProtocol as ClashShadowsocksProtocol
 from uniproxy.clash.protocols import make_protocol_from_uniproxy as make_clash_protocol
-from uniproxy.protocols import ShadowsocksObfsPlugin, ShadowsocksProtocol
 from uniproxy.surge.protocols import ShadowsocksProtocol as SurgeShadowsocksProtocol
 from uniproxy.surge.protocols import make_protocol_from_uniproxy as make_surge_protocol
+from uniproxy.uniproxy.protocols import ShadowsocksObfsPlugin, ShadowsocksProtocol
 from uniproxy.utils import load_ini_without_section
 
 yaml = YAML()
@@ -96,6 +96,7 @@ class TestShadowsocksProtocol:
         )
         assert _clash_as_dict(ss) == yaml_loads(clash_config)
 
+    # pyrefly: ignore [implicit-any-parameter]
     def test_from_uniproxy(self, ss_config_obfs):
         ss_config, clash_config, surge_config = ss_config_obfs
 

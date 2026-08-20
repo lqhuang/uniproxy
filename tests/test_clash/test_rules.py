@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from uniproxy.clash.rules import IPCidrRule, make_rules_from_uniproxy
-from uniproxy.rules import IPCidrRule as UniproxyIPCidrRule
+from uniproxy.uniproxy.rules import IPCidrRule as UniproxyIPCidrRule
 
 
 def test_ip_rules_with_no_resolve():

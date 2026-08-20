@@ -5,10 +5,10 @@ from xattrs import asdict
 from uniproxy.surge.protocols import (
     HttpProtocol,
     Socks5Protocol,
-    SurgeTLS,
     VmessProtocol,
     VmessTransport,
 )
+from uniproxy.surge.shared import SurgeTLS
 from uniproxy.utils import load_ini_without_section
 
 
