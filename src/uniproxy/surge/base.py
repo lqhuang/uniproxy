@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-from typing import Any, ClassVar, Sequence
+from typing import Any, ClassVar, Sequence, override
 from uniproxy.typing import ServerAddress
+
+from abc import ABC, abstractmethod
+from functools import cached_property
 
 from attrs import define
 
-from .typing import SurgeRuleProviderType
+from uniproxy.abc import BaseTaggable
+from uniproxy.utils import to_tag
 
 
-class AbstractSurge:
+class AbstractSurge(BaseTaggable, ABC):
     """
     Abstract Clash class
 
@@ -26,17 +30,13 @@ class BaseProtocol(AbstractSurge):
 
     # type: SurgeProtocolType
 
-    def __str__(self) -> str:
+    @override
+    @cached_property
+    def to_tag(self) -> str:
         return self.name
 
+    @abstractmethod
     def __attrs_asdict__(self) -> dict[str, str]:
-        raise NotImplementedError()
-
-    @classmethod
-    def from_uniproxy(cls, protocol: Any, **kwargs) -> Any:
-        raise NotImplementedError()
-
-    def to_uniproxy(self, **kwargs) -> Any:
         raise NotImplementedError()
 
 
@@ -44,7 +44,9 @@ class BaseProtocol(AbstractSurge):
 class BaseProxyProvider(AbstractSurge):
     name: str
 
-    def __str__(self) -> str:
+    @override
+    @cached_property
+    def to_tag(self) -> str:
         return self.name
 
 
@@ -69,7 +71,9 @@ class BaseProxyGroup(AbstractSurge):
             group for group in self.proxies if isinstance(group, BaseProxyGroup)
         )
 
-    def __str__(self) -> str:
+    @override
+    @cached_property
+    def to_tag(self) -> str:
         return self.name
 
 
@@ -78,35 +82,16 @@ class BaseRule(AbstractSurge): ...
 
 
 @define
-class BaseBasicRule(BaseRule):
+class BaseBasicRule(AbstractSurge):
     matcher: str
     policy: ProtocolLike
 
-    def __str__(self) -> str:
+    @override
+    @cached_property
+    def to_tag(self) -> str:
         # pyrefly: ignore [missing-attribute]
-        return f"{self.type.upper()},{self.matcher},{self.policy}"  # pyright: ignore[reportAttributeAccessIssue]
-
-
-@define
-class BaseProviderRule(BaseRule):
-    matcher: RuleProviderLike
-    policy: ProtocolLike
-
-    def __str__(self) -> str:
-        # pyrefly: ignore [missing-attribute]
-        return f"{self.type.upper()},{self.matcher},{self.policy}"  # pyright: ignore[reportAttributeAccessIssue]
-
-
-@define
-class BaseRuleProvider(AbstractSurge):
-    name: str
-    url: str
-    type: SurgeRuleProviderType
-
-    def __str__(self) -> str:
-        return self.name
+        return f"{self.type}.{self.matcher}.{to_tag(self.policy)}"
 
 
 type ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str
-type RuleProviderLike = BaseRuleProvider | str
 type RuleLike = BaseRule | str

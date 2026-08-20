@@ -15,7 +15,7 @@ type SurgeProtocolType = Literal[
     "hysteria2",
     "wireguard",
 ]
-SurgeGroupType = Literal[
+type SurgeGroupType = Literal[
     "select", "url-test", "fallback", "load-balance", "external", "subnet", "smart"
 ]
 

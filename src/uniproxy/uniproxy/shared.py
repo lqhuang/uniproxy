@@ -27,8 +27,3 @@ class HealthCheck:
     lazy: bool = False
     url: str = "https://www.gstatic.com/generate_204"
     udp_url: str | None = "https://www.gstatic.com/generate_204"
-
-
-@define(slots=False)
-class NoResoleMixin:
-    no_resolve: bool | None = None

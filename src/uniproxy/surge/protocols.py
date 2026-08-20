@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence, cast
+from typing import Literal, Mapping, Sequence, cast, override
 from uniproxy.typing import AlpnType, IPAddress, ShadowsocksCipher
 
+from functools import cached_property
 from ipaddress import IPv4Address, IPv6Address
 
 from attrs import define
@@ -53,6 +54,7 @@ class HttpProtocol(BaseProtocol):
         if self.tls is not None:
             self.type = "https"
 
+    @override
     def __attrs_asdict__(self):
         """
         Config (ini) example:
@@ -88,6 +90,7 @@ class HttpProtocol(BaseProtocol):
         must_opts = f"{protocl}, {self.server}, {self.port}"
         return {
             self.name: ", ".join(
+                # pyrefly: ignore [implicit-any-lambda]
                 filter(lambda x: bool(x), (must_opts, auth_opt, tls_opt, extra_opts))
             )
         }
@@ -120,6 +123,7 @@ class Socks5Protocol(BaseProtocol):
         if self.tls is not None:
             self.type = "socks5-tls"
 
+    @override
     def __attrs_asdict__(self):
         """
         Config (ini) example:
@@ -151,6 +155,7 @@ class Socks5Protocol(BaseProtocol):
         must_opts = f"{protocl}, {self.server}, {self.port}"
         return {
             self.name: ", ".join(
+                # pyrefly: ignore [implicit-any-lambda]
                 filter(lambda x: bool(x), (must_opts, auth_opt, tls_opt, udp_opt))
             )
         }
@@ -202,6 +207,7 @@ class ShadowsocksProtocol(BaseProtocol):
             **kwargs,
         )
 
+    @override
     def __attrs_asdict__(self):
         """
         Config (ini) example:
@@ -267,6 +273,11 @@ class VmessTransport(AbstractSurge):
         }
         return ", ".join(f"{k}={v}" for k, v in opts.items() if v is not None)
 
+    @override
+    @cached_property
+    def to_tag(self) -> str:
+        return str(self)
+
 
 @define
 class VmessProtocol(BaseProtocol):
@@ -278,6 +289,7 @@ class VmessProtocol(BaseProtocol):
 
     type: Literal["vmess"] = "vmess"
 
+    @override
     def __attrs_asdict__(self):
         """
         Ini example:
@@ -348,6 +360,7 @@ class TrojanProtocol(BaseProtocol):
 
     type: Literal["trojan"] = "trojan"
 
+    @override
     def __attrs_asdict__(self):
         """
         Config (ini) example:
@@ -374,6 +387,7 @@ class TrojanProtocol(BaseProtocol):
             server=protocol.server,
             port=protocol.port,
             password=protocol.password,
+            # pyrefly: ignore [bad-argument-type]
             tls=protocol.tls and SurgeTLS.from_uniproxy(protocol.tls),
             udp_relay=UniproxyTrojanProtocol.network != "tcp",
         )
@@ -395,7 +409,8 @@ class TuicProtocol(BaseProtocol):
 
     type: Literal["tuic"] = "tuic"
 
-    def __attrs_asdict__(self) -> dict:
+    @override
+    def __attrs_asdict__(self):
         must_opts = f"{self.type}, {self.server}, {self.port}, token={self.token}"
         alpn_opts = f"alpn={self.alpn}" if self.alpn is not None else ""
         tls_opts = str(self.tls) if self.tls else ""
@@ -439,7 +454,8 @@ class AnyTLSProtocol(BaseProtocol):
 
     type: Literal["anytls"] = "anytls"
 
-    def __attrs_asdict__(self) -> dict:
+    @override
+    def __attrs_asdict__(self):
         must_opts = f"{self.type}, {self.server}, {self.port}, password={self.password}"
         tls_opts = str(self.tls) if self.tls else ""
         misc_opts = f"reuse={str(self.reuse).lower()}" if self.reuse is not None else ""
@@ -500,6 +516,7 @@ class WireguardPeer(AbstractSurge):
     allowed_ips: Sequence[str]
     client_id: tuple[int, int, int] | None = None
 
+    @override
     def __attrs_asdict__(self):
         peer = {
             "public-key": self.public_key,
@@ -539,6 +556,7 @@ class WireguardSection(AbstractSurge):
 
     type: Literal["wireguard"] = "wireguard"
 
+    @override
     def __attrs_asdict__(self):
         return {f"WireGuard {self.name}": {}}
 
@@ -574,6 +592,7 @@ def make_protocol_from_uniproxy(
         return protocol
     elif isinstance(protocol, UniproxyBaseProtocol):
         try:
+            # pyrefly: ignore [missing-attribute]
             return _SURGE_MAPPER[protocol.type].from_uniproxy(protocol, **kwargs)
         except KeyError:
             raise ValueError(

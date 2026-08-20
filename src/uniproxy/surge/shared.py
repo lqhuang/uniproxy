@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, override
+
+from functools import cached_property
 
 from attrs import frozen
 
@@ -40,6 +42,11 @@ class SurgeTLS(AbstractSurge):
             "server-cert-fingerprint-sha256": self.server_cert_fingerprint_sha256,
         }
         return ", ".join(f"{k}={v}" for k, v in config.items() if v is not None)
+
+    @override
+    @cached_property
+    def to_tag(self) -> str:
+        return str(self)
 
     @classmethod
     def from_uniproxy(cls, tls: TLS | None) -> SurgeTLS:

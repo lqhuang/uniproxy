@@ -1,18 +1,30 @@
 from __future__ import annotations
 
-from typing import Literal, TypeGuard, Union
+from typing import Literal, TypeGuard
 
 from attrs import define
 
 from uniproxy.uniproxy.base import BaseBasicRule, BaseGroupRule, BaseRule, ProtocolLike
-from uniproxy.uniproxy.shared import NoResoleMixin
 from uniproxy.uniproxy.typing import (
     BASIC_NO_RESOLABLE_RULES,
     BASIC_RULES,
     GROUP_NO_RESOLVABLE_RULES,
     GROUP_RULES,
-    UniproxyRuleType,
 )
+
+
+class NoResoleMixin:
+    """
+    Applies to:
+
+    IP-CIDR, IP-CIDR6, GEOIP, IP-ASN, RULE-SET, DOMAIN-SET
+
+    Effect:
+
+    Skip the rule for unresolved domain requests instead of triggering a DNS lookup. On RULE-SET, applies to every sub-rule.
+    """
+
+    no_resolve: bool | None = None
 
 
 @define

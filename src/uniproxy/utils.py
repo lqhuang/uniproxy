@@ -5,6 +5,7 @@ from typing import Any, Iterable, Protocol, Sequence, cast
 import binascii
 from base64 import b64decode
 from configparser import ConfigParser
+from functools import cached_property
 
 
 def load_ini_without_section(s: str) -> dict[str, Any]:
@@ -29,11 +30,21 @@ class HasTag(Protocol):
     tag: str
 
 
-def to_tag(x: HasTag | str) -> str:
+class Taggable(Protocol):
+    @cached_property
+    def to_tag(self) -> str: ...
+
+
+def to_tag(x: Taggable | str) -> str:
     if isinstance(x, str):
         return x
     else:
-        return x.tag
+        try:
+            return x.to_tag
+        except AttributeError:
+            raise TypeError(
+                f"Object {x} ({type(x)}) does not have a 'to_tag' property or not an instance of 'str' type."
+            )
 
 
 def to_name(x: HasName | str) -> str:
@@ -50,7 +61,7 @@ def maybe_map_to_name(xs: Iterable[HasName | str] | None) -> Sequence[str] | Non
 
 
 def maybe_flatmap_to_tag(
-    xs: Iterable[HasTag | str] | HasTag | str | None,
+    xs: Iterable[Taggable | str] | Taggable | str | None,
 ) -> Sequence[str] | None:
     if xs is None:
         return None
