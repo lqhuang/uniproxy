@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from typing import ClassVar, Literal
+from typing import ClassVar, Literal, override
+
+from abc import ABC
+from functools import cached_property
 
 from attrs import define
 
+from uniproxy.abc import BaseTaggable
 
-class AbstractSingBox:
+
+class AbstractSingBox(ABC):
     """
     Abstract SingBox Class
 
@@ -16,58 +21,72 @@ class AbstractSingBox:
 
 
 @define(slots=False)
-class BaseOutbound(AbstractSingBox):
+class BaseOutbound(BaseTaggable, AbstractSingBox):
     tag: str
-    # type: str
 
-    def __str__(self) -> str:
+    @cached_property
+    @override
+    def to_tag(self) -> str:
         return self.tag
 
 
 @define(slots=False)
-class BaseInbound(AbstractSingBox):
+class BaseInbound(BaseTaggable, AbstractSingBox):
     tag: str
-    # type: str
 
-    def __str__(self) -> str:
+    @cached_property
+    @override
+    def to_tag(self) -> str:
         return self.tag
 
 
 @define(slots=False)
-class BaseEndpoint(AbstractSingBox):
+class BaseEndpoint(BaseTaggable, AbstractSingBox):
     tag: str
-    # type: str
 
-    def __str__(self) -> str:
+    @cached_property
+    @override
+    def to_tag(self) -> str:
         return self.tag
 
 
 @define(slots=False)
-class BaseDnsServer(AbstractSingBox):
+class BaseDnsServer(BaseTaggable, AbstractSingBox):
     tag: str
-    # type: str
 
-    def __str__(self) -> str:
+    @cached_property
+    @override
+    def to_tag(self) -> str:
         return self.tag
 
 
 @define(slots=False)
-class BaseRuleSet(AbstractSingBox):
-    tag: str
-    format: Literal["binary", "source"]
-    # type: str
+class BaseDnsRule(AbstractSingBox): ...
 
-    def __str__(self) -> str:
+
+@define(slots=False)
+class BaseRule(AbstractSingBox): ...
+
+
+@define(slots=False)
+class BaseRuleSet(BaseTaggable, AbstractSingBox):
+    tag: str
+
+    @cached_property
+    @override
+    def to_tag(self) -> str:
         return self.tag
 
 
 @define(slots=False)
-class BaseService(AbstractSingBox):
+class BaseService(BaseTaggable, AbstractSingBox):
     """
     since sing-box 1.12.0
     """
 
     tag: str
 
-    def __str__(self) -> str:
+    @cached_property
+    @override
+    def to_tag(self) -> str:
         return self.tag

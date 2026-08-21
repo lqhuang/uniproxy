@@ -1,15 +1,19 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, override
+
+from functools import cached_property
 
 from attrs import define
+
+from uniproxy.abc import BaseTaggable
 
 from .base import AbstractSingBox
 from .shared import DialFieldsMixin, OutboundTLS
 
 
 @define(slots=False)
-class BaseHttpClient(AbstractSingBox):
+class BaseHttpClient(BaseTaggable, AbstractSingBox):
     """
     > [!NOTE]
     > Since sing-box 1.14.0
@@ -57,6 +61,11 @@ class BaseHttpClient(AbstractSingBox):
 
     headers: dict[str, str] | None = None
     """Additional headers to add to each request."""
+
+    @cached_property
+    @override
+    def to_tag(self) -> str:
+        return self.tag
 
 
 @define

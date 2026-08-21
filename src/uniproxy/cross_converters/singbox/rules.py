@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Literal, Mapping, Sequence, override
 
 from attrs import define, field
 
@@ -24,7 +24,7 @@ from uniproxy.uniproxy.rules import (
     UserAgentRule,
 )
 from uniproxy.uniproxy.rules import FinalRule as UniproxyFinalRule
-from uniproxy.utils import maybe_flatmap_to_str, maybe_flatmap_to_tag, to_tag
+from uniproxy.utils import maybe_flatmap_to_str, to_tag
 
 
 def unify_mixed_route_rules(rules: Sequence[Rule | UniproxyRule]) -> Sequence[Rule]:

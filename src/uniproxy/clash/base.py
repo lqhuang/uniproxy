@@ -52,13 +52,6 @@ class BaseBasicRule(BaseRule):
             raise NotImplementedError
 
 
-@define
-class FinalRule(BaseRule):
-    policy: ProtocolLike
-    type: Literal["final"] = "final"
-
-    def __str__(self) -> str:
-        return f"MATCH,{self.policy}"
 
 
 @define

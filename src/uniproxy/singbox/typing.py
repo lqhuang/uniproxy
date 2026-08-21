@@ -69,6 +69,8 @@ type TransportType = Literal["http", "ws", "quic", "grpc", "httpupgrade"]
 
 # Route
 type RuleSetType = Literal["local", "remote"]
+# Route
+type RuleSetSourceType = Literal["source", "binary"]
 
 
 class Fallback(Protocol):

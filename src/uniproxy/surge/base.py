@@ -12,7 +12,7 @@ from uniproxy.abc import BaseTaggable
 from uniproxy.utils import to_tag
 
 
-class AbstractSurge(BaseTaggable, ABC):
+class AbstractSurge(ABC):
     """
     Abstract Clash class
 
@@ -23,15 +23,15 @@ class AbstractSurge(BaseTaggable, ABC):
 
 
 @define
-class BaseProtocol(AbstractSurge):
+class BaseProtocol(BaseTaggable, AbstractSurge):
     name: str
     server: ServerAddress
     port: int
 
     # type: SurgeProtocolType
 
-    @override
     @cached_property
+    @override
     def to_tag(self) -> str:
         return self.name
 
@@ -41,17 +41,17 @@ class BaseProtocol(AbstractSurge):
 
 
 @define
-class BaseProxyProvider(AbstractSurge):
+class BaseProxyProvider(BaseTaggable, AbstractSurge):
     name: str
 
-    @override
     @cached_property
+    @override
     def to_tag(self) -> str:
         return self.name
 
 
 @define
-class BaseProxyGroup(AbstractSurge):
+class BaseProxyGroup(BaseTaggable, AbstractSurge):
     name: str
     proxies: Sequence[ProtocolLike | str]
     # type: SurgeGroupType
@@ -71,26 +71,19 @@ class BaseProxyGroup(AbstractSurge):
             group for group in self.proxies if isinstance(group, BaseProxyGroup)
         )
 
-    @override
     @cached_property
+    @override
     def to_tag(self) -> str:
         return self.name
 
 
 @define
-class BaseRule(AbstractSurge): ...
-
-
-@define
-class BaseBasicRule(AbstractSurge):
-    matcher: str
-    policy: ProtocolLike
-
-    @override
+class BaseRule(BaseTaggable, AbstractSurge):
     @cached_property
+    @override
     def to_tag(self) -> str:
         # pyrefly: ignore [missing-attribute]
-        return f"{self.type}.{self.matcher}.{to_tag(self.policy)}"
+        return f"{self.type},{self.matcher},{to_tag(self.policy)}"
 
 
 type ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str

@@ -60,7 +60,7 @@ def maybe_map_to_name(xs: Iterable[HasName | str] | None) -> Sequence[str] | Non
     return [to_name(each) for each in xs]
 
 
-def maybe_flatmap_to_tag(
+def maybe_map_to_tag(
     xs: Iterable[Taggable | str] | Taggable | str | None,
 ) -> Sequence[str] | None:
     if xs is None:
@@ -88,29 +88,29 @@ def maybe_flatmap_to_name(
 
 def maybe_flatmap_to_str(
     xs: Any | str | Iterable[Any | str] | None,
-) -> str | list[str] | None:
+) -> str | tuple[str, ...] | None:
     if xs is None:
         return None
     elif isinstance(xs, str):  # str is also Iterable
         return xs
     elif isinstance(xs, Iterable):
-        return [str(each) for each in xs]
+        return tuple(str(each) for each in xs)
     else:
         return str(xs)  # fallback to Any
 
 
-def map_to_str(xs: Iterable[Any | str]) -> list[str]:
-    return [str(each) for each in xs]
+def map_to_str(xs: Iterable[Any | str]) -> tuple[str, ...]:
+    return tuple(str(each) for each in xs)
 
 
-def flatmap_to_str(xs: Iterable[Any | str] | None) -> list[str]:
-    return [] if xs is None else [str(each) for each in xs]
+def flatmap_to_str(xs: Iterable[Any | str] | None) -> tuple[str, ...]:
+    return () if xs is None else tuple(str(each) for each in xs)
 
 
-def maybe_map_to_str(xs: Iterable[Any | str] | None) -> list[str] | None:
+def maybe_map_to_str(xs: Iterable[Any | str] | None) -> tuple[str, ...] | None:
     if xs is None:
         return None
-    return [str(each) for each in xs]
+    return tuple(str(each) for each in xs)
 
 
 def maybe_to_str(x: Any | str | None) -> str | None:

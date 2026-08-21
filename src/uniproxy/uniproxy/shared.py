@@ -25,5 +25,5 @@ class HealthCheck:
     enable: bool = True
     interval: float = 60
     lazy: bool = False
-    url: str = "https://www.gstatic.com/generate_204"
-    udp_url: str | None = "https://www.gstatic.com/generate_204"
+    # url: str = "https://www.gstatic.com/generate_204"
+    # udp_url: str | None = "https://www.gstatic.com/generate_204"

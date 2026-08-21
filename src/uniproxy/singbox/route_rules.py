@@ -4,26 +4,9 @@ from typing import Literal, Sequence
 
 from attrs import define, field
 
-from uniproxy.uniproxy.base import BaseRule as UniproxyBaseRule
-from uniproxy.uniproxy.rules import (
-    DomainGroupRule,
-    DomainKeywordGroupRule,
-    DomainKeywordRule,
-    DomainRule,
-    DomainSuffixGroupRule,
-    DomainSuffixRule,
-    GeoIPRule,
-    IPCidr6GroupRule,
-    IPCidr6Rule,
-    IPCidrGroupRule,
-    IPCidrRule,
-    ProcessNameRule,
-    UniproxyRule,
-    UserAgentRule,
-)
-from uniproxy.utils import maybe_flatmap_to_tag, to_tag
+from uniproxy.utils import maybe_map_to_tag, to_tag
 
-from .base import AbstractSingBox, BaseInbound, BaseRuleSet
+from .base import BaseInbound, BaseRule
 from .typing import SniffProtocol
 
 #
@@ -33,9 +16,6 @@ from .typing import SniffProtocol
 type FinalActionType = Literal["route", "reject", "hijack-dns"]
 type NonFinalActionType = Literal["route-options", "sniff", "resolve"]
 type RuleActionType = FinalActionType | NonFinalActionType
-
-
-class BaseRule(AbstractSingBox): ...
 
 
 class BaseFinalActionRule(BaseRule): ...
@@ -64,10 +44,8 @@ class RouteOptionFieldsMixin:
     port: int | Sequence[int] | None = None
     port_range: str | Sequence[str] | None = None
     process_name: str | Sequence[str] | None = None
-    rule_set: str | Sequence[str] | BaseRuleSet | Sequence[BaseRuleSet] | None = field(
-        default=None,
-        # FIXME: This is a hack to make the converter work
-        converter=maybe_flatmap_to_tag,
+    rule_set: str | Sequence[str] | None = field(
+        default=None, converter=maybe_map_to_tag
     )
     rule_set_ip_cidr_match_source: bool | None = None
     invert: bool | None = None

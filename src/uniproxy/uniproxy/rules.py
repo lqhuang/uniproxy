@@ -13,6 +13,7 @@ from uniproxy.uniproxy.typing import (
 )
 
 
+@define(slots=False)
 class NoResoleMixin:
     """
     Applies to:

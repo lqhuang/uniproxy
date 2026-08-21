@@ -6,7 +6,7 @@ from attrs import define, field
 
 from uniproxy.uniproxy.base import BaseRule as UniproxyBaseRule
 from uniproxy.uniproxy.rules import FinalRule as UniproxyFinalRule
-from uniproxy.utils import maybe_to_str
+from uniproxy.utils import maybe_map_to_tag, maybe_to_str
 
 from .base import AbstractSingBox, BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
 from .http_clients import HttpClient
@@ -14,18 +14,38 @@ from .route_rules import Rule
 
 
 @define
+class InlineRuleSet(BaseRuleSet):
+    rules: Sequence[Rule]
+
+    type: Literal["inline"] = "inline"
+
+
+@define
 class LocalRuleSet(BaseRuleSet):
     path: str
 
+    format: Literal["binary", "source"]
+
     type: Literal["local"] = "local"
+
+    def __attrs_post_init__(self) -> None:
+        if self.format == "source" and not self.path.endswith("json"):
+            raise ValueError(
+                f"Invalid path for rule-set: {self.path}. Must end with '.json' for source format."
+            )
+        if self.format == "binary" and not self.path.endswith("srs"):
+            raise ValueError(
+                f"Invalid path for rule-set: {self.path}. Must end with '.srs' for binary format."
+            )
 
 
 @define
 class RemoteRuleSet(BaseRuleSet):
     url: str
-    update_interval: float | None = None
+    format: Literal["binary", "source"] | None = None
 
-    http_client: None = None
+    update_interval: float | None = None
+    http_client: HttpClient | None = None
 
     # download_detour: BaseOutbound | str | None = field(
     #     default=None, converter=maybe_to_str
@@ -41,8 +61,23 @@ class RemoteRuleSet(BaseRuleSet):
 
     type: Literal["remote"] = "remote"
 
+    def __attrs_post_init__(self) -> None:
+        if self.format is None and self.url.endswith("json"):
+            self.format = "source"
+        elif self.format == "source" and not self.url.endswith("json"):
+            raise ValueError(
+                f"Invalid url for rule-set: {self.url}. Must end with '.json' for source format."
+            )
 
-type RuleSet = LocalRuleSet | RemoteRuleSet
+        if self.format is None and self.url.endswith("srs"):
+            self.format = "binary"
+        elif self.format == "binary" and not self.url.endswith("srs"):
+            raise ValueError(
+                f"Invalid url for rule-set: {self.url}. Must end with '.srs' for binary format."
+            )
+
+
+type RuleSet = InlineRuleSet | LocalRuleSet | RemoteRuleSet
 
 
 @define
@@ -50,10 +85,12 @@ class Route(AbstractSingBox):
     rules: Sequence[Rule]
     """List of [[Rule]]"""
 
-    rule_set: Sequence[BaseRuleSet] | None = None
+    rule_set: Sequence[BaseRuleSet] | None = field(
+        default=None, converter=maybe_map_to_tag
+    )
     """List of [[rule-set]]"""
 
-    final: BaseOutbound | str | None = field(default=None, converter=maybe_to_str)
+    final: BaseOutbound | str | None = field(default=None, converter=maybe_map_to_tag)
     """Default outbound tag. the first outbound will be used if empty."""
 
     auto_detect_interface: bool | None = None
@@ -91,9 +128,7 @@ class Route(AbstractSingBox):
     """
 
     default_http_client: HttpClient | str | None = field(
-        default=None,
-        # pyrefly: ignore [implicit-any-lambda]
-        converter=lambda x: x.tag if hasattr(x, "tag") else maybe_to_str(x),
+        default=None, converter=maybe_map_to_tag
     )
     """
     > [!NEW] Since sing-box 1.14.0

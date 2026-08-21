@@ -4,23 +4,23 @@ from typing import Literal, Mapping, Sequence, override
 
 from functools import cached_property
 
-from attrs import define, field
+from attrs import define
 
 from uniproxy.abc import BaseTaggable
-from uniproxy.uniproxy.rules import DomainGroupRule as UniproxyDomainGroupRule
-from uniproxy.uniproxy.rules import (
-    DomainKeywordGroupRule,
-    DomainSuffixGroupRule,
-    IPCidr6GroupRule,
-    IPCidrGroupRule,
-    UniproxyRule,
-    is_basic_no_resolvable_rule,
-    is_basic_rule,
-)
-from uniproxy.uniproxy.typing import BasicNoResolableRuleType, BasicRuleType
-from uniproxy.utils import to_name, to_tag
+from uniproxy.utils import to_tag
 
-from .base import AbstractSurge, BaseBasicRule, BaseRule, ProtocolLike, RuleLike
+from .base import BaseRule, ProtocolLike
+
+#
+# Base
+#
+
+
+@define
+class BaseBasicRule(BaseRule):
+    matcher: str
+    policy: ProtocolLike
+
 
 #
 # Mixins
@@ -41,8 +41,8 @@ class _NoResoleMixin(BaseTaggable):
 
     no_resolve: bool | None = None
 
-    @override
     @cached_property
+    @override
     def to_tag(self) -> str:
         if self.no_resolve:
             return f"{super().to_tag},no-resolve"
@@ -64,8 +64,8 @@ class _ExtendedMatchingMixin(BaseTaggable):
 
     extended_matching: bool | None = None
 
-    @override
     @cached_property
+    @override
     def to_tag(self) -> str:
         if self.extended_matching:
             return f"{super().to_tag},extended-matching"
@@ -77,8 +77,8 @@ class _ExtendedMatchingMixin(BaseTaggable):
 class _PreMatchingMixin(BaseTaggable):
     pre_matching: bool | None = None
 
-    @override
     @cached_property
+    @override
     def to_tag(self) -> str:
         if self.pre_matching:
             return f"{super().to_tag},pre-matching"
@@ -132,7 +132,7 @@ class DomainWildCardRule(_PreMatchingMixin, _ExtendedMatchingMixin, BaseBasicRul
 
 @define
 class DomainSetRule(_PreMatchingMixin, _ExtendedMatchingMixin, BaseBasicRule):
-    force_remote_dns: bool | None = None
+    # force_remote_dns: bool | None = None
     type: Literal["domain-set"] = "domain-set"
 
 
@@ -328,8 +328,8 @@ class ScriptRule(BaseBasicRule):
     requires_resolve: bool | None = None
     type: Literal["script"] = "script"
 
-    @override
     @cached_property
+    @override
     def to_tag(self) -> str:
         if self.requires_resolve:
             return f"{super().to_tag},requires-resolve"
@@ -345,11 +345,16 @@ class ScriptRule(BaseBasicRule):
 @define(slots=False)
 class _RuleSetRuleMixin:
     matcher: Literal["SYSTEM", "LAN"] | str
+    policy: ProtocolLike
 
 
 @define
 class RuleSetRule(
-    _PreMatchingMixin, _ExtendedMatchingMixin, _RuleSetRuleMixin, BaseRule
+    _PreMatchingMixin,
+    _ExtendedMatchingMixin,
+    _NoResoleMixin,
+    _RuleSetRuleMixin,
+    BaseRule,
 ):
     type: Literal["rule-set"] = "rule-set"
 
@@ -365,16 +370,16 @@ class FinalRule(BaseRule):
     dns_failed: bool | None = None
     type: Literal["final"] = "final"
 
-    @override
     @cached_property
+    @override
     def to_tag(self) -> str:
         if self.dns_failed:
-            return f"final.{to_tag(self.policy)},dns-failed"
+            return f"final,{to_tag(self.policy)},dns-failed"
         else:
-            return f"final.{to_tag(self.policy)}"
+            return f"final,{to_tag(self.policy)}"
 
 
-type _SurgeBasicRule = (
+type _BasicRule = (
     DomainRule
     | DomainSuffixRule
     | DomainKeywordRule
@@ -400,76 +405,6 @@ type _SurgeBasicRule = (
     | DeviceNameRule
 )
 
-type _SurgeExternalRule = RuleSetRule | DomainSetRule
+type _ExternalRule = RuleSetRule | DomainSetRule
 
-type SurgeRule = _SurgeBasicRule | _SurgeExternalRule | FinalRule
-
-
-_SURGE_MAPPER: Mapping[BasicRuleType, type[_SurgeBasicRule]] = {
-    "domain": DomainRule,
-    "domain-suffix": DomainSuffixRule,
-    "domain-keyword": DomainKeywordRule,
-    "user-agent": UserAgentRule,
-    "url-regex": UrlRegexRule,
-    "process-name": ProcessNameRule,
-    "and": AndRule,
-    "or": OrRule,
-    "not": NotRule,
-    "subnet": SubnetRule,
-    "dest-port": DestPortRule,
-    "in-port": InPortRule,
-    "src-port": SrcPortRule,
-    "src-ip": SrcIPRule,
-    "protocol": ProtocolRule,
-    "script": ScriptRule,
-    "cellular-radio": CellularRadioRule,
-    "device-name": DeviceNameRule,
-}
-
-_SURGE_NO_RESOLVE_MAPPER: Mapping[
-    BasicNoResolableRuleType, type[IPCidrRule | IPCidr6Rule | GeoIPRule | IPAsnRule]
-] = {
-    "ip-cidr": IPCidrRule,
-    "ip-cidr6": IPCidr6Rule,
-    "geoip": GeoIPRule,
-    "ip-asn": IPAsnRule,
-}
-
-
-def make_rules_from_uniproxy(rule: UniproxyRule) -> Sequence[SurgeRule]:
-    policy = to_name(rule.policy)
-
-    if is_basic_rule(rule):
-        return (_SURGE_MAPPER[rule.type](matcher=to_name(rule.matcher), policy=policy),)  # type: ignore[reportArgumentType]
-    elif is_basic_no_resolvable_rule(rule):
-        return (
-            _SURGE_NO_RESOLVE_MAPPER[rule.type](  # type: ignore[reportArgumentType]
-                matcher=to_name(rule.matcher),  # type: ignore[reportArgumentType]
-                policy=policy,
-                no_resolve=rule.no_resolve,  # type: ignore[reportArgumentType]
-            ),
-        )
-    elif isinstance(rule, UniproxyDomainGroupRule):
-        return tuple(DomainRule(matcher=each, policy=policy) for each in rule.matcher)
-    elif isinstance(rule, DomainSuffixGroupRule):
-        return tuple(
-            DomainSuffixRule(matcher=each, policy=policy) for each in rule.matcher
-        )
-    elif isinstance(rule, DomainKeywordGroupRule):
-        return tuple(
-            DomainKeywordRule(matcher=each, policy=policy) for each in rule.matcher
-        )
-    elif isinstance(rule, IPCidrGroupRule):
-        return tuple(
-            IPCidrRule(matcher=each, policy=policy, no_resolve=rule.no_resolve)
-            for each in rule.matcher
-        )
-    elif isinstance(rule, IPCidr6GroupRule):
-        return tuple(
-            IPCidr6Rule(matcher=each, policy=policy, no_resolve=rule.no_resolve)
-            for each in rule.matcher
-        )
-    else:
-        raise ValueError(
-            f"Unknown rule type '{rule.type}' while transforming uniproxy rule to surge rule"
-        )
+type Rule = _BasicRule | _ExternalRule | FinalRule

@@ -65,6 +65,7 @@ class RuleProvider(BaseRuleProvider):
 
     url: str | None = None
     path: str | None = None
+
     interval: int | None = None
 
     # behavior: RuleProviderBehaviorType
