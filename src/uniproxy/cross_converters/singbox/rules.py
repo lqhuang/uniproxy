@@ -35,14 +35,14 @@ def unify_mixed_route_rules(rules: Sequence[Rule | UniproxyRule]) -> Sequence[Ru
         elif isinstance(r, UniproxyFinalRule):
             pass
         elif isinstance(r, UniproxyBaseRule):
-            out_rules.append(route_rule_from_uniproxy(r))
+            out_rules.append(singbox_route_rule_from_uniproxy(r))
         else:
             print(r)
             raise ValueError(f"Unexpected rule type: {type(r)}")
     return out_rules
 
 
-def route_rule_from_uniproxy(rule: UniproxyRule) -> Rule:
+def singbox_route_rule_from_uniproxy(rule: UniproxyRule) -> Rule:
     if not isinstance(rule, UniproxyBaseRule):
         raise ValueError(f"Expected type of Uniproxy Rules, got {type(rule)}")
     if isinstance(rule, UniproxyFinalRule):

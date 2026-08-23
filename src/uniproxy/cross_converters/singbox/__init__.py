@@ -1,0 +1,3 @@
+from __future__ import annotations
+
+from .rules import singbox_route_rule_from_uniproxy as singbox_route_rule_from_uniproxy

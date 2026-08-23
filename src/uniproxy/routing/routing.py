@@ -5,7 +5,7 @@ from typing import Iterable, Sequence
 from xattrs import define, field
 
 from uniproxy.clash.providers import RuleProvider as ClashRuleProvider
-from uniproxy.clash.rules import ClashRule
+from uniproxy.clash.rules import Rule as ClashRule
 from uniproxy.singbox.dns_rules import DnsRule
 from uniproxy.singbox.route import Rule as RouteRule
 from uniproxy.singbox.route import RuleSet
@@ -24,7 +24,7 @@ class SingBoxRouting:
 
     route_rules: Sequence[RouteRule] = field(factory=tuple)
     dns_rules: Sequence[DnsRule] = field(factory=tuple)
-    rule_sets: Iterable[RuleSet] = field(factory=set)
+    rule_sets: Iterable[RuleSet] = field(factory=tuple)
 
 
 @define
@@ -35,7 +35,7 @@ class SurgeRouting:
 @define
 class ClashRouting:
     rules: Sequence[ClashRule] = field(factory=tuple)
-    rule_providers: Iterable[ClashRuleProvider] = field(factory=set)
+    rule_providers: Iterable[ClashRuleProvider] = field(factory=tuple)
 
 
 type PolicyRouting = SingBoxRouting | SurgeRouting | ClashRouting
