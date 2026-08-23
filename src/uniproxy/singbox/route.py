@@ -13,14 +13,14 @@ from .http_clients import HttpClient
 from .route_rules import Rule
 
 
-@define
+@define(hash=True)
 class InlineRuleSet(BaseRuleSet):
     rules: Sequence[Rule]
 
     type: Literal["inline"] = "inline"
 
 
-@define
+@define(hash=True)
 class LocalRuleSet(BaseRuleSet):
     path: str
 
@@ -39,7 +39,7 @@ class LocalRuleSet(BaseRuleSet):
             )
 
 
-@define
+@define(hash=True)
 class RemoteRuleSet(BaseRuleSet):
     url: str
     format: Literal["binary", "source"] | None = None

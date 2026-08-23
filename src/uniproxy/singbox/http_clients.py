@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, override
+from typing import Literal, Mapping, override
 
 from functools import cached_property
 
@@ -59,7 +59,7 @@ class BaseHttpClient(BaseTaggable, AbstractSingBox):
 
     tls: OutboundTLS | None = None
 
-    headers: dict[str, str] | None = None
+    headers: Mapping[str, str] | None = None
     """Additional headers to add to each request."""
 
     @cached_property

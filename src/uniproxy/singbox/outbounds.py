@@ -23,7 +23,7 @@ from uniproxy.uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
 from uniproxy.uniproxy.proxy_groups import UniproxyProxyGroup
 from uniproxy.uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 from uniproxy.uniproxy.typing import GroupType, ProtocolType, VmessCipher
-from uniproxy.utils import flatmap_to_str, map_to_str
+from uniproxy.utils import flatmap_to_str, map_to_str, to_tag
 
 from .base import BaseOutbound
 from .shared import (
@@ -33,7 +33,7 @@ from .shared import (
     OutboundTLS,
     UdpOverTcp,
 )
-from .typing import SingBoxNetwork
+from .typing import Network
 
 __all__ = (
     "DirectOutbound",
@@ -161,7 +161,7 @@ class ShadowsocksMixin:
     """Shadowsocks SIP003 plugin, implemented in internal."""
     plugin_opts: str | None = None
     """Shadowsocks SIP003 plugin options."""
-    network: SingBoxNetwork | None = None
+    network: Network | None = None
     """Enabled network. One of `tcp`, `udp`. Both is enabled by default."""
     udp_over_tcp: Literal[False] | UdpOverTcp | None = None
     """UDP over TCP configuration. Conflict with `multiplex`."""
@@ -245,7 +245,7 @@ class VmessMixin:
     alter_id: int | None = None
     global_padding: bool | None = None
     authenticated_length: bool | None = True
-    network: SingBoxNetwork | None = None
+    network: Network | None = None
     tls: OutboundTLS | None = None
     packet_encoding: Literal["packetaddr", "xudp"] | None = None
     transport: BaseTransport | None = None

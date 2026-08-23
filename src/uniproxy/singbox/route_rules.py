@@ -6,12 +6,14 @@ from attrs import define, field
 
 from uniproxy.utils import maybe_map_to_tag, to_tag
 
-from .base import BaseInbound, BaseRule
-from .typing import SniffProtocol
+from .base import BaseRule
+from .typing import NetworkConn, NetworkProtocol, SniffProtocol
 
 #
 # Route Rule
 #
+
+type RoutePreferredBy = Literal["tailscale", "wireguard", "bridge"]
 
 type FinalActionType = Literal["route", "reject", "hijack-dns"]
 type NonFinalActionType = Literal["route-options", "sniff", "resolve"]
@@ -26,15 +28,18 @@ class BaseNonFinalActionRule(BaseRule): ...
 
 @define(slots=False)
 class RouteOptionFieldsMixin:
-    inbound: Sequence[BaseInbound] | Sequence[str] | None = None
+    inbound: Sequence[str] | None = field(default=None, converter=maybe_map_to_tag)
     ip_version: Literal["4", "6", None] = None
     auth_user: str | Sequence[str] | None = None
-    protocol: SniffProtocol | None = None
-    network: Literal["tcp", "udp"] | None = None
+    protocol: SniffProtocol | Sequence[SniffProtocol] | None = None
+    client: str | Sequence[str] | None = None
+
+    network: NetworkProtocol | Sequence[NetworkProtocol] | None = None
     domain: str | Sequence[str] | None = None
     domain_suffix: str | Sequence[str] | None = None
     domain_keyword: str | Sequence[str] | None = None
     domain_regex: str | Sequence[str] | None = None
+
     ip_cidr: str | Sequence[str] | None = None
     ip_is_private: bool | None = None
     source_ip_cidr: Sequence[str] | None = None
@@ -43,12 +48,42 @@ class RouteOptionFieldsMixin:
     source_port_range: str | Sequence[str] | None = None
     port: int | Sequence[int] | None = None
     port_range: str | Sequence[str] | None = None
+
     process_name: str | Sequence[str] | None = None
+    process_path: str | Sequence[str] | None = None
+    process_path_regex: str | Sequence[str] | None = None
+    package_name: str | Sequence[str] | None = None
+    package_name_regex: str | Sequence[str] | None = None
+
+    user: str | Sequence[str] | None = None
+    user_id: int | Sequence[int] | None = None
+
+    network_type: NetworkConn | Sequence[NetworkConn] | None = None
+    network_is_expensive: bool | None = None
+    network_is_constrained: bool | None = None
+    interface_address: None = None
+    network_interface_address: None = None
+    default_interface_address: None = None
+
+    source_mac_address: str | Sequence[str] | None = None
+    source_hostname: str | Sequence[str] | None = None
+
+    preferred_by: RoutePreferredBy | Sequence[RoutePreferredBy] | None = None
+    """
+    The tag of a rule or server that is preferred when multiple rules match.
+    """
+
+    wifi_ssid: str | Sequence[str] | None = None
+    wifi_bssid: str | Sequence[str] | None = None
+
     rule_set: str | Sequence[str] | None = field(
         default=None, converter=maybe_map_to_tag
     )
     rule_set_ip_cidr_match_source: bool | None = None
     invert: bool | None = None
+
+    # Deprecated
+    # rule_set_ipcidr_match_source
 
 
 @define(slots=False)

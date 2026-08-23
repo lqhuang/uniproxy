@@ -24,7 +24,7 @@ class SingBoxRouting:
 
     route_rules: Sequence[RouteRule] = field(factory=tuple)
     dns_rules: Sequence[DnsRule] = field(factory=tuple)
-    rule_sets: Iterable[RuleSet] = field(factory=tuple)
+    rule_sets: Sequence[RuleSet] = field(factory=tuple)
 
 
 @define
@@ -35,7 +35,7 @@ class SurgeRouting:
 @define
 class ClashRouting:
     rules: Sequence[ClashRule] = field(factory=tuple)
-    rule_providers: Iterable[ClashRuleProvider] = field(factory=tuple)
+    rule_providers: Sequence[ClashRuleProvider] = field(factory=tuple)
 
 
 type PolicyRouting = SingBoxRouting | SurgeRouting | ClashRouting

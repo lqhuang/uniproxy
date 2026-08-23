@@ -9,7 +9,7 @@ from pathlib import Path
 from attrs import define, field
 
 from uniproxy.uniproxy.shared import TLS as UniproxyTLS
-from uniproxy.utils import maybe_to_str
+from uniproxy.utils import maybe_to_str, to_tag
 
 from .base import AbstractSingBox, BaseDnsServer, BaseInbound, BaseOutbound
 from .typing import TLSVersion, TransportType
@@ -659,7 +659,7 @@ class DomainResolver(AbstractSingBox):
     | others             | Domain in server address |
     """
 
-    server: BaseDnsServer | str = field(converter=str)
+    server: BaseDnsServer | str = field(converter=to_tag)
     """Tag of target server."""
 
     strategy: DnsStrategy | None = None

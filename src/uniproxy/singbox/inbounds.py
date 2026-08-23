@@ -20,7 +20,7 @@ from .shared import (
     ListenFieldsMixin,
     Platform,
 )
-from .typing import FallbackAlpn, SingBoxNetwork, TunStack
+from .typing import FallbackAlpn, Network, TunStack
 
 __all__ = (
     "DirectInbound",
@@ -42,7 +42,7 @@ __all__ = (
 
 @define(slots=False)
 class _DirectMixin:
-    network: SingBoxNetwork | None = None
+    network: Network | None = None
     """
     Listen network, one of `tcp`, `udp`.
 
@@ -171,7 +171,7 @@ class _ShadowsocksMixin:
     password: str | None = None
     """Password for the Shadowsocks server."""
 
-    network: SingBoxNetwork | None = None
+    network: Network | None = None
     """
     Listen network, one of `tcp` `udp`.
 
@@ -305,7 +305,7 @@ class NaiveMixin:
     tls: InboundTLS
     """TLS configuration, see [TLS](https://sing-box.sagernet.org/configuration/shared/tls/#inbound)."""
 
-    network: SingBoxNetwork | None = None
+    network: Network | None = None
     """
     Listen network, one of `tcp` `udp`.
 

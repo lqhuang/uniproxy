@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import Literal, Mapping, Protocol
 from uniproxy.typing import AlpnType, ServerAddress
 
-type SingBoxNetwork = Literal["tcp", "udp"]
+type Network = Literal["tcp", "udp"]
+type NetworkProtocol = Literal["tcp", "udp", "icmp"]
+type NetworkConn = Literal["wifi", "cellular", "ethernet", "other"]
 type LogLevel = Literal["trace", "debug", "info", "warn", "error", "fatal", "panic"]
 
 type TunStack = Literal["system", "gvisor", "mixed"]
