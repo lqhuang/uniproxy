@@ -47,6 +47,14 @@ def to_tag(x: Taggable | str) -> str:
             )
 
 
+def map_to_tag(xs: Iterable[Taggable | str]) -> tuple[str, ...]:
+    return tuple(to_tag(each) for each in xs)
+
+
+def maybe_to_tag(x: Taggable | str | None) -> str | None:
+    return to_tag(x) if x is not None else None
+
+
 def to_name(x: HasName | str) -> str:
     if isinstance(x, str):
         return x
@@ -58,6 +66,10 @@ def maybe_map_to_name(xs: Iterable[HasName | str] | None) -> Sequence[str] | Non
     if xs is None:
         return None
     return [to_name(each) for each in xs]
+
+
+def flatmap_to_tag(xs: Iterable[Taggable | str] | None) -> tuple[str, ...]:
+    return () if xs is None else tuple(to_tag(each) for each in xs)
 
 
 def maybe_map_to_tag(

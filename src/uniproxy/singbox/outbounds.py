@@ -23,7 +23,7 @@ from uniproxy.uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
 from uniproxy.uniproxy.proxy_groups import UniproxyProxyGroup
 from uniproxy.uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 from uniproxy.uniproxy.typing import GroupType, ProtocolType, VmessCipher
-from uniproxy.utils import flatmap_to_str, map_to_str, to_tag
+from uniproxy.utils import flatmap_to_tag, map_to_tag
 
 from .base import BaseOutbound
 from .shared import (
@@ -518,7 +518,7 @@ class SelectorOutbound(BaseOutbound):
     ```
     """
 
-    outbounds: Sequence[Outbound | str] = field(converter=map_to_str)
+    outbounds: Sequence[Outbound | str] = field(converter=map_to_tag)
     default: Outbound | str | None = None
     interrupt_exist_connections: bool | None = None
     type: Literal["selector"] = "selector"
@@ -528,12 +528,12 @@ class SelectorOutbound(BaseOutbound):
         cls, protocol: UniproxySelectGroup | UniproxyFallBackGroup, **kwargs
     ) -> SelectorOutbound:
         if protocol.providers:
-            provider_proxies = map_to_str(chain(*protocol.providers))
+            provider_proxies = map_to_tag(chain(*protocol.providers))
         else:
-            provider_proxies = []
+            provider_proxies = ()
         return cls(
             tag=protocol.name,
-            outbounds=(flatmap_to_str(protocol.proxies) + provider_proxies),
+            outbounds=(flatmap_to_tag(protocol.proxies) + provider_proxies),
             interrupt_exist_connections=False,
         )
 
@@ -562,7 +562,7 @@ class UrlTestOutbound(BaseOutbound):
     ```
     """
 
-    outbounds: Sequence[Outbound | str] = field(converter=map_to_str)
+    outbounds: Sequence[Outbound | str] = field(converter=map_to_tag)
     """List of outbound tags to test."""
     url: str | None = None
     """The URL to test. `https://www.gstatic.com/generate_204` will be used if empty."""
@@ -600,13 +600,13 @@ class UrlTestOutbound(BaseOutbound):
                 )
 
         if protocol.providers:
-            provider_proxies = map_to_str(chain(*protocol.providers))
+            provider_proxies = map_to_tag(chain(*protocol.providers))
         else:
             provider_proxies = []
 
         return cls(
             tag=protocol.name,
-            outbounds=(flatmap_to_str(protocol.proxies) + provider_proxies),
+            outbounds=(flatmap_to_tag(protocol.proxies) + provider_proxies),
             url=protocol.url,
             interval=f"{protocol.interval}s" if protocol.interval else None,
             tolerance=tolerance,

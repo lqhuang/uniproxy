@@ -9,7 +9,7 @@ from pathlib import Path
 from attrs import define, field
 
 from uniproxy.uniproxy.shared import TLS as UniproxyTLS
-from uniproxy.utils import maybe_to_str, to_tag
+from uniproxy.utils import maybe_to_str, maybe_to_tag, to_tag
 
 from .base import AbstractSingBox, BaseDnsServer, BaseInbound, BaseOutbound
 from .typing import TLSVersion, TransportType
@@ -204,7 +204,7 @@ class BaseTLS(AbstractSingBox):
     """
 
     client_certificate_path: Path | str | None = field(
-        default=None, converter=maybe_to_str
+        default=None, converter=maybe_to_tag
     )
     """
     > [!NOTE]
@@ -352,8 +352,8 @@ class OutboundTLS(BaseTLS):
 
 @define(slots=False)
 class ListenableMixin:
-    listen: str | None
-    listen_port: int | None
+    listen: str
+    listen_port: int
 
 
 @define(slots=False)
@@ -374,7 +374,7 @@ class ListenFieldsMixin:
     `5m` is used by default.
     """
 
-    detour: BaseInbound | str | None = field(default=None, converter=maybe_to_str)
+    detour: BaseInbound | str | None = field(default=None, converter=maybe_to_tag)
     """
     If set, connections will be forwarded to the specified inbound.
 
@@ -445,7 +445,7 @@ class DialFieldsMixin:
     -udp_fragment
     -connect_timeout"""
 
-    detour: BaseOutbound | str | None = field(default=None, converter=maybe_to_str)
+    detour: BaseOutbound | str | None = field(default=None, converter=maybe_to_tag)
     """The tag of the upstream outbound."""
 
     bind_interface: str | None = None
@@ -499,7 +499,7 @@ class DialFieldsMixin:
     # """
 
     domain_resolver: DomainResolver | DomainResolverMap | str | None = field(
-        default=None, converter=maybe_to_str
+        default=None, converter=maybe_to_tag
     )
     """
     Set domain resolver to use for resolving domain names.
