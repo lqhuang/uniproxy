@@ -5,7 +5,10 @@ from typing import Sequence
 from attrs import define
 
 from .base import AbstractSingBox
+from .certificate import Certificate
+from .certificate_providers import CertificateProvider
 from .dns import DNS
+from .endpoints import Endpoint
 from .http_clients import HttpClient
 from .inbounds import Inbound
 from .outbounds import Outbound
@@ -27,9 +30,9 @@ class SingBoxConfig(AbstractSingBox):
     route: Route | None = None
     dns: DNS | None = None
     http_clients: Sequence[HttpClient] | None = None
-    certificate: None = None
-    certificate_providers: None = None
-    endpoints: None = None
+    certificate: Certificate | None = None
+    certificate_providers: Sequence[CertificateProvider] | None = None
+    endpoints: Sequence[Endpoint] | None = None
     services: Sequence[Service] | None = None
     log: Log | None = None
     ntp: NTP | None = None

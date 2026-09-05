@@ -126,6 +126,7 @@ class HttpOutbound(DialFieldsMixin, HttpMixin, BaseOutbound):
     type: Literal["http"] = "http"
 
     @classmethod
+    # pyrefly: ignore [implicit-any-parameter]
     def from_uniproxy(cls, protocol: HttpProtocol, **kwargs) -> HttpOutbound:
 
         if protocol.type == "https":
@@ -205,7 +206,10 @@ class ShadowsocksOutbound(DialFieldsMixin, ShadowsocksMixin, BaseOutbound):
 
     @classmethod
     def from_uniproxy(
-        cls, protocol: ShadowsocksProtocol, **kwargs
+        cls,
+        protocol: ShadowsocksProtocol,
+        # pyrefly: ignore [implicit-any-parameter]
+        **kwargs,
     ) -> ShadowsocksOutbound:
         if protocol.plugin is not None:
             if protocol.plugin.command in {"obfs-local", "obfs"}:
@@ -257,6 +261,7 @@ class VmessOutbound(DialFieldsMixin, VmessMixin, BaseOutbound):
     type: Literal["vmess"] = "vmess"
 
     @classmethod
+    # pyrefly: ignore [implicit-any-parameter]
     def from_uniproxy(cls, protocol: VmessProtocol, **kwargs) -> VmessOutbound:
         # transport_mapping = {
         #     "ws": "ws",
@@ -329,6 +334,7 @@ class TrojanOutbound(DialFieldsMixin, TrojanMixin, BaseOutbound):
     type: Literal["trojan"] = "trojan"
 
     @classmethod
+    # pyrefly: ignore [implicit-any-parameter]
     def from_uniproxy(cls, protocol: TrojanProtocol, **kwargs) -> TrojanOutbound:
         return cls(
             tag=protocol.name,
@@ -416,6 +422,7 @@ class NaiveOutbound(DialFieldsMixin, NaiveMixin, BaseOutbound):
     type: Literal["naive"] = "naive"
 
     @classmethod
+    # pyrefly: ignore [implicit-any-parameter]
     def from_uniproxy(cls, protocol: NaiveProtocol, **kwargs) -> NaiveOutbound:
         if protocol.tls is None:
             tls = OutboundTLS(enabled=True)
@@ -480,6 +487,7 @@ class AnyTLSOutbound(DialFieldsMixin, AnyTLSMixin, BaseOutbound):
     type: Literal["anytls"] = "anytls"
 
     @classmethod
+    # pyrefly: ignore [implicit-any-parameter]
     def from_uniproxy(cls, protocol: AnyTLSProtocol, **kwargs) -> AnyTLSOutbound:
         if protocol.tls is None:
             tls = OutboundTLS(enabled=True)
@@ -525,14 +533,19 @@ class SelectorOutbound(BaseOutbound):
 
     @classmethod
     def from_uniproxy(
-        cls, protocol: UniproxySelectGroup | UniproxyFallBackGroup, **kwargs
+        cls,
+        protocol: UniproxySelectGroup | UniproxyFallBackGroup,
+        # pyrefly: ignore [implicit-any-parameter]
+        **kwargs,
     ) -> SelectorOutbound:
         if protocol.providers:
+            # pyrefly: ignore [bad-argument-type]
             provider_proxies = map_to_tag(chain(*protocol.providers))
         else:
             provider_proxies = ()
         return cls(
             tag=protocol.name,
+            # pyrefly: ignore [bad-argument-type]
             outbounds=(flatmap_to_tag(protocol.proxies) + provider_proxies),
             interrupt_exist_connections=False,
         )
@@ -587,7 +600,10 @@ class UrlTestOutbound(BaseOutbound):
 
     @classmethod
     def from_uniproxy(
-        cls, protocol: UniproxyUrlTestGroup | UniproxyLoadBalanceGroup, **kwargs
+        cls,
+        protocol: UniproxyUrlTestGroup | UniproxyLoadBalanceGroup,
+        # pyrefly: ignore [implicit-any-parameter]
+        **kwargs,
     ) -> UrlTestOutbound:
         match protocol:
             case UniproxyUrlTestGroup():
@@ -600,12 +616,14 @@ class UrlTestOutbound(BaseOutbound):
                 )
 
         if protocol.providers:
+            # pyrefly: ignore [bad-argument-type]
             provider_proxies = map_to_tag(chain(*protocol.providers))
         else:
-            provider_proxies = []
+            provider_proxies: tuple[str, ...] = ()
 
         return cls(
             tag=protocol.name,
+            # pyrefly: ignore [bad-argument-type]
             outbounds=(flatmap_to_tag(protocol.proxies) + provider_proxies),
             url=protocol.url,
             interval=f"{protocol.interval}s" if protocol.interval else None,
@@ -692,10 +710,13 @@ def is_valid_protocol_group(proxy: Any) -> TypeGuard[UniproxyProxyGroup]:
 
 
 def _make_protocol_outbound_from_uniproxy(
-    protocol: UniproxyProtocol, **kwargs
+    protocol: UniproxyProtocol,
+    # pyrefly: ignore [implicit-any-parameter]
+    **kwargs,
 ) -> ProtocolOutbound:
     if is_valid_protocol(protocol):
         # FIXME: type violation
+        # pyrefly: ignore [missing-attribute]
         return _SINGBOX_REGISTERED_PROTOCOLS[protocol.type].from_uniproxy(
             protocol, **kwargs
         )
@@ -706,11 +727,15 @@ def _make_protocol_outbound_from_uniproxy(
 
 
 def _make_group_outbound_from_uniproxy(
-    protocol: UniproxyProxyGroup, **kwargs
+    protocol: UniproxyProxyGroup,
+    # pyrefly: ignore [implicit-any-parameter]
+    **kwargs,
 ) -> Outbound:
     if protocol.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys():
         return _SINGBOX_REGISTERED_PROXY_GROUPS[protocol.type].from_uniproxy(
-            protocol, **kwargs
+            # pyrefly: ignore [bad-argument-type]
+            protocol,
+            **kwargs,
         )
     else:
         raise ValueError(
@@ -719,7 +744,9 @@ def _make_group_outbound_from_uniproxy(
 
 
 def make_outbound_from_uniproxy(
-    protocol: UniproxyProtocol | UniproxyProxyGroup, **kwargs
+    protocol: UniproxyProtocol | UniproxyProxyGroup,
+    # pyrefly: ignore [implicit-any-parameter]
+    **kwargs,
 ) -> Outbound:
     if is_valid_protocol(protocol):
         return _make_protocol_outbound_from_uniproxy(protocol, **kwargs)
