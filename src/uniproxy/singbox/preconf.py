@@ -8,7 +8,7 @@ from uniproxy.singbox.dns import (
     TlsDnsServer,
     UdpDnsServer,
 )
-from uniproxy.singbox.http_clients import Http2Client
+from uniproxy.singbox.http_clients import Http2Client, Http3Client
 from uniproxy.singbox.outbounds import DirectOutbound
 from uniproxy.singbox.route_rules import HijackDnsRule, SniffRule
 from uniproxy.singbox.shared import OutboundTLS
@@ -21,7 +21,8 @@ TAG_DROP_OUTBOUND = "REJECT-DROP"
 TAG_DNS_SERVER_SYSTEM = "dns-system"
 TAG_DNS_SERVER_FAKEIP = "dns-fakeip"
 
-TAG_DEFAULT_HTTP_CLIENT = "http-client-default"
+TAG_HTTP_CLIENT_H2 = "http-client-http2"
+TAG_HTTP_CLIENT_H3 = "http-client-http3"
 
 #### ------------- Snippets for DNS Servers ------------- ####
 DNS_SERVER_SYSTEM = LocalDnsServer(tag=TAG_DNS_SERVER_SYSTEM)
@@ -40,18 +41,18 @@ DNS_SERVER_SYSTEM = LocalDnsServer(tag=TAG_DNS_SERVER_SYSTEM)
 #   - 192.0.2.0/24 (TEST-NET-1)
 #   - 198.51.100.0/24 (TEST-NET-2)
 #   - 203.0.113.0/24 (TEST-NET-3)
+#   - 198.18.0.0/15 (Used for benchmark testing of inter-network communications between two separate subnets)
 #   - 240.0.0.0/4 (Reserved for Future Use)
 #
 # - IPv6
-#   - 2001:2::/48 (Used for benchmarking IPv6)
+#   - 2001:2::/48 (IPv6 benchmarking address space defined in RFC 5180)
 #   - 2620:4f:8000::/48 (Blackhole servers with the traditional authoritative zones configured)
 #   - 2001:4:112::/48 (Blackhole servers for the new blackholing approach involving DNAME records to empty.as112.arpa)
 #   - 2001:db8::/32 (This prefix is used in documentation, anywhere an example IPv6 address is given or model networking scenarios are described.)
 #
 DNS_SERVER_FAKEIP = FakeIPDnsServer(
-    tag=TAG_DNS_SERVER_FAKEIP, inet4_range="240.0.0.0/4", inet6_range="2001:db8::/32"
+    tag=TAG_DNS_SERVER_FAKEIP, inet4_range="198.18.0.0/15", inet6_range="2001:2::/48"
 )
-
 
 DNS_SERVER_GOOGLE_UDP = UdpDnsServer(tag="dns-google-udp", server="8.8.8.8")
 DNS_SERVER_GOOGLE_TLS = TlsDnsServer(tag="dns-google-tls", server="8.8.8.8")
@@ -66,10 +67,7 @@ DNS_SERVER_GOOGLE_H3 = H3DnsServer(
     tls=OutboundTLS(enabled=True, server_name="dns.google", min_version="1.3"),
 )
 
-
-DNS_SERVER_CLOUDFLARE_UDP = UdpDnsServer(
-    tag="dns-cloudflare-udp", server="1.1.1.1", server_port=53
-)
+DNS_SERVER_CLOUDFLARE_UDP = UdpDnsServer(tag="dns-cloudflare-udp", server="1.1.1.1")
 DNS_SERVER_CLOUDFLARE_TLS = TlsDnsServer(
     tag="dns-cloudflare-tls",
     server="1.1.1.1",
@@ -97,4 +95,5 @@ RULE_SNIFF = SniffRule()
 RULE_HIJACK_DNS = HijackDnsRule()
 
 #### ------------- Snippets for Http Clients ------------- ####
-HC_DEFAULT = Http2Client(tag=TAG_DEFAULT_HTTP_CLIENT, version=2)
+HC_HTTP2 = Http2Client(tag=TAG_HTTP_CLIENT_H2)
+HC_HTTP3 = Http3Client(tag=TAG_HTTP_CLIENT_H3)
