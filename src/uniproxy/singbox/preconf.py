@@ -11,6 +11,7 @@ from uniproxy.singbox.dns import (
 from uniproxy.singbox.http_clients import Http2Client, Http3Client
 from uniproxy.singbox.outbounds import DirectOutbound
 from uniproxy.singbox.route_rules import HijackDnsRule, SniffRule
+from uniproxy.singbox.services import ApiService, Dashboard
 from uniproxy.singbox.shared import OutboundTLS
 
 #### ------------- Snippets for flag as tag ------------- ####
@@ -97,3 +98,12 @@ RULE_HIJACK_DNS = HijackDnsRule()
 #### ------------- Snippets for Http Clients ------------- ####
 HC_HTTP2 = Http2Client(tag=TAG_HTTP_CLIENT_H2)
 HC_HTTP3 = Http3Client(tag=TAG_HTTP_CLIENT_H3)
+
+
+### ------------- Snippets for Services ------------- ####
+LOCAL_API_SERVICE_WITH_DASHBOARD = ApiService(
+    tag="svc-api-and-dashboard",
+    listen="::1",
+    listen_port=18080,
+    dashboard=Dashboard(enabled=True),
+)

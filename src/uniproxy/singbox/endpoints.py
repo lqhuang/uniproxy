@@ -58,7 +58,7 @@ class Peer:
 
 
 @define(slots=False)
-class WireguardMixin:
+class _WireguardMixin:
     address: Sequence[IPAddress]
     """
     **Required**
@@ -124,7 +124,7 @@ class WireguardMixin:
 
 
 @define
-class WireguardEndpoint(DialFieldsMixin, WireguardMixin, BaseEndpoint):  # type: ignore[misc]
+class WireguardEndpoint(DialFieldsMixin, _WireguardMixin, BaseEndpoint):
     """
     Examples:
 
@@ -264,7 +264,7 @@ class OpenConnectFormEntry:
 
 
 @define(slots=False)
-class OpenConnectEndpointMixin:
+class _OpenConnectMixin:
     server: str
     """OpenConnect server address or URL."""
 
@@ -335,7 +335,7 @@ class OpenConnectEndpointMixin:
 
 
 @define()
-class OpenConnectEndpoint(DialFieldsMixin, OpenConnectEndpointMixin, BaseEndpoint):
+class OpenConnectEndpoint(DialFieldsMixin, _OpenConnectMixin, BaseEndpoint):
     """
     OpenConnect Client
 
