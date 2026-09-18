@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from uniproxy.clash.rules import (
+from uniproxy.mihomo.rules import (
     AndRule,
     CellularRadioRule,
     DestPortRule,
@@ -26,8 +26,8 @@ from uniproxy.clash.rules import (
     UrlRegexRule,
     UserAgentRule,
 )
-from uniproxy.clash.rules import Rule as ClashRule
-from uniproxy.clash.rules import _BasicRule as ClashBasicRule
+from uniproxy.mihomo.rules import Rule as ClashRule
+from uniproxy.mihomo.rules import _BasicRule as ClashBasicRule
 from uniproxy.uniproxy.rules import (
     DomainGroupRule,
     DomainKeywordGroupRule,

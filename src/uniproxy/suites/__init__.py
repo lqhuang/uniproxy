@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal
 from uniproxy.typing import Backend
 
-from uniproxy.clash.typing import RuleProviderFormatType
+from uniproxy.mihomo.typing import RuleProviderFormatType
 from uniproxy.singbox.typing import RuleSetSourceType
 
 _ext_map: dict[str, str] = {

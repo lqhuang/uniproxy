@@ -12,8 +12,10 @@ from xattrs.converters import to_kebab
 from xattrs.filters import exclude_if_none
 from xattrs.preconf.yaml import _yaml_loads
 
-from uniproxy.clash.protocols import ShadowsocksProtocol as ClashShadowsocksProtocol
-from uniproxy.clash.protocols import make_protocol_from_uniproxy as make_clash_protocol
+from uniproxy.mihomo.protocols import ShadowsocksProtocol as MihomoShadowsocksProtocol
+from uniproxy.mihomo.protocols import (
+    make_protocol_from_uniproxy as make_mihomo_protocol,
+)
 from uniproxy.surge.protocols import ShadowsocksProtocol as SurgeShadowsocksProtocol
 from uniproxy.surge.protocols import make_protocol_from_uniproxy as make_surge_protocol
 from uniproxy.uniproxy.protocols import ShadowsocksObfsPlugin, ShadowsocksProtocol
@@ -22,7 +24,7 @@ from uniproxy.utils import load_ini_without_section
 yaml = YAML()
 yaml_loads = partial(_yaml_loads, _ruamel_yaml=yaml)
 
-_clash_as_dict = partial(asdict, filter=exclude_if_none, key_serializer=to_kebab)
+_mihomo_as_dict = partial(asdict, filter=exclude_if_none, key_serializer=to_kebab)
 
 
 @pytest.fixture(scope="module")
@@ -42,7 +44,7 @@ def ss_config_obfs():
         "plugin_opts": "obfs=http;obfs-host=www.microsoft.com",
     }
 
-    clash_config = dedent(f"""
+    mihomo_config = dedent(f"""
         name: "{name}"
         type: ss
         server: localhost
@@ -55,7 +57,7 @@ def ss_config_obfs():
     """)
 
     surge_config = f"{name} = ss, localhost, {port}, encrypt-method=aes-128-gcm, password={password}, udp-relay=true, obfs=http, obfs-host=www.microsoft.com"
-    return ss, clash_config, surge_config
+    return ss, mihomo_config, surge_config
 
 
 class TestShadowsocksProtocol:
@@ -73,8 +75,8 @@ class TestShadowsocksProtocol:
         surge_config = f"{name} = ss, localhost, 1080, encrypt-method=aes-256-gcm, password=pass, udp-relay=true"
         assert asdict(ss) == load_ini_without_section(surge_config)
 
-    def test_clash(self):
-        ss = ClashShadowsocksProtocol(
+    def test_mihomo(self):
+        ss = MihomoShadowsocksProtocol(
             name="proxy-ss",
             server="localhost",
             port=1080,
@@ -83,7 +85,7 @@ class TestShadowsocksProtocol:
             udp=True,
         )
 
-        clash_config = dedent(
+        mihomo_config = dedent(
             """
             name: "proxy-ss"
             type: "ss"
@@ -94,11 +96,11 @@ class TestShadowsocksProtocol:
             udp: true
             """
         )
-        assert _clash_as_dict(ss) == yaml_loads(clash_config)
+        assert _mihomo_as_dict(ss) == yaml_loads(mihomo_config)
 
     # pyrefly: ignore [implicit-any-parameter]
     def test_from_uniproxy(self, ss_config_obfs):
-        ss_config, clash_config, surge_config = ss_config_obfs
+        ss_config, mihomo_config, surge_config = ss_config_obfs
 
         kv_pairs = ss_config["plugin_opts"].split(";")
         plugin_opts = {k: v for k, v in [p.split("=") for p in kv_pairs]}
@@ -117,8 +119,8 @@ class TestShadowsocksProtocol:
             ),
         )
 
-        clash_ss = make_clash_protocol(ss)
-        assert _clash_as_dict(clash_ss) == yaml_loads(clash_config)
+        mihomo_ss = make_mihomo_protocol(ss)
+        assert _mihomo_as_dict(mihomo_ss) == yaml_loads(mihomo_config)
 
         surge_ss = make_surge_protocol(ss)
 

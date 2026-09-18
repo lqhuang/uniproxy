@@ -4,8 +4,8 @@ from collections.abc import Iterable, Sequence
 
 from xattrs import define, field
 
-from uniproxy.clash.providers import RuleProvider as ClashRuleProvider
-from uniproxy.clash.rules import Rule as ClashRule
+from uniproxy.mihomo.providers import RuleProvider as ClashRuleProvider
+from uniproxy.mihomo.rules import Rule as ClashRule
 from uniproxy.singbox.dns_rules import DnsRule
 from uniproxy.singbox.route import Rule as RouteRule
 from uniproxy.singbox.route import RuleSet

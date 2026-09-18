@@ -9,7 +9,7 @@ from xattrs.converters import to_kebab
 from xattrs.filters import exclude_if_none
 from xattrs.preconf.yaml import _yaml_loads
 
-from uniproxy.clash.protocols import (
+from uniproxy.mihomo.protocols import (
     ShadowsocksProtocol,
     Socks5Protocol,
     VmessProtocol,
@@ -23,7 +23,7 @@ yaml_loads = partial(_yaml_loads, _ruamel_yaml=yaml)
 def test_proxy_socks5():
     name = "proxy-socks5"
     socks5 = Socks5Protocol(name=name, server="localhost", port=1080)
-    clash_config = dedent(
+    mihomo_config = dedent(
         f"""
         name: "{name}"
         type: socks5
@@ -34,7 +34,7 @@ def test_proxy_socks5():
     )
     assert asdict(
         socks5, filter=exclude_if_none, key_serializer=to_kebab
-    ) == yaml_loads(clash_config)
+    ) == yaml_loads(mihomo_config)
 
 
 def test_proxy_socks5__tls():
@@ -48,7 +48,7 @@ def test_proxy_socks5__tls():
         tls=True,
         skip_cert_verify=True,
     )
-    clash_config = dedent(
+    mihomo_config = dedent(
         f"""
         name: "{name}"
         type: socks5
@@ -63,7 +63,7 @@ def test_proxy_socks5__tls():
     )
     assert asdict(
         socks5, filter=exclude_if_none, key_serializer=to_kebab
-    ) == yaml_loads(clash_config)
+    ) == yaml_loads(mihomo_config)
 
 
 def test_proxy_vmess():
@@ -77,7 +77,7 @@ def test_proxy_vmess():
         udp=True,
     )
 
-    clash_config = dedent(
+    mihomo_config = dedent(
         """
         name: proxy-vmess
         type: vmess
@@ -90,7 +90,7 @@ def test_proxy_vmess():
         """
     )
     assert asdict(vmess, filter=exclude_if_none, key_serializer=to_kebab) == yaml_loads(
-        clash_config
+        mihomo_config
     )
 
 
@@ -110,7 +110,7 @@ def test_proxy_vmess__ws():
         ws_opts=VmessWsTransport(path="/ws-path"),
     )
 
-    clash_config = dedent(
+    mihomo_config = dedent(
         """
         name: proxy-vmess
         type: vmess
@@ -129,5 +129,5 @@ def test_proxy_vmess__ws():
         """
     )
     assert asdict(vmess, filter=exclude_if_none, key_serializer=to_kebab) == yaml_loads(
-        clash_config
+        mihomo_config
     )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from uniproxy.clash.proxy_groups import (
+from uniproxy.mihomo.proxy_groups import (
     FallBackGroup,
     LoadBalanceGroup,
     SelectGroup,

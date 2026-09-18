@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Literal, assert_never, cast, overload
 from uniproxy.typing import Backend
 
-from uniproxy.clash.providers import RuleProvider as ClashRuleProvider
-from uniproxy.clash.rules import Rule as ClashRule
+from uniproxy.mihomo.providers import RuleProvider as ClashRuleProvider
+from uniproxy.mihomo.rules import Rule as ClashRule
 from uniproxy.singbox.dns_rules import DnsRule as SingBoxDnsRule
 from uniproxy.singbox.route import RuleSet as SingBoxRuleSet
 from uniproxy.singbox.route_rules import Rule as SingBoxRouteRule
@@ -21,7 +21,7 @@ def merge_surge_routing(*routings: SurgeRouting) -> SurgeRouting:
     return SurgeRouting(rules=tuple(rules))
 
 
-def merge_clash_routing(*routings: ClashRouting) -> ClashRouting:
+def merge_mihomo_routing(*routings: ClashRouting) -> ClashRouting:
     """Merge multiple Clash routing configurations into one."""
     rules: list[ClashRule] = []
     rule_providers: dict[str, ClashRuleProvider] = {}
@@ -72,7 +72,7 @@ def merge_policy_routing(backend: Backend, *routings: PolicyRouting) -> PolicyRo
         return merge_surge_routing(*routings)
     elif backend == "mihomo":
         # pyrefly: ignore [bad-argument-type]
-        return merge_clash_routing(*routings)
+        return merge_mihomo_routing(*routings)
     elif backend == "sing-box":
         # pyrefly: ignore [bad-argument-type]
         return merge_singbox_routing(*routings)

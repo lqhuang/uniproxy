@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence, cast
+from collections.abc import Mapping, Sequence
+from typing import Literal, cast
 from uniproxy.typing import AlpnType, IPAddress, ShadowsocksCipher
 
 from ipaddress import IPv4Address, IPv6Address
@@ -32,9 +33,9 @@ from uniproxy.uniproxy.typing import ProtocolType, VmessCipher, VmessTransportTy
 from .base import BaseProtocol
 
 # @define
-# class ClashProtocol(BaseProtocol):
+# class MihomoProtocol(BaseProtocol):
 #     @classmethod
-#     def from_uniproxy(cls, protocol, **kwargs) -> ClashProtocol:
+#     def from_uniproxy(cls, protocol, **kwargs) -> MihomoProtocol:
 #         raise NotImplementedError
 
 #     def to_uniproxy(self, **kwargs) -> UniproxyProtocol:
@@ -519,7 +520,7 @@ _CLASH_MAPPER: Mapping[ProtocolType, type[BaseProtocol]] = {
     "anytls": AnyTLSProtocol,
 }
 
-type ClashProtocol = (
+type MihomoProtocol = (
     HttpProtocol
     | Socks5Protocol
     | ShadowsocksProtocol
@@ -530,8 +531,8 @@ type ClashProtocol = (
 
 
 def make_protocol_from_uniproxy(
-    protocol: UniproxyProtocol | ClashProtocol, **kwargs
-) -> ClashProtocol:
+    protocol: UniproxyProtocol | MihomoProtocol, **kwargs
+) -> MihomoProtocol:
     if isinstance(protocol, BaseProtocol):
         return protocol
     elif isinstance(protocol, UniproxyBaseProtocol):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from uniproxy.clash.rules import IPCidrRule, make_rules_from_uniproxy
+from uniproxy.mihomo.rules import IPCidrRule, make_rules_from_uniproxy
 from uniproxy.uniproxy.rules import IPCidrRule as UniproxyIPCidrRule
 
 

@@ -29,7 +29,7 @@ def surge_routing_from_uniproxy(rules: Sequence[UniproxyRule]) -> SurgeRouting:
     )
 
 
-def clash_routing_from_uniproxy(rules: Sequence[UniproxyRule]) -> ClashRouting:
+def mihomo_routing_from_uniproxy(rules: Sequence[UniproxyRule]) -> ClashRouting:
     return ClashRouting(
         rules=tuple(
             chain.from_iterable(mihomo_rules_from_uniproxy(rule) for rule in rules)
@@ -46,7 +46,7 @@ def make_routing_from_uniproxy_rules(
     if backend == "surge":
         return surge_routing_from_uniproxy(rules)
     elif backend == "mihomo":
-        return clash_routing_from_uniproxy(rules)
+        return mihomo_routing_from_uniproxy(rules)
     elif backend == "sing-box":
         assert dns_server is not None
         return singbox_routing_from_uniproxy(rules, dns_server=dns_server)

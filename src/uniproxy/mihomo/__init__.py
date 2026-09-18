@@ -1,4 +1,5 @@
-# ruff: noqa: F401
+from __future__ import annotations
+
 from .protocols import (
     HttpProtocol,
     ShadowsocksProtocol,
