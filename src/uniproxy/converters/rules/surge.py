@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
+from itertools import chain
+from warnings import deprecated
+
+from uniproxy.routing import SurgeRouting
 from uniproxy.surge.rules import (
     AndRule,
     CellularRadioRule,
@@ -38,7 +42,6 @@ from uniproxy.uniproxy.rules import (
     is_basic_no_resolvable_rule,
     is_basic_rule,
 )
-from uniproxy.uniproxy.rules import SubnetRule as UniproxySubnetRule
 from uniproxy.uniproxy.typing import BasicNoResolableRuleType, BasicRuleType
 from uniproxy.utils import to_name, to_tag
 
@@ -73,6 +76,20 @@ _SURGE_NO_RESOLVE_MAPPER: Mapping[
 }
 
 
+def _routing_to_rules(routing: SurgeRouting) -> Sequence[SurgeRule]:
+    return routing.rules
+
+
+def surge_rules_from_surge_routing(rs: Sequence[SurgeRouting]) -> Sequence[SurgeRule]:
+    rules: list[SurgeRule] = list(
+        chain.from_iterable(_routing_to_rules(each) for each in rs)
+    )
+    return rules
+
+
+@deprecated(
+    "`surge_rules_from_uniproxy` is deprecated, use `surge_rules_from_surge_routing` instead"
+)
 def surge_rules_from_uniproxy(rule: UniproxyRule) -> Sequence[SurgeRule]:
     policy = to_name(rule.policy)
 

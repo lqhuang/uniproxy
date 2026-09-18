@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence, override
+from typing import Literal, override
 
 from functools import cached_property
 
@@ -374,9 +374,9 @@ class FinalRule(BaseRule):
     @override
     def to_tag(self) -> str:
         if self.dns_failed:
-            return f"final,{to_tag(self.policy)},dns-failed"
+            return f"{self.type.upper()},{to_tag(self.policy)},dns-failed"
         else:
-            return f"final,{to_tag(self.policy)}"
+            return f"{self.type.upper()},{to_tag(self.policy)}"
 
 
 type _BasicRule = (

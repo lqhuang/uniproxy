@@ -1,23 +1,24 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, assert_never
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, assert_never
 from uniproxy.typing import Backend
 
 from itertools import chain
 
-from uniproxy.cross_converters.clash import clash_rules_from_uniproxy
-from uniproxy.cross_converters.singbox import singbox_route_rule_from_uniproxy
-from uniproxy.cross_converters.surge import surge_rules_from_uniproxy
-from uniproxy.singbox.dns import BaseDnsServer
+from uniproxy.routing import ClashRouting, SingBoxRouting, SurgeRouting
+from uniproxy.singbox.base import BaseDnsServer
 from uniproxy.singbox.dns_rules import DnsRouteRule
 from uniproxy.singbox.route_rules import RouteRule as SingBoxRouteRule
 from uniproxy.singbox.route_rules import Rule as SingBoxRule
 from uniproxy.uniproxy.rules import UniproxyRule
 
-from .routing import ClashRouting, SingBoxRouting, SurgeRouting
+from .rules.mihomo import mihomo_rules_from_uniproxy
+from .rules.singbox import singbox_route_rule_from_uniproxy
+from .rules.surge import surge_rules_from_uniproxy
 
 if TYPE_CHECKING:
-    from .routing import PolicyRouting
+    from uniproxy.routing import PolicyRouting
 
 
 def surge_routing_from_uniproxy(rules: Sequence[UniproxyRule]) -> SurgeRouting:
@@ -31,7 +32,7 @@ def surge_routing_from_uniproxy(rules: Sequence[UniproxyRule]) -> SurgeRouting:
 def clash_routing_from_uniproxy(rules: Sequence[UniproxyRule]) -> ClashRouting:
     return ClashRouting(
         rules=tuple(
-            chain.from_iterable(clash_rules_from_uniproxy(rule) for rule in rules)
+            chain.from_iterable(mihomo_rules_from_uniproxy(rule) for rule in rules)
         )
     )
 
@@ -44,7 +45,7 @@ def make_routing_from_uniproxy_rules(
 ) -> PolicyRouting:
     if backend == "surge":
         return surge_routing_from_uniproxy(rules)
-    elif backend == "clash":
+    elif backend == "mihomo":
         return clash_routing_from_uniproxy(rules)
     elif backend == "sing-box":
         assert dns_server is not None

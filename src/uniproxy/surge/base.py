@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, ClassVar, Sequence, override
+from collections.abc import Sequence
+from typing import ClassVar, override
 from uniproxy.typing import ServerAddress
 
 from abc import ABC, abstractmethod
@@ -60,7 +61,7 @@ class BaseProxyGroup(BaseTaggable, AbstractSurge):
     @property
     def proxies_opts(self) -> str:
         opts = ", ".join(
-            (proxy if isinstance(proxy, str) else proxy.name for proxy in self.proxies)
+            proxy if isinstance(proxy, str) else proxy.name for proxy in self.proxies
         )
         return opts
 
@@ -83,7 +84,7 @@ class BaseRule(BaseTaggable, AbstractSurge):
     @override
     def to_tag(self) -> str:
         # pyrefly: ignore [missing-attribute]
-        return f"{self.type},{self.matcher},{to_tag(self.policy)}"
+        return f"{self.type.upper()},{self.matcher},{to_tag(self.policy)}"
 
 
 type ProtocolLike = BaseProtocol | BaseProxyProvider | BaseProxyGroup | str

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence, override
+from collections.abc import Mapping, Sequence
+from typing import Literal, override
 
 from attrs import define, field
 

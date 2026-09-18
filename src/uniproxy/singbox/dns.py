@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from collections.abc import Sequence
+from typing import Literal
 
 from attrs import define, field
 

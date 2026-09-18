@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence, TypeAlias
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
 from attrs import define
 
 from .base import (
-    AbstractClash,
+    AbstractMihomo,
     BaseProtocol,
     BaseProxyGroup,
     BaseProxyProvider,
@@ -13,19 +14,19 @@ from .base import (
 )
 from .providers import RuleProvider
 
-Hosts: TypeAlias = Mapping[str, str]
-Proxies: TypeAlias = Sequence[BaseProtocol]
-ProxyProviders: TypeAlias = Sequence[BaseProxyProvider]
-ProxyGroups: TypeAlias = Sequence[BaseProxyGroup]
-RuleProviders: TypeAlias = Sequence[RuleProvider]
-Rules: TypeAlias = Sequence[BaseRule]
+type Hosts = Mapping[str, str]
+type Proxies = Sequence[BaseProtocol]
+type ProxyProviders = Sequence[BaseProxyProvider]
+type ProxyGroups = Sequence[BaseProxyGroup]
+type RuleProviders = Sequence[RuleProvider]
+type Rules = Sequence[BaseRule]
 
 Mode = Literal["rule", "global", "direct"]
 LogLevelType = Literal["silent", "info", "warning", "error", "debug"]
 
 
 @define
-class ClashConfig(AbstractClash):
+class ClashConfig(AbstractMihomo):
     mode: Mode
     log_level: LogLevelType
     ipv6: bool

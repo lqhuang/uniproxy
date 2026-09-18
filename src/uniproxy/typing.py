@@ -5,7 +5,7 @@ from typing import Literal, Protocol
 from functools import cached_property
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 
-type Backend = Literal["surge", "clash", "sing-box"]
+type Backend = Literal["surge", "sing-box", "mihomo"]
 
 type ServerAddress = str | IPv4Address | IPv6Address
 

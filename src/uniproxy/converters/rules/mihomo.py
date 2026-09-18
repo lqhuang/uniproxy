@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from uniproxy.clash.rules import (
     AndRule,
@@ -74,7 +74,7 @@ _CLASH_MAPPER: Mapping[BasicRuleType, type[ClashBasicRule]] = {
 }
 
 
-def clash_rules_from_uniproxy(rule: UniproxyRule) -> tuple[ClashRule, ...]:
+def mihomo_rules_from_uniproxy(rule: UniproxyRule) -> tuple[ClashRule, ...]:
     if rule.type == "ip-asn":
         raise NotImplementedError("`ip-asn` rule type not implemented yet for Clash")
 

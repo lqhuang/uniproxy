@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import ClassVar
 from uniproxy.typing import ServerAddress
 
 from attrs import define, field
@@ -8,18 +9,18 @@ from attrs import define, field
 from uniproxy.utils import maybe_map_to_str
 
 
-class AbstractClash:
+class AbstractMihomo:
     """
-    Abstract Clash class
+    Abstract Mihomo class
 
-    All Clash classes should inherit from this class.
+    All Mihomo classes should inherit from this class.
     """
 
-    __uniproxy_impl__: ClassVar[str] = "clash"
+    __uniproxy_impl__: ClassVar[str] = "mihomo"
 
 
 @define
-class BaseProtocol(AbstractClash):
+class BaseProtocol(AbstractMihomo):
     name: str
     server: ServerAddress
     port: int
@@ -29,7 +30,7 @@ class BaseProtocol(AbstractClash):
 
 
 @define
-class BaseProxyProvider(AbstractClash):
+class BaseProxyProvider(AbstractMihomo):
     name: str
 
     def __str__(self) -> str:
@@ -37,7 +38,7 @@ class BaseProxyProvider(AbstractClash):
 
 
 @define
-class BaseRule(AbstractClash): ...
+class BaseRule(AbstractMihomo): ...
 
 
 @define
@@ -47,15 +48,13 @@ class BaseBasicRule(BaseRule):
 
     def __str__(self) -> str:
         if hasattr(self, "type"):
-            return f"{self.type.upper()},{str(self.matcher)},{str(self.policy)}"  # type: ignore
+            return f"{self.type.upper()},{self.matcher!s},{self.policy!s}"  # type: ignore
         else:
             raise NotImplementedError
 
 
-
-
 @define
-class BaseProxyGroup(AbstractClash):
+class BaseProxyGroup(AbstractMihomo):
     name: str
     proxies: Sequence[ProtocolLike] | None = field(
         default=None, converter=maybe_map_to_str

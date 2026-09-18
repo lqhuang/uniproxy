@@ -61,7 +61,7 @@ def merge_policy_routing(
 ) -> SingBoxRouting: ...
 @overload
 def merge_policy_routing(
-    backend: Literal["clash"], *routings: ClashRouting
+    backend: Literal["mihomo"], *routings: ClashRouting
 ) -> ClashRouting: ...
 
 
@@ -70,7 +70,7 @@ def merge_policy_routing(backend: Backend, *routings: PolicyRouting) -> PolicyRo
     if backend == "surge":
         # pyrefly: ignore [bad-argument-type]
         return merge_surge_routing(*routings)
-    elif backend == "clash":
+    elif backend == "mihomo":
         # pyrefly: ignore [bad-argument-type]
         return merge_clash_routing(*routings)
     elif backend == "sing-box":
