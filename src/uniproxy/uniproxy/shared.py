@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 from uniproxy.typing import AlpnType
 
 from pathlib import Path
 
-from attrs import define, frozen
+from attrs import frozen
 
 
 @frozen
