@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from random import randint
+
 from uniproxy.singbox.dns import (
     FakeIPDnsServer,
     H3DnsServer,
@@ -88,6 +90,12 @@ DNS_SERVER_CLOUDFLARE_H3 = H3DnsServer(
 
 #### ------------- Snippets for Outbound ------------- ####
 OUT_DIRECT = DirectOutbound(tag=TAG_DIRECT_OUTBOUND)
+OUT_REJECT = DirectOutbound(
+    tag=TAG_BLOCK_OUTBOUND,
+    override_address="192.0.2.0",
+    override_port=randint(0, 65535),
+)
+
 
 #### ------------- Snippets for Route Rules ------------- ####
 # RULE_DNS = Rule(outbound=TAG_DNS_OUTBOUND, protocol="dns")

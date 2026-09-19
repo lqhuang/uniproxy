@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from collections.abc import Sequence
+from typing import Literal
 
 from attrs import define, field
 
@@ -29,7 +30,7 @@ class BaseNonFinalActionRule(BaseRule): ...
 @define(slots=False)
 class RouteOptionFieldsMixin:
     inbound: Sequence[str] | None = field(default=None, converter=maybe_map_to_tag)
-    ip_version: Literal["4", "6", None] = None
+    ip_version: Literal["4", "6"] | None = None
     auth_user: str | Sequence[str] | None = None
     protocol: SniffProtocol | Sequence[SniffProtocol] | None = None
     client: str | Sequence[str] | None = None
