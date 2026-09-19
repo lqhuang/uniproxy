@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from collections.abc import Sequence
+from typing import Literal
 from uniproxy.typing import NetworkCIDR, ShadowsocksCipher
 
 from ipaddress import IPv4Address, IPv6Address
@@ -23,20 +24,19 @@ from .shared import (
 from .typing import FallbackAlpn, Network, TunStack
 
 __all__ = (
+    "AnyTLSInbound",
     "DirectInbound",
     "HTTPInbound",
-    "Socks5Inbound",
+    "Inbound",
+    "NaiveInbound",
+    "ProxyUser",
     "ShadowsocksInbound",
+    "SimpleUser",
+    "Socks5Inbound",
     "TrojanInbound",
     "TuicInbound",
-    "NaiveInbound",
-    "AnyTLSInbound",
-    "TunInbound",
-    "Inbound",
-    #
-    "ProxyUser",
-    "SimpleUser",
     "TuicUser",
+    "TunInbound",
 )
 
 
@@ -693,7 +693,7 @@ class _TunMixin:
     udp_timeout: float | None = None
     """UDP NAT expiration time in seconds, default is 300 (5 minutes)."""
 
-    stack: TunStack | None = None
+    # stack: TunStack | None = None
     """
     TCP/IP stack.
 
@@ -704,11 +704,16 @@ class _TunMixin:
     | `mixed`  | Mixed `system` TCP stack and `gvisor` UDP stack                                                       |
 
     Defaults to the `mixed` stack if the gVisor build tag is enabled, otherwise defaults to the `system` stack.
+
+    > [!NOTE]
+    >
+    > Deprecated since version 1.15. Removed in version 1.17.
     """
 
     include_interface: Sequence[str] | None = None
     """
     > ![NOTE]
+    >
     > Interface rules are only supported on Linux and require `auto_route`.
 
     Limit interfaces in route. Not limited by default.

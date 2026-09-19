@@ -12,7 +12,7 @@ from uniproxy.singbox.dns import (
 )
 from uniproxy.singbox.http_clients import Http2Client, Http3Client
 from uniproxy.singbox.outbounds import DirectOutbound
-from uniproxy.singbox.route_rules import HijackDnsRule, SniffRule
+from uniproxy.singbox.route_rules import RouteRuleHijackDns, RouteRuleSniff
 from uniproxy.singbox.services import ApiService, Dashboard
 from uniproxy.singbox.shared import OutboundTLS
 
@@ -100,8 +100,8 @@ OUT_DIRECT = DirectOutbound(tag=TAG_DIRECT_OUTBOUND)
 #### ------------- Snippets for Route Rules ------------- ####
 # RULE_DNS = Rule(outbound=TAG_DNS_OUTBOUND, protocol="dns")
 # RULE_DNS_BYPASS = Rule(outbound=TAG_DIRECT_OUTBOUND, protocol="dns")  # bypass dns query
-RULE_SNIFF = SniffRule()
-RULE_HIJACK_DNS = HijackDnsRule()
+RULE_SNIFF = RouteRuleSniff()
+RULE_HIJACK_DNS = RouteRuleHijackDns()
 
 #### ------------- Snippets for Http Clients ------------- ####
 HC_HTTP2 = Http2Client(tag=TAG_HTTP_CLIENT_H2)

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from warnings import deprecated
+
 from uniproxy.mihomo.rules import (
     AndRule,
     CellularRadioRule,
@@ -74,6 +76,9 @@ _CLASH_MAPPER: Mapping[BasicRuleType, type[ClashBasicRule]] = {
 }
 
 
+@deprecated(
+    "`mihomo_rules_from_uniproxy` is deprecated and will be removed in future versions"
+)
 def mihomo_rules_from_uniproxy(rule: UniproxyRule) -> tuple[ClashRule, ...]:
     if rule.type == "ip-asn":
         raise NotImplementedError("`ip-asn` rule type not implemented yet for Clash")

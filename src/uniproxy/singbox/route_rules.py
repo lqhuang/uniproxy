@@ -93,7 +93,7 @@ class _RouteRule:
 
 
 @define
-class RouteRule(RouteOptionFieldsMixin, _RouteRule, BaseFinalActionRule):
+class RouteRuleRoute(RouteOptionFieldsMixin, _RouteRule, BaseFinalActionRule):
     action: Literal["route"] = "route"
 
 
@@ -116,7 +116,7 @@ class _RejectRule:
 
 
 @define
-class RejectRule(RouteOptionFieldsMixin, _RejectRule, BaseFinalActionRule):
+class RouteRuleReject(RouteOptionFieldsMixin, _RejectRule, BaseFinalActionRule):
     """
     https://sing-box.sagernet.org/configuration/route/rule_action/#reject
 
@@ -139,7 +139,7 @@ class RejectRule(RouteOptionFieldsMixin, _RejectRule, BaseFinalActionRule):
 
 
 @define
-class HijackDnsRule(BaseFinalActionRule):
+class RouteRuleHijackDns(BaseFinalActionRule):
     """
     https://sing-box.sagernet.org/configuration/route/rule_action/#hijack-dns
 
@@ -155,7 +155,7 @@ class HijackDnsRule(BaseFinalActionRule):
 
 
 @define
-class SniffRule(BaseNonFinalActionRule):
+class RouteRuleSniff(BaseNonFinalActionRule):
     """
     Example
     =======
@@ -197,4 +197,4 @@ class SniffRule(BaseNonFinalActionRule):
     action: Literal["sniff"] = "sniff"
 
 
-type Rule = RouteRule | RejectRule | HijackDnsRule | SniffRule
+type RouteRule = RouteRuleRoute | RouteRuleReject | RouteRuleHijackDns | RouteRuleSniff

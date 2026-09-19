@@ -5,7 +5,7 @@ from typing import Literal
 
 from attrs import define, field
 
-from uniproxy.utils import maybe_to_str
+from uniproxy.utils import maybe_to_str, maybe_to_tag
 
 from .base import AbstractSingBox, BaseDnsServer, BaseOutbound
 from .dns_rules import DnsRule
@@ -33,7 +33,7 @@ class DNS(AbstractSingBox):
 
     rules: Sequence[DnsRule] | None = None
 
-    final: str | BaseDnsServer | None = field(default=None, converter=maybe_to_str)
+    final: str | BaseDnsServer | None = field(default=None, converter=maybe_to_tag)
     """
     Default dns server tag. The first server will be used if empty.
     """

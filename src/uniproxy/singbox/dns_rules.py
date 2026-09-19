@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from collections.abc import Sequence
+from typing import Literal
 from uniproxy.typing import NetworkCIDR
 
 from attrs import define, field
@@ -25,7 +26,7 @@ class _DnsRuleMixin:
     Tags of Inbound
     """
 
-    ip_version: Literal[4, 6, None] = None
+    ip_version: Literal[4, 6] | None = None
     """
 
     """
@@ -113,7 +114,7 @@ class _DnsRuleMixin:
 
 
 @define(slots=False)
-class _BaseDnsRouteRule(BaseDnsRule):
+class _BaseDnsRuleRoute(BaseDnsRule):
     server: str | BaseDnsServer = field(converter=to_tag)
     """
     Tag of target server.
@@ -144,19 +145,19 @@ class _BaseDnsRouteRule(BaseDnsRule):
 
 
 @define
-class DnsRouteRule(_DnsRuleMixin, _BaseDnsRouteRule, BaseDnsRule):
+class DnsRuleRoute(_DnsRuleMixin, _BaseDnsRuleRoute, BaseDnsRule):
     action: Literal["route"] | None = None
 
 
 @define(slots=False)
-class _BaseDnsRejectRule(BaseDnsRule):
+class _BaseDnsRuleReject(BaseDnsRule):
     method: Literal["default", "drop"] | None = None
     no_drop: bool | None = None
 
 
 @define
-class DnsRejectRule(_DnsRuleMixin, _BaseDnsRejectRule):
+class DnsRuleReject(_DnsRuleMixin, _BaseDnsRuleReject):
     action: Literal["reject"] = "reject"
 
 
-type DnsRule = DnsRouteRule | DnsRejectRule
+type DnsRule = DnsRuleRoute | DnsRuleReject

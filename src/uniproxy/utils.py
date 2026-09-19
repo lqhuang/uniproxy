@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Protocol, Sequence, cast
+from collections.abc import Iterable, Sequence
+from typing import Any, Protocol, cast
 
 import binascii
 from base64 import b64decode

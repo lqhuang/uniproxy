@@ -7,8 +7,8 @@ from xattrs import define, field
 from uniproxy.mihomo.providers import RuleProvider as ClashRuleProvider
 from uniproxy.mihomo.rules import Rule as ClashRule
 from uniproxy.singbox.dns_rules import DnsRule
-from uniproxy.singbox.route import Rule as RouteRule
 from uniproxy.singbox.route import RuleSet
+from uniproxy.singbox.route_rules import RouteRule
 from uniproxy.surge.rules import Rule as SurgeRule
 
 

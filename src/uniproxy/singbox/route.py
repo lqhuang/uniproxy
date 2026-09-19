@@ -1,21 +1,20 @@
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from collections.abc import Sequence
+from typing import Literal
 
 from attrs import define, field
 
-from uniproxy.uniproxy.base import BaseRule as UniproxyBaseRule
-from uniproxy.uniproxy.rules import FinalRule as UniproxyFinalRule
-from uniproxy.utils import maybe_map_to_tag, maybe_to_str
+from uniproxy.utils import maybe_map_to_tag
 
-from .base import AbstractSingBox, BaseDnsServer, BaseInbound, BaseOutbound, BaseRuleSet
+from .base import AbstractSingBox, BaseDnsServer, BaseOutbound, BaseRuleSet
 from .http_clients import HttpClient
-from .route_rules import Rule
+from .route_rules import RouteRule
 
 
 @define(hash=True)
 class InlineRuleSet(BaseRuleSet):
-    rules: Sequence[Rule]
+    rules: Sequence[RouteRule]
 
     type: Literal["inline"] = "inline"
 
@@ -45,7 +44,7 @@ class RemoteRuleSet(BaseRuleSet):
     format: Literal["binary", "source"] | None = None
 
     update_interval: float | None = None
-    http_client: HttpClient | None = None
+    http_client: HttpClient | None = field(default=None, converter=maybe_map_to_tag)
 
     # download_detour: BaseOutbound | str | None = field(
     #     default=None, converter=maybe_to_str
@@ -82,12 +81,10 @@ type RuleSet = InlineRuleSet | LocalRuleSet | RemoteRuleSet
 
 @define
 class Route(AbstractSingBox):
-    rules: Sequence[Rule]
+    rules: Sequence[RouteRule]
     """List of [[Rule]]"""
 
-    rule_set: Sequence[BaseRuleSet] | None = field(
-        default=None, converter=maybe_map_to_tag
-    )
+    rule_set: Sequence[RuleSet] | None = field(default=None)
     """List of [[rule-set]]"""
 
     final: BaseOutbound | str | None = field(default=None, converter=maybe_map_to_tag)
@@ -139,7 +136,7 @@ class Route(AbstractSingBox):
     """
 
     default_domain_resolver: BaseDnsServer | str | None = field(
-        default=None, converter=maybe_to_str
+        default=None, converter=maybe_map_to_tag
     )
     """
     > [!NEW] Since sing-box 1.12.0

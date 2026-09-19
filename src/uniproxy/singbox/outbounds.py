@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Mapping, Sequence, TypeGuard, cast
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal, TypeGuard, cast
 from uniproxy.typing import ServerAddress, ShadowsocksCipher
 
 from itertools import chain
+from pprint import pprint
 
 from attrs import define, field
 
@@ -23,7 +25,7 @@ from uniproxy.uniproxy.proxy_groups import SelectGroup as UniproxySelectGroup
 from uniproxy.uniproxy.proxy_groups import UniproxyProxyGroup
 from uniproxy.uniproxy.proxy_groups import UrlTestGroup as UniproxyUrlTestGroup
 from uniproxy.uniproxy.typing import GroupType, ProtocolType, VmessCipher
-from uniproxy.utils import flatmap_to_tag, map_to_tag
+from uniproxy.utils import flatmap_to_str, flatmap_to_tag, map_to_str, map_to_tag
 
 from .base import BaseOutbound
 from .shared import (
@@ -36,15 +38,15 @@ from .shared import (
 from .typing import Network
 
 __all__ = (
+    "AnyTLSOutbound",
     "DirectOutbound",
     "HttpOutbound",
-    "ShadowsocksOutbound",
-    "VmessOutbound",
-    "TrojanOutbound",
     "NaiveOutbound",
-    "AnyTLSOutbound",
-    "UrlTestOutbound",
     "SelectorOutbound",
+    "ShadowsocksOutbound",
+    "TrojanOutbound",
+    "UrlTestOutbound",
+    "VmessOutbound",
 )
 
 
@@ -540,13 +542,12 @@ class SelectorOutbound(BaseOutbound):
     ) -> SelectorOutbound:
         if protocol.providers:
             # pyrefly: ignore [bad-argument-type]
-            provider_proxies = map_to_tag(chain(*protocol.providers))
+            provider_proxies = map_to_str(chain(*protocol.providers))
         else:
             provider_proxies = ()
         return cls(
             tag=protocol.name,
-            # pyrefly: ignore [bad-argument-type]
-            outbounds=(flatmap_to_tag(protocol.proxies) + provider_proxies),
+            outbounds=(*flatmap_to_str(protocol.proxies), *provider_proxies),
             interrupt_exist_connections=False,
         )
 
@@ -617,14 +618,13 @@ class UrlTestOutbound(BaseOutbound):
 
         if protocol.providers:
             # pyrefly: ignore [bad-argument-type]
-            provider_proxies = map_to_tag(chain(*protocol.providers))
+            provider_proxies = flatmap_to_str(chain(*protocol.providers))
         else:
             provider_proxies: tuple[str, ...] = ()
 
         return cls(
             tag=protocol.name,
-            # pyrefly: ignore [bad-argument-type]
-            outbounds=(flatmap_to_tag(protocol.proxies) + provider_proxies),
+            outbounds=flatmap_to_str(protocol.proxies) + provider_proxies,
             url=protocol.url,
             interval=f"{protocol.interval}s" if protocol.interval else None,
             tolerance=tolerance,
@@ -644,7 +644,7 @@ type ProtocolOutbound = (
 type GroupOutbound = SelectorOutbound | UrlTestOutbound
 type Outbound = ProtocolOutbound | GroupOutbound
 
-_SINGBOX_OUTBOUND_TYPES = set((
+_SINGBOX_OUTBOUND_TYPES = {
     DirectOutbound,
     HttpOutbound,
     ShadowsocksOutbound,
@@ -654,7 +654,7 @@ _SINGBOX_OUTBOUND_TYPES = set((
     NaiveOutbound,
     SelectorOutbound,
     UrlTestOutbound,
-))
+}
 
 
 def is_singbox_outbound(proxy: Any) -> TypeGuard[Outbound]:
@@ -665,7 +665,7 @@ def is_singbox_outbound(proxy: Any) -> TypeGuard[Outbound]:
     if isinstance(proxy, BaseOutbound):
         try:
             return type(proxy) in _SINGBOX_OUTBOUND_TYPES
-        except Exception:
+        except Exception:  # noqa: BLE001
             return False
     else:
         return False
@@ -696,7 +696,7 @@ def is_valid_protocol(proxy: Any) -> TypeGuard[UniproxyProtocol]:
     Check if the protocol type is valid for SingBox.
     """
 
-    return hasattr(proxy, "type") and proxy.type in _SINGBOX_REGISTERED_PROTOCOLS.keys()
+    return hasattr(proxy, "type") and proxy.type in _SINGBOX_REGISTERED_PROTOCOLS
 
 
 def is_valid_protocol_group(proxy: Any) -> TypeGuard[UniproxyProxyGroup]:
@@ -704,9 +704,7 @@ def is_valid_protocol_group(proxy: Any) -> TypeGuard[UniproxyProxyGroup]:
     Check if the protocol type is valid for SingBox.
     """
 
-    return (
-        hasattr(proxy, "type") and proxy.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys()
-    )
+    return hasattr(proxy, "type") and proxy.type in _SINGBOX_REGISTERED_PROXY_GROUPS
 
 
 def _make_protocol_outbound_from_uniproxy(
@@ -731,7 +729,7 @@ def _make_group_outbound_from_uniproxy(
     # pyrefly: ignore [implicit-any-parameter]
     **kwargs,
 ) -> Outbound:
-    if protocol.type in _SINGBOX_REGISTERED_PROXY_GROUPS.keys():
+    if protocol.type in _SINGBOX_REGISTERED_PROXY_GROUPS:
         return _SINGBOX_REGISTERED_PROXY_GROUPS[protocol.type].from_uniproxy(
             # pyrefly: ignore [bad-argument-type]
             protocol,

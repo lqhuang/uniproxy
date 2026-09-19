@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from typing import Literal, override
+from collections.abc import Sequence
 
-from attrs import define, field
+from warnings import deprecated
 
-from uniproxy.singbox.route_rules import BaseRule, RejectRule, RouteRule, Rule
-from uniproxy.singbox.typing import SniffProtocol
+from uniproxy.singbox.route_rules import (
+    BaseRule,
+    RouteRule,
+    RouteRuleReject,
+    RouteRuleRoute,
+)
 from uniproxy.uniproxy.base import BaseRule as UniproxyBaseRule
 from uniproxy.uniproxy.rules import (
     DomainGroupRule,
@@ -28,31 +31,37 @@ from uniproxy.uniproxy.rules import FinalRule as UniproxyFinalRule
 from uniproxy.utils import maybe_flatmap_to_str, to_tag
 
 
-def unify_mixed_route_rules(rules: Sequence[Rule | UniproxyRule]) -> Sequence[Rule]:
-    out_rules: list[Rule] = []
+def unify_mixed_route_rules(
+    rules: Sequence[RouteRule | UniproxyRule],
+) -> Sequence[RouteRule]:
+    out_rules: list[RouteRule] = []
     for r in rules:
         if isinstance(r, BaseRule):
             out_rules.append(r)
         elif isinstance(r, UniproxyFinalRule):
             pass
         elif isinstance(r, UniproxyBaseRule):
+            # pyrefly: ignore [deprecated]
             out_rules.append(singbox_route_rule_from_uniproxy(r))
         else:
             print(r)
-            raise ValueError(f"Unexpected rule type: {type(r)}")
+            raise TypeError(f"Unexpected rule type: {type(r)}")
     return out_rules
 
 
-def singbox_route_rule_from_uniproxy(rule: UniproxyRule) -> Rule:
+@deprecated(
+    "`singbox_route_rule_from_uniproxy` is deprecated and will be removed in future versions."
+)
+def singbox_route_rule_from_uniproxy(rule: UniproxyRule) -> RouteRule:
     if not isinstance(rule, UniproxyBaseRule):
-        raise ValueError(f"Expected type of Uniproxy Rules, got {type(rule)}")
+        raise TypeError(f"Expected type of Uniproxy Rules, got {type(rule)}")
     if isinstance(rule, UniproxyFinalRule):
-        raise ValueError(f"Final rule is not expected here, got {type(rule)}")
+        raise TypeError(f"Final rule is not expected here, got {type(rule)}")
 
     if str(rule.policy).upper() == "REJECT":
-        return RejectRule(domain_suffix=maybe_flatmap_to_str(rule.matcher))
+        return RouteRuleReject(domain_suffix=maybe_flatmap_to_str(rule.matcher))
     elif str(rule.policy).upper() == "REJECT-DROP":
-        return RejectRule(
+        return RouteRuleReject(
             domain_suffix=maybe_flatmap_to_str(rule.matcher), method="drop"
         )
     else:
@@ -63,33 +72,35 @@ def singbox_route_rule_from_uniproxy(rule: UniproxyRule) -> Rule:
             DomainRule(matcher=matcher, policy=policy)
             | DomainGroupRule(matcher=matcher, policy=policy)
         ):
-            return RouteRule(outbound=str(policy), domain=matcher)
+            return RouteRuleRoute(outbound=str(policy), domain=matcher)
         case (
             DomainSuffixRule(matcher=matcher, policy=policy)
             | DomainSuffixGroupRule(matcher=matcher, policy=policy)
         ):
-            return RouteRule(outbound=str(policy), domain_suffix=matcher)
+            return RouteRuleRoute(outbound=str(policy), domain_suffix=matcher)
         case (
             DomainKeywordRule(matcher=matcher, policy=policy)
             | DomainKeywordGroupRule(matcher=matcher, policy=policy)
         ):
-            return RouteRule(outbound=str(policy), domain_keyword=matcher)
+            return RouteRuleRoute(outbound=str(policy), domain_keyword=matcher)
         case (
             IPCidrRule(matcher=matcher, policy=policy)
             | IPCidrGroupRule(matcher=matcher, policy=policy)
             | IPCidr6Rule(matcher=matcher, policy=policy)
             | IPCidr6GroupRule(matcher=matcher, policy=policy)
         ):
-            return RouteRule(outbound=str(policy), ip_cidr=matcher)
+            return RouteRuleRoute(outbound=str(policy), ip_cidr=matcher)
         case GeoIPRule(matcher=matcher, policy=policy):
             # TODO: add extra opts to give a prefix or suffix
-            return RouteRule(
+            return RouteRuleRoute(
                 outbound=str(policy), rule_set=f"rs-geoip-{matcher}".lower()
             )
         case ProcessNameRule(matcher=matcher, policy=policy):
-            return RouteRule(outbound=str(policy), process_name=matcher)
+            return RouteRuleRoute(outbound=str(policy), process_name=matcher)
         case UserAgentRule(matcher=matcher, policy=policy):
-            return RouteRule(outbound=str(policy), rule_set=f"rs-useragent-{matcher}")
+            return RouteRuleRoute(
+                outbound=str(policy), rule_set=f"rs-useragent-{matcher}"
+            )
         # case (
         #     RuleSetRule(matcher, policy) | DomainSetRule(matcher=matcher, policy=policy)
         # ):

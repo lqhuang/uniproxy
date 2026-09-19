@@ -7,7 +7,7 @@ from uniproxy.mihomo.providers import RuleProvider as ClashRuleProvider
 from uniproxy.mihomo.rules import Rule as ClashRule
 from uniproxy.singbox.dns_rules import DnsRule as SingBoxDnsRule
 from uniproxy.singbox.route import RuleSet as SingBoxRuleSet
-from uniproxy.singbox.route_rules import Rule as SingBoxRouteRule
+from uniproxy.singbox.route_rules import RouteRule as SingBoxRouteRule
 from uniproxy.surge.rules import Rule as SurgeRule
 
 from .routing import ClashRouting, PolicyRouting, SingBoxRouting, SurgeRouting
