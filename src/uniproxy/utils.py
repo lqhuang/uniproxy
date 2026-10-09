@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from typing import Any, Protocol, cast
+from uniproxy.typing import Taggable
 
 import binascii
 from base64 import b64decode
 from configparser import ConfigParser
-from functools import cached_property
 
 
 def load_ini_without_section(s: str) -> dict[str, Any]:
@@ -29,11 +29,6 @@ class HasName(Protocol):
 
 class HasTag(Protocol):
     tag: str
-
-
-class Taggable(Protocol):
-    @cached_property
-    def to_tag(self) -> str: ...
 
 
 def to_tag(x: Taggable | str) -> str:

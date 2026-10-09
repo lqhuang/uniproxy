@@ -5,7 +5,6 @@ from typing import ClassVar, override
 from uniproxy.typing import ServerAddress
 
 from abc import ABC, abstractmethod
-from functools import cached_property
 
 from attrs import define
 
@@ -31,7 +30,7 @@ class BaseProtocol(BaseTaggable, AbstractSurge):
 
     # type: SurgeProtocolType
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.name
@@ -45,7 +44,7 @@ class BaseProtocol(BaseTaggable, AbstractSurge):
 class BaseProxyProvider(BaseTaggable, AbstractSurge):
     name: str
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.name
@@ -72,7 +71,7 @@ class BaseProxyGroup(BaseTaggable, AbstractSurge):
             group for group in self.proxies if isinstance(group, BaseProxyGroup)
         )
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.name
@@ -80,7 +79,7 @@ class BaseProxyGroup(BaseTaggable, AbstractSurge):
 
 @define
 class BaseRule(BaseTaggable, AbstractSurge):
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         # pyrefly: ignore [missing-attribute]

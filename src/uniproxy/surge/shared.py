@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, override
-
-from functools import cached_property
+from typing import Literal
 
 from attrs import frozen
 
@@ -43,8 +41,7 @@ class SurgeTLS(AbstractSurge):
         }
         return ", ".join(f"{k}={v}" for k, v in config.items() if v is not None)
 
-    @override
-    @cached_property
+    @property
     def to_tag(self) -> str:
         return str(self)
 

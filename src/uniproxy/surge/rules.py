@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Literal, override
 
-from functools import cached_property
-
 from attrs import define
 
 from uniproxy.abc import BaseTaggable
@@ -41,7 +39,7 @@ class _NoResoleMixin(BaseTaggable):
 
     no_resolve: bool | None = None
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         if self.no_resolve:
@@ -64,7 +62,7 @@ class _ExtendedMatchingMixin(BaseTaggable):
 
     extended_matching: bool | None = None
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         if self.extended_matching:
@@ -77,7 +75,7 @@ class _ExtendedMatchingMixin(BaseTaggable):
 class _PreMatchingMixin(BaseTaggable):
     pre_matching: bool | None = None
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         if self.pre_matching:
@@ -328,7 +326,7 @@ class ScriptRule(BaseBasicRule):
     requires_resolve: bool | None = None
     type: Literal["script"] = "script"
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         if self.requires_resolve:
@@ -370,7 +368,7 @@ class FinalRule(BaseRule):
     dns_failed: bool | None = None
     type: Literal["final"] = "final"
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         if self.dns_failed:

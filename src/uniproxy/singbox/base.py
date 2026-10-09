@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import ClassVar, Literal, override
+from typing import ClassVar, override
 
 from abc import ABC
-from functools import cached_property
 
 from attrs import define
 
@@ -24,7 +23,7 @@ class AbstractSingBox(ABC):
 class BaseOutbound(BaseTaggable, AbstractSingBox):
     tag: str
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.tag
@@ -34,7 +33,7 @@ class BaseOutbound(BaseTaggable, AbstractSingBox):
 class BaseInbound(BaseTaggable, AbstractSingBox):
     tag: str
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.tag
@@ -44,7 +43,7 @@ class BaseInbound(BaseTaggable, AbstractSingBox):
 class BaseEndpoint(BaseTaggable, AbstractSingBox):
     tag: str
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.tag
@@ -54,7 +53,7 @@ class BaseEndpoint(BaseTaggable, AbstractSingBox):
 class BaseDnsServer(BaseTaggable, AbstractSingBox):
     tag: str
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.tag
@@ -72,7 +71,7 @@ class BaseRule(AbstractSingBox): ...
 class BaseRuleSet(BaseTaggable, AbstractSingBox):
     tag: str
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.tag
@@ -86,7 +85,7 @@ class BaseService(BaseTaggable, AbstractSingBox):
 
     tag: str
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.tag

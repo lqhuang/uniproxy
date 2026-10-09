@@ -4,7 +4,6 @@ from collections.abc import Mapping, Sequence
 from typing import Literal, cast, override
 from uniproxy.typing import AlpnType, IPAddress, ShadowsocksCipher
 
-from functools import cached_property
 from ipaddress import IPv4Address, IPv6Address
 
 from attrs import define
@@ -274,11 +273,6 @@ class VmessTransport(AbstractSurge):
         }
         return ", ".join(f"{k}={v}" for k, v in opts.items() if v is not None)
 
-    @override
-    @cached_property
-    def to_tag(self) -> str:
-        return str(self)
-
 
 @define
 class VmessProtocol(BaseProtocol):
@@ -337,7 +331,7 @@ class VmessProtocol(BaseProtocol):
                 None
                 if protocol.tls is None
                 else SurgeTLS(
-                    skip_cert_verify=True if not protocol.tls.verify else False,
+                    skip_cert_verify=(not protocol.tls.verify),
                     sni=protocol.tls.server_name,
                     # server_cert_fingerprint_sha256=protocol.tls.cert_ca,
                 )

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Literal, Mapping, override
-
-from functools import cached_property
+from collections.abc import Mapping
+from typing import Literal, override
 
 from attrs import define
 
@@ -62,7 +61,7 @@ class BaseHttpClient(BaseTaggable, AbstractSingBox):
     headers: Mapping[str, str] | None = None
     """Additional headers to add to each request."""
 
-    @cached_property
+    @property
     @override
     def to_tag(self) -> str:
         return self.tag
